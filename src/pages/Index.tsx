@@ -46,42 +46,42 @@ const Index = () => {
   return (
     <Layout>
       {/* HERO — Premium with subtle animated gradient */}
-      <section className="relative min-h-[92vh] flex items-center overflow-hidden">
+      <section className="relative min-h-[85vh] sm:min-h-[92vh] flex items-center overflow-hidden">
         {/* Animated background */}
         <div className="absolute inset-0 bg-gradient-to-br from-background via-secondary/50 to-surface-warm" />
-        <div className="absolute top-0 right-0 w-[50vw] h-[50vw] rounded-full bg-gradient-to-bl from-primary/4 to-transparent blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[40vw] h-[40vw] rounded-full bg-gradient-to-tr from-gold/6 to-transparent blur-3xl" />
+        <div className="absolute top-0 right-0 w-[60vw] sm:w-[50vw] h-[60vw] sm:h-[50vw] rounded-full bg-gradient-to-bl from-primary/4 to-transparent blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[50vw] sm:w-[40vw] h-[50vw] sm:h-[40vw] rounded-full bg-gradient-to-tr from-gold/6 to-transparent blur-3xl" />
 
-        {/* Subtle floating shapes */}
-        <div className="absolute top-[20%] right-[15%] w-24 h-24 rounded-2xl border border-primary/10 rotate-12"
+        {/* Subtle floating shapes — hidden on small screens */}
+        <div className="hidden sm:block absolute top-[20%] right-[15%] w-24 h-24 rounded-2xl border border-primary/10 rotate-12"
           style={{ animation: 'float 6s ease-in-out infinite' }} />
-        <div className="absolute bottom-[25%] left-[10%] w-16 h-16 rounded-full border border-gold/15"
+        <div className="hidden sm:block absolute bottom-[25%] left-[10%] w-16 h-16 rounded-full border border-gold/15"
           style={{ animation: 'float 8s ease-in-out infinite reverse' }} />
 
         <div className="relative z-10 section-padding w-full">
-          <div className="max-w-7xl mx-auto py-20">
+          <div className="max-w-7xl mx-auto py-12 sm:py-20">
             <div className="max-w-3xl">
               <div className="reveal">
-                <span className="inline-flex items-center gap-2 text-sm font-medium text-gold bg-gold/8 px-4 py-1.5 rounded-full mb-8">
+                <span className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-gold bg-gold/8 px-3 sm:px-4 py-1.5 rounded-full mb-6 sm:mb-8">
                   <Sparkles className="h-3.5 w-3.5" /> Espaços premium para profissionais
                 </span>
               </div>
               <h1
-                className="text-4xl sm:text-5xl lg:text-[3.5rem] leading-[1.06] tracking-tight mb-6 text-charcoal reveal reveal-delay-1"
-                style={{ lineHeight: '1.06' }}
+                className="text-3xl sm:text-5xl lg:text-[3.5rem] leading-[1.08] tracking-tight mb-5 sm:mb-6 text-charcoal reveal reveal-delay-1"
+                style={{ lineHeight: '1.08' }}
               >
                 Um espaço para profissionais que valorizam{' '}
                 <span className="text-primary">experiência</span>
               </h1>
-              <p className="text-lg text-muted-foreground max-w-xl mb-10 reveal reveal-delay-2" style={{ textWrap: 'pretty' }}>
+              <p className="text-base sm:text-lg text-muted-foreground max-w-xl mb-8 sm:mb-10 reveal reveal-delay-2" style={{ textWrap: 'pretty' }}>
                 Consultórios, salas de reunião e espaços de coworking com design sofisticado, infraestrutura completa e
                 localização privilegiada.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 reveal reveal-delay-3">
-                <Button size="lg" className="gap-2 rounded-xl text-base px-8 py-6 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/25" onClick={() => scrollTo('experiencia')}>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 reveal reveal-delay-3">
+                <Button size="lg" className="gap-2 rounded-xl text-base px-6 sm:px-8 py-5 sm:py-6 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/25" onClick={() => scrollTo('experiencia')}>
                   Explorar Espaços <ArrowRight className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="lg" className="gap-2 rounded-xl text-base px-8 py-6" onClick={() => scrollTo('simulador')}>
+                <Button variant="outline" size="lg" className="gap-2 rounded-xl text-base px-6 sm:px-8 py-5 sm:py-6" onClick={() => scrollTo('simulador')}>
                   Simular Reserva
                 </Button>
               </div>
