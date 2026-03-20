@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logoIntegra from "@/assets/logo_integra.png";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
@@ -18,10 +19,11 @@ export function Navbar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/85 backdrop-blur-md border-b border-border/40">
       <div className="max-w-7xl mx-auto flex items-center justify-between h-16 section-padding">
-        <Link to="/" className="flex items-center gap-2">
-          <span className="font-display text-2xl text-foreground tracking-tight">Integra</span>
+        <Link to="/" className="flex items-center gap-2.5">
+          <img src={logoIntegra} alt="Integra" className="h-9 w-auto" />
+          <span className="font-display text-xl text-charcoal tracking-tight hidden sm:inline">Integra</span>
         </Link>
 
         {/* Desktop */}
@@ -32,15 +34,15 @@ export function Navbar() {
               to={link.to}
               className={`text-sm font-medium transition-colors duration-200 ${
                 isActive(link.to)
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "text-charcoal"
+                  : "text-muted-foreground hover:text-charcoal"
               }`}
             >
               {link.label}
             </Link>
           ))}
           <Link to="/auth">
-            <Button variant="outline" size="sm" className="gap-1.5 border-border/60">
+            <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90">
               <LogIn className="h-3.5 w-3.5" />
               Área de Gestão
             </Button>
@@ -49,7 +51,7 @@ export function Navbar() {
 
         {/* Mobile toggle */}
         <button
-          className="md:hidden p-2 text-foreground active:scale-95 transition-transform"
+          className="md:hidden p-2 text-charcoal active:scale-95 transition-transform"
           onClick={() => setOpen(!open)}
           aria-label="Menu"
         >
@@ -69,7 +71,7 @@ export function Navbar() {
               onClick={() => setOpen(false)}
               className={`block text-base font-medium py-2 transition-colors ${
                 isActive(link.to)
-                  ? "text-foreground"
+                  ? "text-charcoal"
                   : "text-muted-foreground"
               }`}
             >
@@ -77,7 +79,7 @@ export function Navbar() {
             </Link>
           ))}
           <Link to="/auth" onClick={() => setOpen(false)}>
-            <Button variant="outline" size="sm" className="w-full gap-1.5 mt-2">
+            <Button size="sm" className="w-full gap-1.5 mt-2 bg-primary hover:bg-primary/90">
               <LogIn className="h-3.5 w-3.5" />
               Área de Gestão
             </Button>

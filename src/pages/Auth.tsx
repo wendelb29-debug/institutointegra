@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import logoIntegra from '@/assets/logo_integra.png';
 
 const Auth = () => {
   const { user, loading, signIn, signUp } = useAuth();
@@ -46,16 +47,16 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md shadow-lg border-border/60">
-        <CardHeader className="text-center space-y-2">
-          <div className="mx-auto mb-2">
-            <span className="text-2xl font-display text-primary tracking-tight">Integra</span>
+      <Card className="w-full max-w-md shadow-lg border-border/50">
+        <CardHeader className="text-center space-y-3 pb-2">
+          <div className="mx-auto">
+            <img src={logoIntegra} alt="Integra" className="h-16 w-auto mx-auto" />
           </div>
-          <CardTitle className="text-xl font-semibold">
+          <CardTitle className="text-xl font-display text-charcoal">
             {isLogin ? 'Entrar no sistema' : 'Criar conta'}
           </CardTitle>
           <CardDescription>
-            {isLogin ? 'Acesse o painel de gestão' : 'Crie sua conta para começar'}
+            {isLogin ? 'Acesse o painel de gestão do Integra' : 'Crie sua conta para começar'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -74,7 +75,7 @@ const Auth = () => {
               <Label htmlFor="password">Senha</Label>
               <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
             </div>
-            <Button type="submit" className="w-full" disabled={submitting}>
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={submitting}>
               {submitting ? 'Aguarde...' : isLogin ? 'Entrar' : 'Criar conta'}
             </Button>
           </form>

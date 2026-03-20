@@ -11,6 +11,7 @@ import {
   SidebarHeader, SidebarFooter, useSidebar,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
+import logoIntegra from '@/assets/logo_integra.png';
 
 const mainItems = [
   { title: 'Dashboard', url: '/gestao', icon: LayoutDashboard },
@@ -40,24 +41,24 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
-        {!collapsed && (
-          <span className="text-xl font-display text-primary tracking-tight">Integra</span>
-        )}
-        {collapsed && (
-          <span className="text-lg font-display text-primary">I</span>
-        )}
+      <SidebarHeader className="border-b border-sidebar-border px-3 py-4">
+        <div className="flex items-center gap-2.5">
+          <img src={logoIntegra} alt="Integra" className="h-8 w-auto shrink-0" />
+          {!collapsed && (
+            <span className="text-lg font-display text-charcoal tracking-tight">Integra</span>
+          )}
+        </div>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Coworking</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/60 font-semibold">Coworking</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map(item => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink to={item.url} end={item.url === '/gestao'} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-primary font-medium">
+                    <NavLink to={item.url} end={item.url === '/gestao'} className="hover:bg-sidebar-accent/60" activeClassName="bg-primary/8 text-primary font-medium">
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
@@ -69,13 +70,13 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Instituto Integra</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/60 font-semibold">Instituto</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {institutoItems.map(item => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink to={item.url} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-accent font-medium">
+                    <NavLink to={item.url} className="hover:bg-sidebar-accent/60" activeClassName="bg-gold/8 text-gold font-medium">
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
