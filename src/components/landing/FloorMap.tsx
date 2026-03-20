@@ -58,9 +58,9 @@ export function FloorMap() {
         </ScrollReveal>
 
         <ScrollReveal delay={80}>
-          <div className="relative bg-card rounded-3xl shadow-lg border border-border/40 p-6 overflow-hidden">
+          <div className="relative bg-card rounded-2xl sm:rounded-3xl shadow-lg border border-border/40 p-4 sm:p-6 overflow-hidden">
             {/* Legend */}
-            <div className="flex gap-5 mb-4 text-sm">
+            <div className="flex flex-wrap gap-3 sm:gap-5 mb-4 text-xs sm:text-sm">
               {Object.entries(statusLabels).map(([key, label]) => (
                 <span key={key} className="flex items-center gap-2">
                   <span className="h-3 w-3 rounded-full" style={{ backgroundColor: statusColors[key] }} />
@@ -117,20 +117,20 @@ export function FloorMap() {
 
             {/* Detail Panel */}
             {selected && (
-              <div className="absolute bottom-6 left-6 right-6 bg-card/95 backdrop-blur-sm rounded-2xl border border-border/60 shadow-xl p-6 flex items-center justify-between gap-4"
+              <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 bg-card/95 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-border/60 shadow-xl p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4"
                 style={{ animation: 'reveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
                 <div>
-                  <h3 className="font-semibold text-lg text-foreground">{selected.name}</h3>
-                  <p className="text-sm text-muted-foreground flex items-center gap-3 mt-1">
+                  <h3 className="font-semibold text-base sm:text-lg text-foreground">{selected.name}</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground flex flex-wrap items-center gap-2 sm:gap-3 mt-1">
                     <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {selected.capacity} pessoa{(selected.capacity || 0) > 1 ? 's' : ''}</span>
                     <span className="h-3 w-px bg-border" />
                     <span style={{ color: statusColors[selected.status] }}>{statusLabels[selected.status]}</span>
                     {Number(selected.price_hour) > 0 && <><span className="h-3 w-px bg-border" /> R$ {Number(selected.price_hour).toFixed(2)}/hora</>}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                   {selected.status === 'disponivel' && (
-                    <Button asChild size="sm" className="gap-1.5 rounded-xl">
+                    <Button asChild size="sm" className="gap-1.5 rounded-xl flex-1 sm:flex-none">
                       <Link to="/reservas">Reservar</Link>
                     </Button>
                   )}

@@ -55,18 +55,18 @@ export function ReservationSimulator() {
         </ScrollReveal>
 
         <ScrollReveal delay={80}>
-          <div className="bg-card rounded-3xl shadow-xl shadow-foreground/5 border border-border/40 p-8 md:p-10">
+          <div className="bg-card rounded-2xl sm:rounded-3xl shadow-xl shadow-foreground/5 border border-border/40 p-5 sm:p-8 md:p-10">
             {/* Room Select */}
-            <div className="mb-8">
+            <div className="mb-6 sm:mb-8">
               <label className="flex items-center gap-2 text-sm font-semibold text-foreground mb-3">
                 <Building2 className="h-4 w-4 text-primary" /> Escolha a sala
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {rooms.map(r => (
                   <button
                     key={r.id}
                     onClick={() => setSelectedRoom(r.id)}
-                    className={`p-4 rounded-xl border-2 text-left transition-all duration-200 active:scale-[0.97] ${
+                    className={`p-3 sm:p-4 rounded-xl border-2 text-left transition-all duration-200 active:scale-[0.97] ${
                       selectedRoom === r.id
                         ? 'border-primary bg-primary/5 shadow-md'
                         : 'border-border/40 hover:border-primary/30'
@@ -80,16 +80,16 @@ export function ReservationSimulator() {
             </div>
 
             {/* Time Select */}
-            <div className="mb-8">
+            <div className="mb-6 sm:mb-8">
               <label className="flex items-center gap-2 text-sm font-semibold text-foreground mb-3">
                 <Clock className="h-4 w-4 text-primary" /> Período
               </label>
-              <div className="flex gap-3">
+              <div className="flex gap-2 sm:gap-3">
                 {timeOptions.map(t => (
                   <button
                     key={t.value}
                     onClick={() => setSelectedTime(t.value)}
-                    className={`flex-1 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-200 active:scale-[0.97] ${
+                    className={`flex-1 py-2.5 sm:py-3 rounded-xl border-2 text-sm font-medium transition-all duration-200 active:scale-[0.97] ${
                       selectedTime === t.value
                         ? 'border-primary bg-primary/5 text-primary'
                         : 'border-border/40 text-muted-foreground hover:border-primary/30'
@@ -103,7 +103,7 @@ export function ReservationSimulator() {
 
             {/* Hours slider */}
             {selectedTime === 'hora' && (
-              <div className="mb-8">
+              <div className="mb-6 sm:mb-8">
                 <label className="flex items-center justify-between text-sm font-semibold text-foreground mb-3">
                   <span className="flex items-center gap-2">
                     <CalendarDays className="h-4 w-4 text-primary" /> Quantidade de horas
@@ -122,14 +122,14 @@ export function ReservationSimulator() {
             )}
 
             {/* Price Display */}
-            <div className="bg-gradient-to-r from-primary/8 to-gold/8 rounded-2xl p-6 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-primary/8 to-gold/8 rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Valor total estimado</p>
-                <p className="text-4xl font-display text-charcoal tabular-nums">
+                <p className="text-3xl sm:text-4xl font-display text-charcoal tabular-nums">
                   {price > 0 ? `R$ ${price.toFixed(2)}` : '—'}
                 </p>
               </div>
-              <Button asChild size="lg" disabled={!room || price === 0} className="gap-2 rounded-xl">
+              <Button asChild size="lg" disabled={!room || price === 0} className="gap-2 rounded-xl w-full sm:w-auto">
                 <Link to="/reservas">
                   Continuar reserva <ArrowRight className="h-4 w-4" />
                 </Link>

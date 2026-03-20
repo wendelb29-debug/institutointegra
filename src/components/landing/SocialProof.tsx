@@ -20,7 +20,7 @@ export function SocialProof() {
                 <div className="h-12 w-12 rounded-xl bg-primary/8 flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/12 transition-colors duration-300">
                   <stat.icon className="h-5 w-5 text-primary" />
                 </div>
-                <p className="text-3xl lg:text-4xl font-display text-charcoal mb-1">
+                <p className="text-2xl sm:text-3xl lg:text-4xl font-display text-charcoal mb-1">
                   <AnimatedCounter target={stat.value} suffix={stat.suffix} />
                 </p>
                 <p className="text-sm text-muted-foreground">{stat.label}</p>
