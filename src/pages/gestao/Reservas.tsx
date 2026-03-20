@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,28 +6,41 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Clock, MapPin } from 'lucide-react';
+import {
+  startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths,
+  format, isSameMonth, isSameDay, isToday, parseISO,
+} from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const statusColors: Record<string, string> = {
-  confirmada: 'bg-primary/10 text-primary',
-  pendente: 'bg-accent/10 text-accent',
-  cancelada: 'bg-destructive/10 text-destructive',
+  confirmada: 'bg-primary/10 text-primary border-primary/20',
+  pendente: 'bg-accent/10 text-accent border-accent/20',
+  cancelada: 'bg-destructive/10 text-destructive border-destructive/20',
+};
+
+const statusDot: Record<string, string> = {
+  confirmada: 'bg-primary',
+  pendente: 'bg-accent',
+  cancelada: 'bg-destructive',
 };
 
 const Reservas = () => {
   const [reservations, setReservations] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState<any>(null);
   const [form, setForm] = useState<any>({ status: 'pendente' });
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
   const fetch_ = async () => {
     const [rRes, roomRes] = await Promise.all([
-      supabase.from('reservations').select('*, rooms(name)').order('date', { ascending: false }),
+      supabase.from('reservations').select('*, rooms(name)').order('date', { ascending: true }),
       supabase.from('rooms').select('id, name, price_hour').eq('status', 'disponivel').order('name'),
     ]);
     setReservations(rRes.data || []);
@@ -48,8 +61,48 @@ const Reservas = () => {
     setOpen(false); setForm({ status: 'pendente' }); fetch_();
   };
 
+  const updateStatus = async (id: string, status: string) => {
+    await supabase.from('reservations').update({ status } as any).eq('id', id);
+    toast({ title: `Reserva ${status}!` });
+    setDetailOpen(null);
+    fetch_();
+  };
+
+  // Calendar grid
+  const calendarDays = useMemo(() => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
+    const start = startOfWeek(monthStart, { locale: ptBR });
+    const end = endOfWeek(monthEnd, { locale: ptBR });
+    const days: Date[] = [];
+    let day = start;
+    while (day <= end) {
+      days.push(day);
+      day = addDays(day, 1);
+    }
+    return days;
+  }, [currentMonth]);
+
+  // Map reservations by date
+  const reservationsByDate = useMemo(() => {
+    const map: Record<string, any[]> = {};
+    reservations.forEach(r => {
+      const key = r.date;
+      if (!map[key]) map[key] = [];
+      map[key].push(r);
+    });
+    return map;
+  }, [reservations]);
+
+  const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+  const selectedDayReservations = selectedDate
+    ? reservationsByDate[format(selectedDate, 'yyyy-MM-dd')] || []
+    : [];
+
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-display text-foreground">Reservas</h1>
         <Dialog open={open} onOpenChange={setOpen}>
@@ -66,37 +119,184 @@ const Reservas = () => {
                   <SelectContent>{rooms.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2"><Label>Data</Label><Input type="date" value={form.date || ''} onChange={e => setForm({ ...form, date: e.target.value })} /></div>
+              <div className="space-y-2">
+                <Label>Data</Label>
+                <Input type="date" value={form.date || ''} onChange={e => setForm({ ...form, date: e.target.value })} />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2"><Label>Início</Label><Input type="time" value={form.start_time || ''} onChange={e => setForm({ ...form, start_time: e.target.value })} /></div>
                 <div className="space-y-2"><Label>Fim</Label><Input type="time" value={form.end_time || ''} onChange={e => setForm({ ...form, end_time: e.target.value })} /></div>
               </div>
               <div className="space-y-2"><Label>Valor Total</Label><Input type="number" value={form.total_value || ''} onChange={e => setForm({ ...form, total_value: Number(e.target.value) })} /></div>
+              <div className="space-y-2"><Label>Observações</Label><Input value={form.notes || ''} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
               <Button onClick={handleSave} className="w-full">Reservar</Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="rounded-lg border border-border/60 overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow><TableHead>Sala</TableHead><TableHead>Data</TableHead><TableHead>Horário</TableHead><TableHead>Valor</TableHead><TableHead>Status</TableHead></TableRow>
-          </TableHeader>
-          <TableBody>
-            {reservations.map((r: any) => (
-              <TableRow key={r.id}>
-                <TableCell className="font-medium">{r.rooms?.name}</TableCell>
-                <TableCell>{new Date(r.date).toLocaleDateString('pt-BR')}</TableCell>
-                <TableCell>{r.start_time?.slice(0,5)} - {r.end_time?.slice(0,5)}</TableCell>
-                <TableCell className="tabular-nums">R$ {Number(r.total_value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</TableCell>
-                <TableCell><Badge variant="outline" className={statusColors[r.status]}>{r.status}</Badge></TableCell>
-              </TableRow>
-            ))}
-            {reservations.length === 0 && <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhuma reserva registrada.</TableCell></TableRow>}
-          </TableBody>
-        </Table>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Calendar */}
+        <div className="lg:col-span-2">
+          <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+            {/* Month navigation */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <h2 className="text-base font-semibold capitalize">
+                {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
+              </h2>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Day headers */}
+            <div className="grid grid-cols-7 border-b border-border/40">
+              {dayNames.map(d => (
+                <div key={d} className="text-center text-xs font-medium text-muted-foreground py-2.5">{d}</div>
+              ))}
+            </div>
+
+            {/* Days grid */}
+            <div className="grid grid-cols-7">
+              {calendarDays.map((day, i) => {
+                const dateKey = format(day, 'yyyy-MM-dd');
+                const dayReservations = reservationsByDate[dateKey] || [];
+                const isCurrentMonth = isSameMonth(day, currentMonth);
+                const isSelected = selectedDate && isSameDay(day, selectedDate);
+                const today = isToday(day);
+
+                return (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedDate(day)}
+                    className={`
+                      relative min-h-[72px] p-1.5 border-b border-r border-border/20 text-left transition-colors
+                      ${!isCurrentMonth ? 'bg-muted/30 text-muted-foreground/50' : 'hover:bg-muted/40'}
+                      ${isSelected ? 'bg-primary/5 ring-1 ring-primary/30' : ''}
+                    `}
+                  >
+                    <span className={`
+                      text-xs font-medium inline-flex items-center justify-center w-6 h-6 rounded-full
+                      ${today ? 'bg-primary text-primary-foreground' : ''}
+                    `}>
+                      {format(day, 'd')}
+                    </span>
+                    {/* Reservation dots */}
+                    <div className="mt-0.5 space-y-0.5">
+                      {dayReservations.slice(0, 3).map((r: any) => (
+                        <div key={r.id} className={`text-[10px] leading-tight truncate rounded px-1 py-0.5 ${statusColors[r.status] || 'bg-muted'}`}>
+                          {r.rooms?.name}
+                        </div>
+                      ))}
+                      {dayReservations.length > 3 && (
+                        <span className="text-[10px] text-muted-foreground">+{dayReservations.length - 3}</span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Day detail sidebar */}
+        <div className="space-y-4">
+          <div className="rounded-xl border border-border/60 bg-card p-5">
+            <h3 className="text-sm font-semibold mb-3">
+              {selectedDate
+                ? format(selectedDate, "dd 'de' MMMM, yyyy", { locale: ptBR })
+                : 'Selecione um dia'}
+            </h3>
+
+            {selectedDate && selectedDayReservations.length === 0 && (
+              <div className="text-sm text-muted-foreground py-6 text-center">
+                <p>Nenhuma reserva neste dia.</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3 gap-1.5"
+                  onClick={() => {
+                    setForm({ ...form, date: format(selectedDate, 'yyyy-MM-dd'), status: 'pendente' });
+                    setOpen(true);
+                  }}
+                >
+                  <Plus className="h-3.5 w-3.5" /> Reservar
+                </Button>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              {selectedDayReservations.map((r: any) => (
+                <button
+                  key={r.id}
+                  onClick={() => setDetailOpen(r)}
+                  className="w-full text-left rounded-lg border border-border/40 p-3 hover:bg-muted/40 transition-colors space-y-1.5"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{r.rooms?.name}</span>
+                    <Badge variant="outline" className={`text-[10px] ${statusColors[r.status]}`}>{r.status}</Badge>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{r.start_time?.slice(0, 5)} - {r.end_time?.slice(0, 5)}</span>
+                    <span className="tabular-nums">R$ {Number(r.total_value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Legend */}
+          <div className="rounded-xl border border-border/60 bg-card p-4">
+            <p className="text-xs font-medium text-muted-foreground mb-2">Legenda</p>
+            <div className="space-y-1.5">
+              {Object.entries(statusDot).map(([status, color]) => (
+                <div key={status} className="flex items-center gap-2 text-xs">
+                  <div className={`h-2.5 w-2.5 rounded-full ${color}`} />
+                  <span className="capitalize">{status}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Reservation Detail Dialog */}
+      <Dialog open={!!detailOpen} onOpenChange={() => setDetailOpen(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Detalhes da Reserva</DialogTitle></DialogHeader>
+          {detailOpen && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div><span className="text-muted-foreground">Sala:</span><p className="font-medium">{detailOpen.rooms?.name}</p></div>
+                <div><span className="text-muted-foreground">Data:</span><p className="font-medium">{new Date(detailOpen.date).toLocaleDateString('pt-BR')}</p></div>
+                <div><span className="text-muted-foreground">Horário:</span><p className="font-medium">{detailOpen.start_time?.slice(0, 5)} - {detailOpen.end_time?.slice(0, 5)}</p></div>
+                <div><span className="text-muted-foreground">Valor:</span><p className="font-medium tabular-nums">R$ {Number(detailOpen.total_value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p></div>
+              </div>
+              <div>
+                <span className="text-sm text-muted-foreground">Status:</span>
+                <Badge variant="outline" className={`ml-2 ${statusColors[detailOpen.status]}`}>{detailOpen.status}</Badge>
+              </div>
+              {detailOpen.notes && (
+                <div><span className="text-sm text-muted-foreground">Observações:</span><p className="text-sm mt-1">{detailOpen.notes}</p></div>
+              )}
+              <div className="flex gap-2 pt-2">
+                {detailOpen.status === 'pendente' && (
+                  <>
+                    <Button size="sm" onClick={() => updateStatus(detailOpen.id, 'confirmada')} className="flex-1">Confirmar</Button>
+                    <Button size="sm" variant="destructive" onClick={() => updateStatus(detailOpen.id, 'cancelada')} className="flex-1">Cancelar</Button>
+                  </>
+                )}
+                {detailOpen.status === 'confirmada' && (
+                  <Button size="sm" variant="destructive" onClick={() => updateStatus(detailOpen.id, 'cancelada')} className="flex-1">Cancelar Reserva</Button>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
