@@ -565,11 +565,14 @@ export type Database = {
       reservations: {
         Row: {
           client_id: string | null
+          contract_id: string | null
           created_at: string
           date: string
           end_time: string
           id: string
           notes: string | null
+          payment_link: string | null
+          payment_status: string
           room_id: string
           start_time: string
           status: Database["public"]["Enums"]["reservation_status"]
@@ -579,11 +582,14 @@ export type Database = {
         }
         Insert: {
           client_id?: string | null
+          contract_id?: string | null
           created_at?: string
           date: string
           end_time: string
           id?: string
           notes?: string | null
+          payment_link?: string | null
+          payment_status?: string
           room_id: string
           start_time: string
           status?: Database["public"]["Enums"]["reservation_status"]
@@ -593,11 +599,14 @@ export type Database = {
         }
         Update: {
           client_id?: string | null
+          contract_id?: string | null
           created_at?: string
           date?: string
           end_time?: string
           id?: string
           notes?: string | null
+          payment_link?: string | null
+          payment_status?: string
           room_id?: string
           start_time?: string
           status?: Database["public"]["Enums"]["reservation_status"]
@@ -611,6 +620,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
             referencedColumns: ["id"]
           },
           {
