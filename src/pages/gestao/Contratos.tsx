@@ -243,7 +243,7 @@ const Contratos = () => {
                         <Button variant="ghost" size="sm" className="gap-1" onClick={() => copyLink(c.signing_token)}>
                           <Copy className="h-3.5 w-3.5" /> Link
                         </Button>
-                        <Button variant="ghost" size="sm" className="gap-1 text-green-600" onClick={() => sendContractWhatsApp(c)} title="Enviar via WhatsApp">
+                        <Button variant="ghost" size="sm" className="gap-1 text-primary" onClick={() => sendContractWhatsApp(c)} title="Enviar via WhatsApp">
                           <MessageCircle className="h-3.5 w-3.5" />
                         </Button>
                       </>
