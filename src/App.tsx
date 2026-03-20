@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Coworking from "./pages/Coworking";
 import Instituto from "./pages/Instituto";
 import Contato from "./pages/Contato";
+import ReservasPublicas from "./pages/ReservasPublicas";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import GestaoLayout from "./components/gestao/GestaoLayout";
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/coworking" element={<Coworking />} />
             <Route path="/instituto" element={<Instituto />} />
             <Route path="/contato" element={<Contato />} />
+            <Route path="/reservas" element={<ReservasPublicas />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/gestao" element={<GestaoLayout />}>
               <Route index element={<Dashboard />} />
