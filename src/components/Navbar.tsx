@@ -23,7 +23,7 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto flex items-center justify-between h-16 section-padding">
         <Link to="/" className="flex items-center gap-2.5">
           <img src={logoIntegra} alt="Integra" className="h-9 w-auto" />
-          <span className="font-display text-xl text-charcoal tracking-tight hidden sm:inline">Integra</span>
+          
         </Link>
 
         {/* Desktop */}

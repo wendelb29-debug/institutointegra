@@ -10,6 +10,7 @@ import Instituto from "./pages/Instituto";
 import Contato from "./pages/Contato";
 import ReservasPublicas from "./pages/ReservasPublicas";
 import Auth from "./pages/Auth";
+import AssinarContrato from "./pages/AssinarContrato";
 import NotFound from "./pages/NotFound";
 import GestaoLayout from "./components/gestao/GestaoLayout";
 import Dashboard from "./pages/gestao/Dashboard";
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/contato" element={<Contato />} />
             <Route path="/reservas" element={<ReservasPublicas />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/assinar" element={<AssinarContrato />} />
             <Route path="/gestao" element={<GestaoLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="salas" element={<Salas />} />
