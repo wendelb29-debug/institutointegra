@@ -8,10 +8,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, ChevronLeft, ChevronRight, Clock, MapPin } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Clock, Filter } from 'lucide-react';
 import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths,
-  format, isSameMonth, isSameDay, isToday, parseISO,
+  format, isSameMonth, isSameDay, isToday,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -30,24 +30,33 @@ const statusDot: Record<string, string> = {
 const Reservas = () => {
   const [reservations, setReservations] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
+  const [allRooms, setAllRooms] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState<any>(null);
   const [form, setForm] = useState<any>({ status: 'pendente' });
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [filterRoom, setFilterRoom] = useState<string>('all');
   const { toast } = useToast();
   const { user } = useAuth();
 
   const fetch_ = async () => {
-    const [rRes, roomRes] = await Promise.all([
+    const [rRes, roomRes, allRoomRes] = await Promise.all([
       supabase.from('reservations').select('*, rooms(name)').order('date', { ascending: true }),
       supabase.from('rooms').select('id, name, price_hour').eq('status', 'disponivel').order('name'),
+      supabase.from('rooms').select('id, name').order('name'),
     ]);
     setReservations(rRes.data || []);
     setRooms(roomRes.data || []);
+    setAllRooms(allRoomRes.data || []);
   };
 
   useEffect(() => { fetch_(); }, []);
+
+  const filteredReservations = useMemo(() => {
+    if (filterRoom === 'all') return reservations;
+    return reservations.filter(r => r.room_id === filterRoom);
+  }, [reservations, filterRoom]);
 
   const handleSave = async () => {
     if (!form.room_id || !form.date || !form.start_time || !form.end_time) return;
@@ -68,7 +77,6 @@ const Reservas = () => {
     fetch_();
   };
 
-  // Calendar grid
   const calendarDays = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
@@ -76,23 +84,18 @@ const Reservas = () => {
     const end = endOfWeek(monthEnd, { locale: ptBR });
     const days: Date[] = [];
     let day = start;
-    while (day <= end) {
-      days.push(day);
-      day = addDays(day, 1);
-    }
+    while (day <= end) { days.push(day); day = addDays(day, 1); }
     return days;
   }, [currentMonth]);
 
-  // Map reservations by date
   const reservationsByDate = useMemo(() => {
     const map: Record<string, any[]> = {};
-    reservations.forEach(r => {
-      const key = r.date;
-      if (!map[key]) map[key] = [];
-      map[key].push(r);
+    filteredReservations.forEach(r => {
+      if (!map[r.date]) map[r.date] = [];
+      map[r.date].push(r);
     });
     return map;
-  }, [reservations]);
+  }, [filteredReservations]);
 
   const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
@@ -102,44 +105,57 @@ const Reservas = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-display text-foreground">Reservas</h1>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2"><Plus className="h-4 w-4" /> Nova Reserva</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>Nova Reserva</DialogTitle></DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Sala</Label>
-                <Select value={form.room_id || ''} onValueChange={v => setForm({ ...form, room_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>{rooms.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}</SelectContent>
-                </Select>
+        <div className="flex items-center gap-3">
+          {/* Room filter */}
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={filterRoom} onValueChange={setFilterRoom}>
+              <SelectTrigger className="w-[180px] h-9">
+                <SelectValue placeholder="Filtrar por sala" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as salas</SelectItem>
+                {allRooms.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2"><Plus className="h-4 w-4" /> Nova Reserva</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Nova Reserva</DialogTitle></DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Sala</Label>
+                  <Select value={form.room_id || ''} onValueChange={v => setForm({ ...form, room_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                    <SelectContent>{rooms.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Data</Label>
+                  <Input type="date" value={form.date || ''} onChange={e => setForm({ ...form, date: e.target.value })} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2"><Label>Início</Label><Input type="time" value={form.start_time || ''} onChange={e => setForm({ ...form, start_time: e.target.value })} /></div>
+                  <div className="space-y-2"><Label>Fim</Label><Input type="time" value={form.end_time || ''} onChange={e => setForm({ ...form, end_time: e.target.value })} /></div>
+                </div>
+                <div className="space-y-2"><Label>Valor Total</Label><Input type="number" value={form.total_value || ''} onChange={e => setForm({ ...form, total_value: Number(e.target.value) })} /></div>
+                <div className="space-y-2"><Label>Observações</Label><Input value={form.notes || ''} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
+                <Button onClick={handleSave} className="w-full">Reservar</Button>
               </div>
-              <div className="space-y-2">
-                <Label>Data</Label>
-                <Input type="date" value={form.date || ''} onChange={e => setForm({ ...form, date: e.target.value })} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Início</Label><Input type="time" value={form.start_time || ''} onChange={e => setForm({ ...form, start_time: e.target.value })} /></div>
-                <div className="space-y-2"><Label>Fim</Label><Input type="time" value={form.end_time || ''} onChange={e => setForm({ ...form, end_time: e.target.value })} /></div>
-              </div>
-              <div className="space-y-2"><Label>Valor Total</Label><Input type="number" value={form.total_value || ''} onChange={e => setForm({ ...form, total_value: Number(e.target.value) })} /></div>
-              <div className="space-y-2"><Label>Observações</Label><Input value={form.notes || ''} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
-              <Button onClick={handleSave} className="w-full">Reservar</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Calendar */}
         <div className="lg:col-span-2">
           <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
-            {/* Month navigation */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
                 <ChevronLeft className="h-4 w-4" />
@@ -151,15 +167,11 @@ const Reservas = () => {
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
-
-            {/* Day headers */}
             <div className="grid grid-cols-7 border-b border-border/40">
               {dayNames.map(d => (
                 <div key={d} className="text-center text-xs font-medium text-muted-foreground py-2.5">{d}</div>
               ))}
             </div>
-
-            {/* Days grid */}
             <div className="grid grid-cols-7">
               {calendarDays.map((day, i) => {
                 const dateKey = format(day, 'yyyy-MM-dd');
@@ -184,7 +196,6 @@ const Reservas = () => {
                     `}>
                       {format(day, 'd')}
                     </span>
-                    {/* Reservation dots */}
                     <div className="mt-0.5 space-y-0.5">
                       {dayReservations.slice(0, 3).map((r: any) => (
                         <div key={r.id} className={`text-[10px] leading-tight truncate rounded px-1 py-0.5 ${statusColors[r.status] || 'bg-muted'}`}>
@@ -210,31 +221,19 @@ const Reservas = () => {
                 ? format(selectedDate, "dd 'de' MMMM, yyyy", { locale: ptBR })
                 : 'Selecione um dia'}
             </h3>
-
             {selectedDate && selectedDayReservations.length === 0 && (
               <div className="text-sm text-muted-foreground py-6 text-center">
                 <p>Nenhuma reserva neste dia.</p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-3 gap-1.5"
-                  onClick={() => {
-                    setForm({ ...form, date: format(selectedDate, 'yyyy-MM-dd'), status: 'pendente' });
-                    setOpen(true);
-                  }}
-                >
+                <Button variant="outline" size="sm" className="mt-3 gap-1.5"
+                  onClick={() => { setForm({ ...form, date: format(selectedDate, 'yyyy-MM-dd'), status: 'pendente' }); setOpen(true); }}>
                   <Plus className="h-3.5 w-3.5" /> Reservar
                 </Button>
               </div>
             )}
-
             <div className="space-y-3">
               {selectedDayReservations.map((r: any) => (
-                <button
-                  key={r.id}
-                  onClick={() => setDetailOpen(r)}
-                  className="w-full text-left rounded-lg border border-border/40 p-3 hover:bg-muted/40 transition-colors space-y-1.5"
-                >
+                <button key={r.id} onClick={() => setDetailOpen(r)}
+                  className="w-full text-left rounded-lg border border-border/40 p-3 hover:bg-muted/40 transition-colors space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">{r.rooms?.name}</span>
                     <Badge variant="outline" className={`text-[10px] ${statusColors[r.status]}`}>{r.status}</Badge>
@@ -247,8 +246,6 @@ const Reservas = () => {
               ))}
             </div>
           </div>
-
-          {/* Legend */}
           <div className="rounded-xl border border-border/60 bg-card p-4">
             <p className="text-xs font-medium text-muted-foreground mb-2">Legenda</p>
             <div className="space-y-1.5">
