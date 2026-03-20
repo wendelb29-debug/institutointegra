@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, ChevronLeft, ChevronRight, Clock, Filter } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Clock, Filter, MessageCircle, CreditCard, FileSignature } from 'lucide-react';
 import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths,
   format, isSameMonth, isSameDay, isToday,
@@ -19,6 +19,12 @@ const statusColors: Record<string, string> = {
   confirmada: 'bg-primary/10 text-primary border-primary/20',
   pendente: 'bg-accent/10 text-accent border-accent/20',
   cancelada: 'bg-destructive/10 text-destructive border-destructive/20',
+};
+
+const paymentColors: Record<string, string> = {
+  pendente: 'bg-accent/10 text-accent',
+  aprovado: 'bg-primary/10 text-primary',
+  recusado: 'bg-destructive/10 text-destructive',
 };
 
 const statusDot: Record<string, string> = {
@@ -60,21 +66,58 @@ const Reservas = () => {
 
   const handleSave = async () => {
     if (!form.room_id || !form.date || !form.start_time || !form.end_time) return;
+    const paymentLink = `https://paypal.me/integracoworking/${form.total_value || 0}`;
     const { error } = await supabase.from('reservations').insert({
       room_id: form.room_id, date: form.date, start_time: form.start_time,
-      end_time: form.end_time, status: form.status, user_id: user?.id,
+      end_time: form.end_time, status: 'pendente', user_id: user?.id,
       total_value: form.total_value || 0, notes: form.notes,
-    });
+      payment_status: 'pendente', payment_link: paymentLink,
+    } as any);
     if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return; }
     toast({ title: 'Reserva criada!' });
     setOpen(false); setForm({ status: 'pendente' }); fetch_();
   };
 
-  const updateStatus = async (id: string, status: string) => {
-    await supabase.from('reservations').update({ status } as any).eq('id', id);
-    toast({ title: `Reserva ${status}!` });
+  const updatePaymentStatus = async (id: string, status: string) => {
+    if (status === 'aprovado') {
+      // Payment approved → reservation stays pending until contract is signed
+      await supabase.from('reservations').update({ payment_status: 'aprovado' } as any).eq('id', id);
+      toast({ title: 'Pagamento aprovado!', description: 'Agora aguardando assinatura do contrato.' });
+    } else {
+      await supabase.from('reservations').update({ payment_status: status } as any).eq('id', id);
+      toast({ title: `Pagamento ${status}!` });
+    }
     setDetailOpen(null);
     fetch_();
+  };
+
+  const confirmReservation = async (id: string) => {
+    const reservation = reservations.find(r => r.id === id);
+    if (reservation?.payment_status !== 'aprovado') {
+      toast({ title: 'Pagamento pendente', description: 'A reserva só pode ser confirmada após pagamento aprovado.', variant: 'destructive' });
+      return;
+    }
+    await supabase.from('reservations').update({ status: 'confirmada' } as any).eq('id', id);
+    toast({ title: 'Reserva confirmada!' });
+    setDetailOpen(null);
+    fetch_();
+  };
+
+  const cancelReservation = async (id: string) => {
+    await supabase.from('reservations').update({ status: 'cancelada' } as any).eq('id', id);
+    toast({ title: 'Reserva cancelada!' });
+    setDetailOpen(null);
+    fetch_();
+  };
+
+  const sendWhatsApp = (reservation: any, type: 'payment' | 'contract') => {
+    const link = type === 'payment'
+      ? reservation.payment_link || `https://paypal.me/integracoworking/${reservation.total_value || 0}`
+      : `${window.location.origin}/assinar?token=${reservation.contract_id || ''}`;
+    const message = type === 'payment'
+      ? `Olá! Segue o link de pagamento da sua reserva na sala "${reservation.rooms?.name}":\n\n💳 Valor: R$ ${Number(reservation.total_value).toFixed(2)}\n🔗 Link: ${link}\n\nInstituto Integra`
+      : `Olá! Segue o link para assinatura do contrato:\n\n🔗 ${link}\n\nInstituto Integra`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const calendarDays = useMemo(() => {
@@ -98,23 +141,17 @@ const Reservas = () => {
   }, [filteredReservations]);
 
   const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-
-  const selectedDayReservations = selectedDate
-    ? reservationsByDate[format(selectedDate, 'yyyy-MM-dd')] || []
-    : [];
+  const selectedDayReservations = selectedDate ? reservationsByDate[format(selectedDate, 'yyyy-MM-dd')] || [] : [];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-display text-foreground">Reservas</h1>
         <div className="flex items-center gap-3">
-          {/* Room filter */}
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <Select value={filterRoom} onValueChange={setFilterRoom}>
-              <SelectTrigger className="w-[180px] h-9">
-                <SelectValue placeholder="Filtrar por sala" />
-              </SelectTrigger>
+              <SelectTrigger className="w-[180px] h-9"><SelectValue placeholder="Filtrar por sala" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas as salas</SelectItem>
                 {allRooms.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
@@ -143,9 +180,9 @@ const Reservas = () => {
                   <div className="space-y-2"><Label>Início</Label><Input type="time" value={form.start_time || ''} onChange={e => setForm({ ...form, start_time: e.target.value })} /></div>
                   <div className="space-y-2"><Label>Fim</Label><Input type="time" value={form.end_time || ''} onChange={e => setForm({ ...form, end_time: e.target.value })} /></div>
                 </div>
-                <div className="space-y-2"><Label>Valor Total</Label><Input type="number" value={form.total_value || ''} onChange={e => setForm({ ...form, total_value: Number(e.target.value) })} /></div>
+                <div className="space-y-2"><Label>Valor Total (R$)</Label><Input type="number" value={form.total_value || ''} onChange={e => setForm({ ...form, total_value: Number(e.target.value) })} /></div>
                 <div className="space-y-2"><Label>Observações</Label><Input value={form.notes || ''} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
-                <Button onClick={handleSave} className="w-full">Reservar</Button>
+                <Button onClick={handleSave} className="w-full">Criar Reserva</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -153,24 +190,15 @@ const Reservas = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendar */}
         <div className="lg:col-span-2">
           <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <h2 className="text-base font-semibold capitalize">
-                {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
-              </h2>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}><ChevronLeft className="h-4 w-4" /></Button>
+              <h2 className="text-base font-semibold capitalize">{format(currentMonth, 'MMMM yyyy', { locale: ptBR })}</h2>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}><ChevronRight className="h-4 w-4" /></Button>
             </div>
             <div className="grid grid-cols-7 border-b border-border/40">
-              {dayNames.map(d => (
-                <div key={d} className="text-center text-xs font-medium text-muted-foreground py-2.5">{d}</div>
-              ))}
+              {dayNames.map(d => <div key={d} className="text-center text-xs font-medium text-muted-foreground py-2.5">{d}</div>)}
             </div>
             <div className="grid grid-cols-7">
               {calendarDays.map((day, i) => {
@@ -179,32 +207,14 @@ const Reservas = () => {
                 const isCurrentMonth = isSameMonth(day, currentMonth);
                 const isSelected = selectedDate && isSameDay(day, selectedDate);
                 const today = isToday(day);
-
                 return (
-                  <button
-                    key={i}
-                    onClick={() => setSelectedDate(day)}
-                    className={`
-                      relative min-h-[72px] p-1.5 border-b border-r border-border/20 text-left transition-colors
-                      ${!isCurrentMonth ? 'bg-muted/30 text-muted-foreground/50' : 'hover:bg-muted/40'}
-                      ${isSelected ? 'bg-primary/5 ring-1 ring-primary/30' : ''}
-                    `}
-                  >
-                    <span className={`
-                      text-xs font-medium inline-flex items-center justify-center w-6 h-6 rounded-full
-                      ${today ? 'bg-primary text-primary-foreground' : ''}
-                    `}>
-                      {format(day, 'd')}
-                    </span>
+                  <button key={i} onClick={() => setSelectedDate(day)} className={`relative min-h-[72px] p-1.5 border-b border-r border-border/20 text-left transition-colors ${!isCurrentMonth ? 'bg-muted/30 text-muted-foreground/50' : 'hover:bg-muted/40'} ${isSelected ? 'bg-primary/5 ring-1 ring-primary/30' : ''}`}>
+                    <span className={`text-xs font-medium inline-flex items-center justify-center w-6 h-6 rounded-full ${today ? 'bg-primary text-primary-foreground' : ''}`}>{format(day, 'd')}</span>
                     <div className="mt-0.5 space-y-0.5">
                       {dayReservations.slice(0, 3).map((r: any) => (
-                        <div key={r.id} className={`text-[10px] leading-tight truncate rounded px-1 py-0.5 ${statusColors[r.status] || 'bg-muted'}`}>
-                          {r.rooms?.name}
-                        </div>
+                        <div key={r.id} className={`text-[10px] leading-tight truncate rounded px-1 py-0.5 ${statusColors[r.status] || 'bg-muted'}`}>{r.rooms?.name}</div>
                       ))}
-                      {dayReservations.length > 3 && (
-                        <span className="text-[10px] text-muted-foreground">+{dayReservations.length - 3}</span>
-                      )}
+                      {dayReservations.length > 3 && <span className="text-[10px] text-muted-foreground">+{dayReservations.length - 3}</span>}
                     </div>
                   </button>
                 );
@@ -213,13 +223,10 @@ const Reservas = () => {
           </div>
         </div>
 
-        {/* Day detail sidebar */}
         <div className="space-y-4">
           <div className="rounded-xl border border-border/60 bg-card p-5">
             <h3 className="text-sm font-semibold mb-3">
-              {selectedDate
-                ? format(selectedDate, "dd 'de' MMMM, yyyy", { locale: ptBR })
-                : 'Selecione um dia'}
+              {selectedDate ? format(selectedDate, "dd 'de' MMMM, yyyy", { locale: ptBR }) : 'Selecione um dia'}
             </h3>
             {selectedDate && selectedDayReservations.length === 0 && (
               <div className="text-sm text-muted-foreground py-6 text-center">
@@ -232,8 +239,7 @@ const Reservas = () => {
             )}
             <div className="space-y-3">
               {selectedDayReservations.map((r: any) => (
-                <button key={r.id} onClick={() => setDetailOpen(r)}
-                  className="w-full text-left rounded-lg border border-border/40 p-3 hover:bg-muted/40 transition-colors space-y-1.5">
+                <button key={r.id} onClick={() => setDetailOpen(r)} className="w-full text-left rounded-lg border border-border/40 p-3 hover:bg-muted/40 transition-colors space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">{r.rooms?.name}</span>
                     <Badge variant="outline" className={`text-[10px] ${statusColors[r.status]}`}>{r.status}</Badge>
@@ -241,6 +247,11 @@ const Reservas = () => {
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{r.start_time?.slice(0, 5)} - {r.end_time?.slice(0, 5)}</span>
                     <span className="tabular-nums">R$ {Number(r.total_value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="outline" className={`text-[9px] ${paymentColors[r.payment_status || 'pendente']}`}>
+                      <CreditCard className="h-2.5 w-2.5 mr-0.5" /> {r.payment_status || 'pendente'}
+                    </Badge>
                   </div>
                 </button>
               ))}
@@ -251,8 +262,7 @@ const Reservas = () => {
             <div className="space-y-1.5">
               {Object.entries(statusDot).map(([status, color]) => (
                 <div key={status} className="flex items-center gap-2 text-xs">
-                  <div className={`h-2.5 w-2.5 rounded-full ${color}`} />
-                  <span className="capitalize">{status}</span>
+                  <div className={`h-2.5 w-2.5 rounded-full ${color}`} /><span className="capitalize">{status}</span>
                 </div>
               ))}
             </div>
@@ -272,22 +282,54 @@ const Reservas = () => {
                 <div><span className="text-muted-foreground">Horário:</span><p className="font-medium">{detailOpen.start_time?.slice(0, 5)} - {detailOpen.end_time?.slice(0, 5)}</p></div>
                 <div><span className="text-muted-foreground">Valor:</span><p className="font-medium tabular-nums">R$ {Number(detailOpen.total_value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p></div>
               </div>
-              <div>
-                <span className="text-sm text-muted-foreground">Status:</span>
-                <Badge variant="outline" className={`ml-2 ${statusColors[detailOpen.status]}`}>{detailOpen.status}</Badge>
+
+              {/* Status badges */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <div>
+                  <span className="text-xs text-muted-foreground">Reserva:</span>
+                  <Badge variant="outline" className={`ml-2 ${statusColors[detailOpen.status]}`}>{detailOpen.status}</Badge>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground">Pagamento:</span>
+                  <Badge variant="outline" className={`ml-2 ${paymentColors[detailOpen.payment_status || 'pendente']}`}>{detailOpen.payment_status || 'pendente'}</Badge>
+                </div>
               </div>
-              {detailOpen.notes && (
-                <div><span className="text-sm text-muted-foreground">Observações:</span><p className="text-sm mt-1">{detailOpen.notes}</p></div>
-              )}
-              <div className="flex gap-2 pt-2">
-                {detailOpen.status === 'pendente' && (
-                  <>
-                    <Button size="sm" onClick={() => updateStatus(detailOpen.id, 'confirmada')} className="flex-1">Confirmar</Button>
-                    <Button size="sm" variant="destructive" onClick={() => updateStatus(detailOpen.id, 'cancelada')} className="flex-1">Cancelar</Button>
-                  </>
+
+              {detailOpen.notes && <div><span className="text-sm text-muted-foreground">Observações:</span><p className="text-sm mt-1">{detailOpen.notes}</p></div>}
+
+              {/* Flow info */}
+              <div className="bg-muted/30 rounded-lg p-3 text-xs text-muted-foreground space-y-1">
+                <p className="font-medium text-foreground text-sm">Fluxo de confirmação:</p>
+                <p className={detailOpen.payment_status === 'aprovado' ? 'text-primary' : ''}>
+                  {detailOpen.payment_status === 'aprovado' ? '✅' : '⬜'} 1. Pagamento aprovado
+                </p>
+                <p className={detailOpen.status === 'confirmada' ? 'text-primary' : ''}>
+                  {detailOpen.status === 'confirmada' ? '✅' : '⬜'} 2. Contrato assinado
+                </p>
+                <p className={detailOpen.status === 'confirmada' ? 'text-primary' : ''}>
+                  {detailOpen.status === 'confirmada' ? '✅' : '⬜'} 3. Reserva confirmada
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-col gap-2 pt-2">
+                {detailOpen.payment_status !== 'aprovado' && detailOpen.status !== 'cancelada' && (
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => updatePaymentStatus(detailOpen.id, 'aprovado')} className="flex-1 gap-1">
+                      <CreditCard className="h-3.5 w-3.5" /> Aprovar Pagamento
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => sendWhatsApp(detailOpen, 'payment')} className="gap-1">
+                      <MessageCircle className="h-3.5 w-3.5" /> Enviar Link
+                    </Button>
+                  </div>
                 )}
-                {detailOpen.status === 'confirmada' && (
-                  <Button size="sm" variant="destructive" onClick={() => updateStatus(detailOpen.id, 'cancelada')} className="flex-1">Cancelar Reserva</Button>
+                {detailOpen.payment_status === 'aprovado' && detailOpen.status === 'pendente' && (
+                  <Button size="sm" onClick={() => confirmReservation(detailOpen.id)} className="gap-1">
+                    <FileSignature className="h-3.5 w-3.5" /> Confirmar Reserva
+                  </Button>
+                )}
+                {detailOpen.status !== 'cancelada' && (
+                  <Button size="sm" variant="destructive" onClick={() => cancelReservation(detailOpen.id)}>Cancelar Reserva</Button>
                 )}
               </div>
             </div>

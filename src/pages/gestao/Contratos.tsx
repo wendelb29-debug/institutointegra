@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Link2, Copy, Eye, FileSignature, FileText, Download, Loader2 } from 'lucide-react';
+import { Plus, Link2, Copy, Eye, FileSignature, FileText, Download, MessageCircle } from 'lucide-react';
 
 const statusColors: Record<string, string> = {
   ativo: 'bg-primary/10 text-primary',
@@ -16,12 +16,10 @@ const statusColors: Record<string, string> = {
   pendente: 'bg-accent/10 text-accent',
 };
 
-// Generate contract HTML for PDF
 const generateContractHTML = (contract: any, signature?: any, type: 'minuta' | 'final' = 'minuta') => {
   const now = new Date();
   return `
-<!DOCTYPE html>
-<html><head><meta charset="utf-8">
+<!DOCTYPE html><html><head><meta charset="utf-8">
 <style>
   body { font-family: 'Georgia', serif; max-width: 700px; margin: 40px auto; padding: 40px; color: #1C1C1C; line-height: 1.7; }
   h1 { text-align: center; font-size: 22px; margin-bottom: 6px; letter-spacing: 1px; }
@@ -44,75 +42,51 @@ ${type === 'minuta' ? '<div class="draft-mark">MINUTA</div>' : ''}
 <div class="watermark">INTEGRA COWORKING</div>
 <h1>CONTRATO DE LOCAÇÃO DE ESPAÇO</h1>
 <p class="subtitle">${type === 'minuta' ? 'MINUTA — Documento preliminar' : 'CONTRATO ASSINADO DIGITALMENTE'}</p>
-
-<div class="section">
-  <div class="section-title">Dados do Contrato</div>
+<div class="section"><div class="section-title">Dados do Contrato</div>
   <div class="field"><span class="field-label">Sala:</span><span class="field-value">${contract.rooms?.name || '—'}</span></div>
   <div class="field"><span class="field-label">Data de Início:</span><span class="field-value">${contract.start_date ? new Date(contract.start_date).toLocaleDateString('pt-BR') : '—'}</span></div>
   <div class="field"><span class="field-label">Data de Fim:</span><span class="field-value">${contract.end_date ? new Date(contract.end_date).toLocaleDateString('pt-BR') : 'Indeterminado'}</span></div>
   <div class="field"><span class="field-label">Valor Mensal:</span><span class="field-value">R$ ${Number(contract.monthly_value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></div>
-  <div class="field"><span class="field-label">Status:</span><span class="field-value">${contract.status}</span></div>
 </div>
-
-<div class="section">
-  <div class="section-title">Dados do Locatário</div>
+<div class="section"><div class="section-title">Dados do Locatário</div>
   <div class="field"><span class="field-label">Nome:</span><span class="field-value">${contract.clients?.name || '—'}</span></div>
   <div class="field"><span class="field-label">CPF:</span><span class="field-value">${contract.clients?.cpf || '—'}</span></div>
   <div class="field"><span class="field-label">E-mail:</span><span class="field-value">${contract.clients?.email || '—'}</span></div>
 </div>
-
-<div class="section">
-  <div class="section-title">Termos e Condições</div>
-  <div class="terms">
-    <p><strong>CLÁUSULA 1ª</strong> — O LOCADOR cede ao LOCATÁRIO o uso do espaço identificado acima, mediante pagamento do valor mensal estipulado, com vencimento todo dia 05 de cada mês.</p>
-    <p><strong>CLÁUSULA 2ª</strong> — O LOCATÁRIO se compromete a utilizar o espaço exclusivamente para fins profissionais, respeitando as normas internas do estabelecimento.</p>
-    <p><strong>CLÁUSULA 3ª</strong> — O presente contrato poderá ser rescindido por qualquer das partes mediante aviso prévio de 30 (trinta) dias.</p>
-    <p><strong>CLÁUSULA 4ª</strong> — O LOCATÁRIO é responsável pela conservação do espaço locado e dos equipamentos disponibilizados.</p>
-    <p><strong>CLÁUSULA 5ª</strong> — Este contrato é firmado em caráter digital, com validade jurídica conforme a Lei nº 14.063/2020 e o Marco Civil da Internet.</p>
-    ${contract.notes ? `<p><strong>OBSERVAÇÕES:</strong> ${contract.notes}</p>` : ''}
-  </div>
-</div>
-
+<div class="section"><div class="section-title">Termos e Condições</div><div class="terms">
+  <p><strong>CLÁUSULA 1ª</strong> — O LOCADOR cede ao LOCATÁRIO o uso do espaço identificado acima, mediante pagamento do valor mensal estipulado.</p>
+  <p><strong>CLÁUSULA 2ª</strong> — O LOCATÁRIO se compromete a utilizar o espaço exclusivamente para fins profissionais.</p>
+  <p><strong>CLÁUSULA 3ª</strong> — O presente contrato poderá ser rescindido mediante aviso prévio de 30 dias.</p>
+  <p><strong>CLÁUSULA 4ª</strong> — O LOCATÁRIO é responsável pela conservação do espaço locado.</p>
+  <p><strong>CLÁUSULA 5ª</strong> — Este contrato é firmado em caráter digital, com validade jurídica conforme Lei nº 14.063/2020.</p>
+  ${contract.notes ? `<p><strong>OBSERVAÇÕES:</strong> ${contract.notes}</p>` : ''}
+</div></div>
 ${type === 'final' && signature ? `
-<div class="section">
-  <div class="section-title">Assinatura Digital</div>
-  <div class="signature-area">
-    <div class="field"><span class="field-label">Signatário:</span><span class="field-value">${signature.signer_name}</span></div>
-    <div class="field"><span class="field-label">CPF:</span><span class="field-value">${signature.signer_cpf || '—'}</span></div>
-    <div class="field"><span class="field-label">E-mail:</span><span class="field-value">${signature.signer_email || '—'}</span></div>
-    <div class="field"><span class="field-label">IP:</span><span class="field-value">${signature.ip_address || '—'}</span></div>
-    <div class="field"><span class="field-label">Geolocalização:</span><span class="field-value">${signature.geolocation || '—'}</span></div>
-    <div class="field"><span class="field-label">Data/Hora:</span><span class="field-value">${new Date(signature.signed_at).toLocaleString('pt-BR')}</span></div>
-    <div class="field"><span class="field-label">User Agent:</span><span class="field-value" style="font-size:10px;word-break:break-all">${signature.user_agent || '—'}</span></div>
-    ${signature.signature_data ? `<div style="margin-top:12px"><p style="font-size:12px;color:#666;margin-bottom:4px">Assinatura:</p><img class="signature-img" src="${signature.signature_data}" /></div>` : ''}
-    ${signature.photo_url ? `<div style="margin-top:12px"><p style="font-size:12px;color:#666;margin-bottom:4px">Foto do signatário:</p><img class="photo-img" src="${signature.photo_url}" /></div>` : ''}
-  </div>
-</div>
-` : `
-<div class="section">
-  <div class="section-title">Assinatura</div>
-  <p style="font-size:13px;color:#999;">Aguardando assinatura digital do locatário.</p>
+<div class="section"><div class="section-title">Assinatura Digital</div><div class="signature-area">
+  <div class="field"><span class="field-label">Signatário:</span><span class="field-value">${signature.signer_name}</span></div>
+  <div class="field"><span class="field-label">CPF:</span><span class="field-value">${signature.signer_cpf || '—'}</span></div>
+  <div class="field"><span class="field-label">IP:</span><span class="field-value">${signature.ip_address || '—'}</span></div>
+  <div class="field"><span class="field-label">Geolocalização:</span><span class="field-value">${signature.geolocation || '—'}</span></div>
+  <div class="field"><span class="field-label">Data/Hora:</span><span class="field-value">${new Date(signature.signed_at).toLocaleString('pt-BR')}</span></div>
+  ${signature.signature_data ? `<div style="margin-top:12px"><p style="font-size:12px;color:#666">Assinatura:</p><img class="signature-img" src="${signature.signature_data}" /></div>` : ''}
+  ${signature.photo_url ? `<div style="margin-top:12px"><p style="font-size:12px;color:#666">Foto:</p><img class="photo-img" src="${signature.photo_url}" /></div>` : ''}
+</div></div>` : `
+<div class="section"><div class="section-title">Assinatura</div>
+  <p style="font-size:13px;color:#999;">Aguardando assinatura digital.</p>
   <div style="margin-top:30px;border-bottom:1px solid #333;width:300px;"></div>
   <p style="font-size:11px;color:#666;margin-top:4px">${contract.clients?.name || 'Locatário'}</p>
-</div>
-`}
-
-<div class="footer">
-  <p>Documento gerado em ${now.toLocaleString('pt-BR')} — Integra Coworking</p>
-  <p>Este documento tem validade jurídica conforme legislação vigente.</p>
-</div>
+</div>`}
+<div class="footer"><p>Gerado em ${now.toLocaleString('pt-BR')} — Integra Coworking</p><p>Documento com validade jurídica conforme legislação vigente.</p></div>
 </body></html>`;
 };
 
 const downloadPDF = (html: string, filename: string) => {
-  const printWindow = window.open('', '_blank');
-  if (!printWindow) return;
-  printWindow.document.write(html);
-  printWindow.document.close();
-  printWindow.document.title = filename;
-  setTimeout(() => {
-    printWindow.print();
-  }, 500);
+  const w = window.open('', '_blank');
+  if (!w) return;
+  w.document.write(html);
+  w.document.close();
+  w.document.title = filename;
+  setTimeout(() => w.print(), 500);
 };
 
 const Contratos = () => {
@@ -127,7 +101,7 @@ const Contratos = () => {
 
   const fetch_ = async () => {
     const [cRes, clRes, rRes] = await Promise.all([
-      supabase.from('contracts').select('*, clients(name, email, cpf), rooms(name), contract_signatures(id, signed_at, signer_name)').order('created_at', { ascending: false }),
+      supabase.from('contracts').select('*, clients(name, email, cpf, phone), rooms(name), contract_signatures(id, signed_at, signer_name)').order('created_at', { ascending: false }),
       supabase.from('clients').select('id, name').order('name'),
       supabase.from('rooms').select('id, name').order('name'),
     ]);
@@ -143,7 +117,7 @@ const Contratos = () => {
     const { error } = await supabase.from('contracts').insert({
       client_id: form.client_id, room_id: form.room_id, start_date: form.start_date,
       end_date: form.end_date || null, monthly_value: form.monthly_value || 0,
-      status: form.status, notes: form.notes,
+      status: form.status, notes: form.notes, contract_type: form.contract_type || 'mensalista',
     });
     if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return; }
     toast({ title: 'Contrato criado!' });
@@ -152,13 +126,11 @@ const Contratos = () => {
 
   const generateSigningLink = async (contractId: string) => {
     const token = crypto.randomUUID();
-    const { error } = await supabase.from('contracts')
-      .update({ signing_token: token } as any)
-      .eq('id', contractId);
+    const { error } = await supabase.from('contracts').update({ signing_token: token } as any).eq('id', contractId);
     if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return; }
     const link = `${window.location.origin}/assinar?token=${token}`;
     await navigator.clipboard.writeText(link);
-    toast({ title: 'Link copiado!', description: 'Link de assinatura copiado para a área de transferência.' });
+    toast({ title: 'Link copiado!', description: 'Link de assinatura copiado.' });
     fetch_();
   };
 
@@ -168,33 +140,23 @@ const Contratos = () => {
     toast({ title: 'Link copiado!' });
   };
 
+  const sendContractWhatsApp = (contract: any) => {
+    const link = `${window.location.origin}/assinar?token=${contract.signing_token}`;
+    const msg = `Olá ${contract.clients?.name || ''}!\n\nSegue o link para assinatura do seu contrato:\n\n📄 ${link}\n\nInstituto Integra`;
+    const phone = contract.clients?.phone?.replace(/\D/g, '') || '';
+    window.open(`https://wa.me/${phone ? '55' + phone : ''}?text=${encodeURIComponent(msg)}`, '_blank');
+  };
+
   const viewSignature = async (contractId: string, contract: any) => {
-    const { data } = await supabase.from('contract_signatures')
-      .select('*')
-      .eq('contract_id', contractId)
-      .order('signed_at', { ascending: false })
-      .limit(1)
-      .single();
-    if (data) {
-      setSignatureDialog(data);
-      setSigContract(contract);
-    }
+    const { data } = await supabase.from('contract_signatures').select('*').eq('contract_id', contractId).order('signed_at', { ascending: false }).limit(1).single();
+    if (data) { setSignatureDialog(data); setSigContract(contract); }
   };
 
-  const downloadMinuta = (contract: any) => {
-    const html = generateContractHTML(contract, null, 'minuta');
-    downloadPDF(html, `Minuta_${contract.clients?.name || 'contrato'}.pdf`);
-  };
+  const downloadMinuta = (c: any) => downloadPDF(generateContractHTML(c, null, 'minuta'), `Minuta_${c.clients?.name || 'contrato'}.pdf`);
 
-  const downloadFinal = async (contract: any) => {
-    const { data: sig } = await supabase.from('contract_signatures')
-      .select('*')
-      .eq('contract_id', contract.id)
-      .order('signed_at', { ascending: false })
-      .limit(1)
-      .single();
-    const html = generateContractHTML(contract, sig, 'final');
-    downloadPDF(html, `Contrato_Assinado_${contract.clients?.name || 'contrato'}.pdf`);
+  const downloadFinal = async (c: any) => {
+    const { data: sig } = await supabase.from('contract_signatures').select('*').eq('contract_id', c.id).order('signed_at', { ascending: false }).limit(1).single();
+    downloadPDF(generateContractHTML(c, sig, 'final'), `Contrato_${c.clients?.name || 'contrato'}.pdf`);
   };
 
   return (
@@ -223,22 +185,21 @@ const Contratos = () => {
                 </Select>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Início</Label><Input type="date" value={form.start_date || ''} onChange={e => setForm({ ...form, start_date: e.target.value })} /></div>
-                <div className="space-y-2"><Label>Fim</Label><Input type="date" value={form.end_date || ''} onChange={e => setForm({ ...form, end_date: e.target.value })} /></div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Valor Mensal</Label><Input type="number" value={form.monthly_value || ''} onChange={e => setForm({ ...form, monthly_value: Number(e.target.value) })} /></div>
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select value={form.status} onValueChange={v => setForm({ ...form, status: v })}>
+                <div className="space-y-2"><Label>Tipo</Label>
+                  <Select value={form.contract_type || 'mensalista'} onValueChange={v => setForm({ ...form, contract_type: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pendente">Pendente</SelectItem>
-                      <SelectItem value="ativo">Ativo</SelectItem>
-                      <SelectItem value="encerrado">Encerrado</SelectItem>
+                      <SelectItem value="mensalista">Mensalista</SelectItem>
+                      <SelectItem value="diarista">Diarista</SelectItem>
+                      <SelectItem value="hora">Por Hora</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-2"><Label>Valor Mensal</Label><Input type="number" value={form.monthly_value || ''} onChange={e => setForm({ ...form, monthly_value: Number(e.target.value) })} /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2"><Label>Início</Label><Input type="date" value={form.start_date || ''} onChange={e => setForm({ ...form, start_date: e.target.value })} /></div>
+                <div className="space-y-2"><Label>Fim</Label><Input type="date" value={form.end_date || ''} onChange={e => setForm({ ...form, end_date: e.target.value })} /></div>
               </div>
               <div className="space-y-2"><Label>Observações</Label><Input value={form.notes || ''} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
               <Button onClick={handleSave} className="w-full">Salvar</Button>
@@ -251,12 +212,8 @@ const Contratos = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Sala</TableHead>
-              <TableHead>Início</TableHead>
-              <TableHead>Valor</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead>Cliente</TableHead><TableHead>Sala</TableHead><TableHead>Tipo</TableHead>
+              <TableHead>Valor</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -264,30 +221,32 @@ const Contratos = () => {
               <TableRow key={c.id}>
                 <TableCell className="font-medium">{c.clients?.name}</TableCell>
                 <TableCell>{c.rooms?.name}</TableCell>
-                <TableCell>{new Date(c.start_date).toLocaleDateString('pt-BR')}</TableCell>
+                <TableCell className="text-muted-foreground capitalize">{c.contract_type || 'mensalista'}</TableCell>
                 <TableCell className="tabular-nums">R$ {Number(c.monthly_value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</TableCell>
                 <TableCell><Badge variant="outline" className={statusColors[c.status]}>{c.status}</Badge></TableCell>
                 <TableCell>
                   <div className="flex items-center justify-end gap-1 flex-wrap">
-                    {/* PDF Minuta */}
-                    <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground" onClick={() => downloadMinuta(c)} title="Baixar minuta">
+                    <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground" onClick={() => downloadMinuta(c)} title="Minuta">
                       <FileText className="h-3.5 w-3.5" /> Minuta
                     </Button>
-
-                    {/* Signing actions */}
                     {c.signed_at ? (
                       <>
                         <Button variant="ghost" size="sm" className="gap-1 text-primary" onClick={() => viewSignature(c.id, c)}>
-                          <Eye className="h-3.5 w-3.5" /> Assinatura
+                          <Eye className="h-3.5 w-3.5" /> Ver
                         </Button>
-                        <Button variant="ghost" size="sm" className="gap-1 text-primary" onClick={() => downloadFinal(c)} title="Baixar contrato assinado">
-                          <Download className="h-3.5 w-3.5" /> PDF Final
+                        <Button variant="ghost" size="sm" className="gap-1 text-primary" onClick={() => downloadFinal(c)}>
+                          <Download className="h-3.5 w-3.5" /> PDF
                         </Button>
                       </>
                     ) : c.signing_token ? (
-                      <Button variant="ghost" size="sm" className="gap-1" onClick={() => copyLink(c.signing_token)}>
-                        <Copy className="h-3.5 w-3.5" /> Link
-                      </Button>
+                      <>
+                        <Button variant="ghost" size="sm" className="gap-1" onClick={() => copyLink(c.signing_token)}>
+                          <Copy className="h-3.5 w-3.5" /> Link
+                        </Button>
+                        <Button variant="ghost" size="sm" className="gap-1 text-green-600" onClick={() => sendContractWhatsApp(c)} title="Enviar via WhatsApp">
+                          <MessageCircle className="h-3.5 w-3.5" />
+                        </Button>
+                      </>
                     ) : (
                       <Button variant="ghost" size="sm" className="gap-1" onClick={() => generateSigningLink(c.id)}>
                         <Link2 className="h-3.5 w-3.5" /> Gerar link
@@ -317,24 +276,12 @@ const Contratos = () => {
                 <div><span className="text-muted-foreground">Data:</span><p className="font-medium">{new Date(signatureDialog.signed_at).toLocaleString('pt-BR')}</p></div>
               </div>
               {signatureDialog.photo_url && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Foto:</p>
-                  <img src={signatureDialog.photo_url} alt="Foto do signatário" className="w-full rounded-lg max-h-48 object-cover" />
-                </div>
+                <div><p className="text-sm text-muted-foreground mb-2">Foto:</p><img src={signatureDialog.photo_url} alt="Foto" className="w-full rounded-lg max-h-48 object-cover" /></div>
               )}
               {signatureDialog.signature_data && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Assinatura:</p>
-                  <div className="border border-border rounded-lg p-2 bg-white">
-                    <img src={signatureDialog.signature_data} alt="Assinatura" className="w-full" />
-                  </div>
-                </div>
+                <div><p className="text-sm text-muted-foreground mb-2">Assinatura:</p><div className="border border-border rounded-lg p-2 bg-white"><img src={signatureDialog.signature_data} alt="Assinatura" className="w-full" /></div></div>
               )}
-              {sigContract && (
-                <Button className="w-full gap-2" onClick={() => downloadFinal(sigContract)}>
-                  <Download className="h-4 w-4" /> Baixar Contrato Assinado (PDF)
-                </Button>
-              )}
+              {sigContract && <Button className="w-full gap-2" onClick={() => downloadFinal(sigContract)}><Download className="h-4 w-4" /> Baixar Contrato Assinado</Button>}
             </div>
           )}
         </DialogContent>
