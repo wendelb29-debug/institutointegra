@@ -121,15 +121,10 @@ export function ReservationSimulator() {
               </div>
             )}
 
-            {/* Price Display */}
-            <div className="bg-gradient-to-r from-primary/8 to-gold/8 rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Valor total estimado</p>
-                <p className="text-3xl sm:text-4xl font-display text-charcoal tabular-nums">
-                  {price > 0 ? `R$ ${price.toFixed(2)}` : '—'}
-                </p>
-              </div>
-              <Button asChild size="lg" disabled={!room || price === 0} className="gap-2 rounded-xl w-full sm:w-auto">
+            {/* CTA */}
+            <div className="bg-gradient-to-r from-primary/8 to-gold/8 rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p className="text-sm text-muted-foreground">Selecione a sala e o período para continuar</p>
+              <Button asChild size="lg" disabled={!room} className="gap-2 rounded-xl w-full sm:w-auto">
                 <Link to="/reservas">
                   Continuar reserva <ArrowRight className="h-4 w-4" />
                 </Link>

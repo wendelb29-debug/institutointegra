@@ -155,13 +155,10 @@ const Index = () => {
                             <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{room.description}</p>
                           )}
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
+                        <div className="flex items-center justify-between pt-1">
+                          <span className="flex items-center gap-1 text-sm text-muted-foreground">
                             <Users className="h-3.5 w-3.5" /> {room.capacity} pessoa{(room.capacity || 0) > 1 ? 's' : ''}
                           </span>
-                        </div>
-                        <div className="flex items-center justify-between pt-3 border-t border-border/30">
-                          <span className="text-lg font-semibold text-foreground tabular-nums">{getPrice(room)}</span>
                           <span className="text-xs text-primary font-medium flex items-center gap-0.5 group-hover:gap-2 transition-all duration-300">
                             Reservar <ChevronRight className="h-3 w-3" />
                           </span>
