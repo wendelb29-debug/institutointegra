@@ -355,6 +355,96 @@ export type Database = {
           },
         ]
       }
+      partner_costs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          num_partners: number
+          reference_month: string
+          total_value: number
+          value_per_partner: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          num_partners?: number
+          reference_month: string
+          total_value: number
+          value_per_partner?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          num_partners?: number
+          reference_month?: string
+          total_value?: number
+          value_per_partner?: number
+        }
+        Relationships: []
+      }
+      partner_invoices: {
+        Row: {
+          amount: number
+          cost_id: string
+          created_at: string
+          due_date: string
+          id: string
+          paid_at: string | null
+          partner_id: string
+          payment_link: string | null
+          reference_month: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          cost_id: string
+          created_at?: string
+          due_date: string
+          id?: string
+          paid_at?: string | null
+          partner_id: string
+          payment_link?: string | null
+          reference_month: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          cost_id?: string
+          created_at?: string
+          due_date?: string
+          id?: string
+          paid_at?: string | null
+          partner_id?: string
+          payment_link?: string | null
+          reference_month?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_invoices_cost_id_fkey"
+            columns: ["cost_id"]
+            isOneToOne: false
+            referencedRelation: "partner_costs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_invoices_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_rooms: {
         Row: {
           id: string
@@ -397,6 +487,7 @@ export type Database = {
           name: string
           phone: string | null
           share_percentage: number | null
+          status: string
           updated_at: string
           user_id: string | null
         }
@@ -408,6 +499,7 @@ export type Database = {
           name: string
           phone?: string | null
           share_percentage?: number | null
+          status?: string
           updated_at?: string
           user_id?: string | null
         }
@@ -419,6 +511,7 @@ export type Database = {
           name?: string
           phone?: string | null
           share_percentage?: number | null
+          status?: string
           updated_at?: string
           user_id?: string | null
         }
