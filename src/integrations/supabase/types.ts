@@ -53,39 +53,104 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_signatures: {
+        Row: {
+          contract_id: string
+          created_at: string
+          geolocation: string | null
+          id: string
+          ip_address: string | null
+          photo_url: string | null
+          signature_data: string | null
+          signed_at: string
+          signer_cpf: string | null
+          signer_email: string | null
+          signer_name: string
+          user_agent: string | null
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          geolocation?: string | null
+          id?: string
+          ip_address?: string | null
+          photo_url?: string | null
+          signature_data?: string | null
+          signed_at?: string
+          signer_cpf?: string | null
+          signer_email?: string | null
+          signer_name: string
+          user_agent?: string | null
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          geolocation?: string | null
+          id?: string
+          ip_address?: string | null
+          photo_url?: string | null
+          signature_data?: string | null
+          signed_at?: string
+          signer_cpf?: string | null
+          signer_email?: string | null
+          signer_name?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_signatures_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           client_id: string
+          contract_type: string | null
           created_at: string
           end_date: string | null
           id: string
           monthly_value: number | null
           notes: string | null
+          pdf_url: string | null
           room_id: string
+          signed_at: string | null
+          signing_token: string | null
           start_date: string
           status: Database["public"]["Enums"]["contract_status"]
           updated_at: string
         }
         Insert: {
           client_id: string
+          contract_type?: string | null
           created_at?: string
           end_date?: string | null
           id?: string
           monthly_value?: number | null
           notes?: string | null
+          pdf_url?: string | null
           room_id: string
+          signed_at?: string | null
+          signing_token?: string | null
           start_date: string
           status?: Database["public"]["Enums"]["contract_status"]
           updated_at?: string
         }
         Update: {
           client_id?: string
+          contract_type?: string | null
           created_at?: string
           end_date?: string | null
           id?: string
           monthly_value?: number | null
           notes?: string | null
+          pdf_url?: string | null
           room_id?: string
+          signed_at?: string | null
+          signing_token?: string | null
           start_date?: string
           status?: Database["public"]["Enums"]["contract_status"]
           updated_at?: string
