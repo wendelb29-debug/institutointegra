@@ -47,7 +47,11 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 relative">
+      <Link to="/" className="absolute top-6 left-6 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <ArrowLeft className="h-4 w-4" />
+        Voltar ao início
+      </Link>
       <Card className="w-full max-w-md shadow-lg border-border/50">
         <CardHeader className="text-center space-y-3 pb-2">
           <div className="mx-auto">
