@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, DoorOpen, Users, FileText, DollarSign,
-  Wrench, CalendarDays, GraduationCap, LogOut, Building2
+  Wrench, CalendarDays, GraduationCap, LogOut, Building2, MessageCircle
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -26,6 +26,7 @@ const mainItems = [
 
 const institutoItems = [
   { title: 'Instituto', url: '/gestao/instituto-gestao', icon: GraduationCap },
+  { title: 'WhatsApp', url: '/gestao/whatsapp', icon: MessageCircle },
 ];
 
 export function AppSidebar() {
