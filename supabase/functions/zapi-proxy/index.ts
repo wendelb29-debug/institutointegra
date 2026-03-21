@@ -10,16 +10,17 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const ZAPI_INSTANCE_ID = Deno.env.get('ZAPI_INSTANCE_ID');
-  const ZAPI_TOKEN = Deno.env.get('ZAPI_TOKEN');
-  const ZAPI_CLIENT_TOKEN = Deno.env.get('ZAPI_CLIENT_TOKEN');
-
-  const needsConfig = !ZAPI_INSTANCE_ID || !ZAPI_TOKEN;
-
   try {
-    const { action, phone, message } = await req.json();
-    const baseUrl = `https://api.z-api.io/instances/${ZAPI_INSTANCE_ID}/token/${ZAPI_TOKEN}`;
+    const { action, phone, message, instanceId, token, clientToken } = await req.json();
 
+    // Use per-psychologist credentials if provided, otherwise fall back to global secrets
+    const ZAPI_INSTANCE_ID = instanceId || Deno.env.get('ZAPI_INSTANCE_ID');
+    const ZAPI_TOKEN = token || Deno.env.get('ZAPI_TOKEN');
+    const ZAPI_CLIENT_TOKEN = clientToken || Deno.env.get('ZAPI_CLIENT_TOKEN');
+
+    const needsConfig = !ZAPI_INSTANCE_ID || !ZAPI_TOKEN;
+
+    const baseUrl = `https://api.z-api.io/instances/${ZAPI_INSTANCE_ID}/token/${ZAPI_TOKEN}`;
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (ZAPI_CLIENT_TOKEN) {
       headers['Client-Token'] = ZAPI_CLIENT_TOKEN;
@@ -35,7 +36,6 @@ serve(async (req) => {
       const res = await fetch(`${baseUrl}/status`, { method: 'GET', headers });
       const data = await res.json();
       console.log('Z-API status response:', JSON.stringify(data));
-      
       const connected = data?.connected === true || data?.status === 'CONNECTED';
 
       return new Response(JSON.stringify({ connected, raw: data }), {
@@ -51,12 +51,9 @@ serve(async (req) => {
     }
 
     if (action === 'qr') {
-      // Z-API uses GET for QR code endpoints
       const res = await fetch(`${baseUrl}/qr-code/image`, { method: 'GET', headers });
       const data = await res.json();
       console.log('Z-API QR response:', JSON.stringify(data));
-
-      // The response has a "value" field with base64 image
       const qr = data?.value || data?.qrcode || data?.image || null;
 
       return new Response(JSON.stringify({ qr }), {
@@ -65,10 +62,7 @@ serve(async (req) => {
     }
 
     if (action === 'disconnect') {
-      const res = await fetch(`${baseUrl}/disconnect`, {
-        method: 'DELETE',
-        headers,
-      });
+      const res = await fetch(`${baseUrl}/disconnect`, { method: 'DELETE', headers });
       const data = await res.json();
 
       return new Response(JSON.stringify({ success: true, data }), {
