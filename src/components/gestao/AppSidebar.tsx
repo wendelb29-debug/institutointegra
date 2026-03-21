@@ -26,6 +26,7 @@ const mainItems = [
 
 const institutoItems = [
   { title: 'Instituto', url: '/gestao/instituto-gestao', icon: GraduationCap },
+  { title: 'WhatsApp', url: '/gestao/whatsapp', icon: MessageCircle },
 ];
 
 export function AppSidebar() {
