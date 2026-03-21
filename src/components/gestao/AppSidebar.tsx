@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, DoorOpen, Users, FileText, DollarSign,
-  Wrench, CalendarDays, GraduationCap, LogOut, Building2, MessageCircle
+  Wrench, CalendarDays, GraduationCap, LogOut, Building2, MessageCircle, Stethoscope
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -26,6 +26,7 @@ const mainItems = [
 
 const institutoItems = [
   { title: 'Instituto', url: '/gestao/instituto-gestao', icon: GraduationCap },
+  { title: 'Agenda', url: '/gestao/agenda', icon: Stethoscope },
   { title: 'WhatsApp', url: '/gestao/whatsapp', icon: MessageCircle },
 ];
 

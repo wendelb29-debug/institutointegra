@@ -23,6 +23,7 @@ import Manutencao from "./pages/gestao/Manutencao";
 import Reservas from "./pages/gestao/Reservas";
 import InstitutoGestao from "./pages/gestao/InstitutoGestao";
 import WhatsAppGestao from "./pages/gestao/WhatsApp";
+import Agenda from "./pages/gestao/Agenda";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="reservas" element={<Reservas />} />
               <Route path="instituto-gestao" element={<InstitutoGestao />} />
               <Route path="whatsapp" element={<WhatsAppGestao />} />
+              <Route path="agenda" element={<Agenda />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

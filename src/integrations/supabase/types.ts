@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          appointment_date: string
+          confirmation_sent: boolean
+          created_at: string
+          end_time: string
+          id: string
+          notes: string | null
+          patient_id: string
+          psychologist_id: string
+          reminder_sent: boolean
+          start_time: string
+          status: Database["public"]["Enums"]["appointment_status"]
+          updated_at: string
+        }
+        Insert: {
+          appointment_date: string
+          confirmation_sent?: boolean
+          created_at?: string
+          end_time: string
+          id?: string
+          notes?: string | null
+          patient_id: string
+          psychologist_id: string
+          reminder_sent?: boolean
+          start_time: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+          updated_at?: string
+        }
+        Update: {
+          appointment_date?: string
+          confirmation_sent?: boolean
+          created_at?: string
+          end_time?: string
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          psychologist_id?: string
+          reminder_sent?: boolean
+          start_time?: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           address: string | null
@@ -565,6 +618,42 @@ export type Database = {
         }
         Relationships: []
       }
+      patients: {
+        Row: {
+          cpf: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string
+          psychologist_id: string
+          updated_at: string
+        }
+        Insert: {
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone: string
+          psychologist_id: string
+          updated_at?: string
+        }
+        Update: {
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string
+          psychologist_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null
@@ -607,6 +696,39 @@ export type Database = {
           updated_at?: string
           user_id?: string
           zip_code?: string | null
+        }
+        Relationships: []
+      }
+      psychologist_whatsapp_config: {
+        Row: {
+          client_token: string | null
+          created_at: string
+          id: string
+          instance_id: string
+          is_connected: boolean
+          psychologist_id: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          client_token?: string | null
+          created_at?: string
+          id?: string
+          instance_id: string
+          is_connected?: boolean
+          psychologist_id: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          client_token?: string | null
+          created_at?: string
+          id?: string
+          instance_id?: string
+          is_connected?: boolean
+          psychologist_id?: string
+          token?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -764,6 +886,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "socio" | "cliente"
+      appointment_status: "agendado" | "confirmado" | "cancelado" | "realizado"
       contract_status: "ativo" | "encerrado" | "pendente"
       maintenance_status: "pendente" | "em_andamento" | "concluido"
       reservation_status: "confirmada" | "pendente" | "cancelada"
@@ -898,6 +1021,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "socio", "cliente"],
+      appointment_status: ["agendado", "confirmado", "cancelado", "realizado"],
       contract_status: ["ativo", "encerrado", "pendente"],
       maintenance_status: ["pendente", "em_andamento", "concluido"],
       reservation_status: ["confirmada", "pendente", "cancelada"],
