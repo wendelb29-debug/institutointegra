@@ -18,6 +18,9 @@ serve(async (req) => {
     const ZAPI_TOKEN = token || Deno.env.get('ZAPI_TOKEN');
     const ZAPI_CLIENT_TOKEN = clientToken || Deno.env.get('ZAPI_CLIENT_TOKEN');
 
+    console.log('Using ZAPI_INSTANCE_ID:', ZAPI_INSTANCE_ID);
+    console.log('Using ZAPI_TOKEN:', ZAPI_TOKEN ? ZAPI_TOKEN.substring(0, 6) + '...' : 'NOT SET');
+
     const needsConfig = !ZAPI_INSTANCE_ID || !ZAPI_TOKEN;
 
     const baseUrl = `https://api.z-api.io/instances/${ZAPI_INSTANCE_ID}/token/${ZAPI_TOKEN}`;
