@@ -90,7 +90,10 @@ const Manutencao = () => {
   };
 
   const handleSave = async () => {
-    if (!form.title) return;
+    if (!form.title || !form.description || !form.room_id || !form.priority || !form.assigned_to) {
+      toast({ title: 'Preencha todos os campos', description: 'Todos os campos são obrigatórios.', variant: 'destructive' });
+      return;
+    }
 
     if (editItem) {
       // Update existing
