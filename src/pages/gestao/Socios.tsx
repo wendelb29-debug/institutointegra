@@ -45,7 +45,10 @@ const Socios = () => {
 
   // Save partner
   const handleSavePartner = async () => {
-    if (!form.name) return;
+    if (!form.name || !form.email || !form.phone || !form.cpf) {
+      toast({ title: 'Preencha todos os campos', description: 'Nome, e-mail, telefone e CPF são obrigatórios.', variant: 'destructive' });
+      return;
+    }
     if (editing) {
       const { error } = await supabase.from('partners').update({
         name: form.name, email: form.email, phone: form.phone, cpf: form.cpf,
