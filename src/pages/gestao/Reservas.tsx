@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, ChevronLeft, ChevronRight, Clock, Filter, MessageCircle, CreditCard, FileSignature } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Clock, Filter, MessageCircle, CreditCard, FileSignature, User } from 'lucide-react';
 import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths,
   format, isSameMonth, isSameDay, isToday,
@@ -27,10 +27,24 @@ const paymentColors: Record<string, string> = {
   recusado: 'bg-destructive/10 text-destructive',
 };
 
-const statusDot: Record<string, string> = {
-  confirmada: 'bg-primary',
-  pendente: 'bg-accent',
-  cancelada: 'bg-destructive',
+// Determine the dominant type of reservations for a day
+const getDayColor = (dayReservations: any[], rooms: any[]): string => {
+  if (!dayReservations || dayReservations.length === 0) return 'bg-white';
+  
+  // Check room types for the reservations
+  const types = dayReservations.map(r => {
+    const room = rooms.find((rm: any) => rm.id === r.room_id);
+    return room?.type || 'hora';
+  });
+
+  const hasDaily = types.includes('diaria');
+  const hasHourly = types.includes('hora');
+  const hasMonthly = types.includes('mensal');
+
+  // Priority: diaria (green) > mensal (blue) > hora (yellow)
+  if (hasDaily || hasMonthly) return 'bg-emerald-100 border-emerald-300';
+  if (hasHourly) return 'bg-amber-100 border-amber-300';
+  return 'bg-emerald-100 border-emerald-300';
 };
 
 const Reservas = () => {
@@ -48,9 +62,9 @@ const Reservas = () => {
 
   const fetch_ = async () => {
     const [rRes, roomRes, allRoomRes] = await Promise.all([
-      supabase.from('reservations').select('*, rooms(name)').order('date', { ascending: true }),
-      supabase.from('rooms').select('id, name, price_hour').eq('status', 'disponivel').order('name'),
-      supabase.from('rooms').select('id, name').order('name'),
+      supabase.from('reservations').select('*, rooms(name, type)').order('date', { ascending: true }),
+      supabase.from('rooms').select('id, name, price_hour, type').eq('status', 'disponivel').order('name'),
+      supabase.from('rooms').select('id, name, type').order('name'),
     ]);
     setReservations(rRes.data || []);
     setRooms(roomRes.data || []);
@@ -80,7 +94,6 @@ const Reservas = () => {
 
   const updatePaymentStatus = async (id: string, status: string) => {
     if (status === 'aprovado') {
-      // Payment approved → reservation stays pending until contract is signed
       await supabase.from('reservations').update({ payment_status: 'aprovado' } as any).eq('id', id);
       toast({ title: 'Pagamento aprovado!', description: 'Agora aguardando assinatura do contrato.' });
     } else {
@@ -191,7 +204,7 @@ const Reservas = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+          <div className="rounded-xl border border-border/60 bg-card overflow-hidden shadow-sm">
             <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}><ChevronLeft className="h-4 w-4" /></Button>
               <h2 className="text-base font-semibold capitalize">{format(currentMonth, 'MMMM yyyy', { locale: ptBR })}</h2>
@@ -207,31 +220,80 @@ const Reservas = () => {
                 const isCurrentMonth = isSameMonth(day, currentMonth);
                 const isSelected = selectedDate && isSameDay(day, selectedDate);
                 const today = isToday(day);
+                const dayColor = isCurrentMonth ? getDayColor(dayReservations, allRooms) : '';
+                const hasReservations = dayReservations.length > 0;
+
                 return (
-                  <button key={i} onClick={() => setSelectedDate(day)} className={`relative min-h-[72px] p-1.5 border-b border-r border-border/20 text-left transition-colors ${!isCurrentMonth ? 'bg-muted/30 text-muted-foreground/50' : 'hover:bg-muted/40'} ${isSelected ? 'bg-primary/5 ring-1 ring-primary/30' : ''}`}>
-                    <span className={`text-xs font-medium inline-flex items-center justify-center w-6 h-6 rounded-full ${today ? 'bg-primary text-primary-foreground' : ''}`}>{format(day, 'd')}</span>
-                    <div className="mt-0.5 space-y-0.5">
-                      {dayReservations.slice(0, 3).map((r: any) => (
-                        <div key={r.id} className={`text-[10px] leading-tight truncate rounded px-1 py-0.5 ${statusColors[r.status] || 'bg-muted'}`}>{r.rooms?.name}</div>
-                      ))}
-                      {dayReservations.length > 3 && <span className="text-[10px] text-muted-foreground">+{dayReservations.length - 3}</span>}
-                    </div>
+                  <button
+                    key={i}
+                    onClick={() => setSelectedDate(day)}
+                    className={`
+                      relative min-h-[80px] p-2 border-b border-r border-border/20 text-left transition-all duration-200
+                      ${!isCurrentMonth ? 'bg-muted/20 text-muted-foreground/40' : ''}
+                      ${isCurrentMonth && !hasReservations ? 'bg-white hover:bg-muted/20' : ''}
+                      ${isCurrentMonth && hasReservations ? `${dayColor} hover:opacity-80` : ''}
+                      ${isSelected ? 'ring-2 ring-primary/50 z-10' : ''}
+                    `}
+                  >
+                    <span className={`
+                      text-xs font-semibold inline-flex items-center justify-center w-7 h-7 rounded-full
+                      ${today ? 'bg-primary text-primary-foreground' : ''}
+                    `}>
+                      {format(day, 'd')}
+                    </span>
+
+                    {hasReservations && isCurrentMonth && (
+                      <div className="mt-1 space-y-0.5">
+                        <div className="text-[10px] font-semibold text-foreground/80">
+                          {dayReservations.length} reserva{dayReservations.length > 1 ? 's' : ''}
+                        </div>
+                        {dayReservations.slice(0, 2).map((r: any) => (
+                          <div key={r.id} className="text-[9px] leading-tight truncate text-foreground/60 font-medium">
+                            {r.rooms?.name}
+                          </div>
+                        ))}
+                        {dayReservations.length > 2 && (
+                          <span className="text-[9px] text-foreground/50 font-medium">+{dayReservations.length - 2} mais</span>
+                        )}
+                      </div>
+                    )}
                   </button>
                 );
               })}
             </div>
           </div>
+
+          {/* Legend */}
+          <div className="flex items-center gap-6 mt-3 px-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="h-4 w-4 rounded border border-border bg-white" />
+              <span>Livre</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="h-4 w-4 rounded bg-emerald-100 border border-emerald-300" />
+              <span>Diária / Mensal</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="h-4 w-4 rounded bg-amber-100 border border-amber-300" />
+              <span>Por Hora</span>
+            </div>
+          </div>
         </div>
 
+        {/* Side panel */}
         <div className="space-y-4">
-          <div className="rounded-xl border border-border/60 bg-card p-5">
-            <h3 className="text-sm font-semibold mb-3">
+          <div className="rounded-xl border border-border/60 bg-card p-5 shadow-sm">
+            <h3 className="text-sm font-semibold mb-4">
               {selectedDate ? format(selectedDate, "dd 'de' MMMM, yyyy", { locale: ptBR }) : 'Selecione um dia'}
             </h3>
             {selectedDate && selectedDayReservations.length === 0 && (
-              <div className="text-sm text-muted-foreground py-6 text-center">
-                <p>Nenhuma reserva neste dia.</p>
-                <Button variant="outline" size="sm" className="mt-3 gap-1.5"
+              <div className="text-sm text-muted-foreground py-8 text-center">
+                <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                  <Clock className="h-5 w-5 text-muted-foreground/50" />
+                </div>
+                <p className="font-medium">Nenhuma reserva neste dia</p>
+                <p className="text-xs mt-1">Este dia está livre para novas reservas.</p>
+                <Button variant="outline" size="sm" className="mt-4 gap-1.5"
                   onClick={() => { setForm({ ...form, date: format(selectedDate, 'yyyy-MM-dd'), status: 'pendente' }); setOpen(true); }}>
                   <Plus className="h-3.5 w-3.5" /> Reservar
                 </Button>
@@ -239,31 +301,30 @@ const Reservas = () => {
             )}
             <div className="space-y-3">
               {selectedDayReservations.map((r: any) => (
-                <button key={r.id} onClick={() => setDetailOpen(r)} className="w-full text-left rounded-lg border border-border/40 p-3 hover:bg-muted/40 transition-colors space-y-1.5">
+                <button key={r.id} onClick={() => setDetailOpen(r)} className="w-full text-left rounded-lg border border-border/40 p-4 hover:bg-muted/40 transition-colors space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{r.rooms?.name}</span>
+                    <span className="text-sm font-semibold">{r.rooms?.name}</span>
                     <Badge variant="outline" className={`text-[10px] ${statusColors[r.status]}`}>{r.status}</Badge>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{r.start_time?.slice(0, 5)} - {r.end_time?.slice(0, 5)}</span>
-                    <span className="tabular-nums">R$ {Number(r.total_value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {r.start_time?.slice(0, 5)} - {r.end_time?.slice(0, 5)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <User className="h-3 w-3" />
+                    <span>{r.notes || 'Sem responsável informado'}</span>
                   </div>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge variant="outline" className={`text-[9px] ${paymentColors[r.payment_status || 'pendente']}`}>
                       <CreditCard className="h-2.5 w-2.5 mr-0.5" /> {r.payment_status || 'pendente'}
                     </Badge>
+                    <Badge variant="outline" className="text-[9px]">
+                      R$ {Number(r.total_value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </Badge>
                   </div>
                 </button>
-              ))}
-            </div>
-          </div>
-          <div className="rounded-xl border border-border/60 bg-card p-4">
-            <p className="text-xs font-medium text-muted-foreground mb-2">Legenda</p>
-            <div className="space-y-1.5">
-              {Object.entries(statusDot).map(([status, color]) => (
-                <div key={status} className="flex items-center gap-2 text-xs">
-                  <div className={`h-2.5 w-2.5 rounded-full ${color}`} /><span className="capitalize">{status}</span>
-                </div>
               ))}
             </div>
           </div>
@@ -283,7 +344,6 @@ const Reservas = () => {
                 <div><span className="text-muted-foreground">Valor:</span><p className="font-medium tabular-nums">R$ {Number(detailOpen.total_value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p></div>
               </div>
 
-              {/* Status badges */}
               <div className="flex items-center gap-3 flex-wrap">
                 <div>
                   <span className="text-xs text-muted-foreground">Reserva:</span>
@@ -297,7 +357,6 @@ const Reservas = () => {
 
               {detailOpen.notes && <div><span className="text-sm text-muted-foreground">Observações:</span><p className="text-sm mt-1">{detailOpen.notes}</p></div>}
 
-              {/* Flow info */}
               <div className="bg-muted/30 rounded-lg p-3 text-xs text-muted-foreground space-y-1">
                 <p className="font-medium text-foreground text-sm">Fluxo de confirmação:</p>
                 <p className={detailOpen.payment_status === 'aprovado' ? 'text-primary' : ''}>
@@ -311,7 +370,6 @@ const Reservas = () => {
                 </p>
               </div>
 
-              {/* Actions */}
               <div className="flex flex-col gap-2 pt-2">
                 {detailOpen.payment_status !== 'aprovado' && detailOpen.status !== 'cancelada' && (
                   <div className="flex gap-2">
