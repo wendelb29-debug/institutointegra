@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 serve(async (req) => {
@@ -32,8 +32,10 @@ serve(async (req) => {
         });
       }
 
-      const res = await fetch(`${baseUrl}/status`, { headers });
+      const res = await fetch(`${baseUrl}/status`, { method: 'GET', headers });
       const data = await res.json();
+      console.log('Z-API status response:', JSON.stringify(data));
+      
       const connected = data?.connected === true || data?.status === 'CONNECTED';
 
       return new Response(JSON.stringify({ connected, raw: data }), {
@@ -49,17 +51,22 @@ serve(async (req) => {
     }
 
     if (action === 'qr') {
-      const res = await fetch(`${baseUrl}/qr-code/image`, { headers });
+      // Z-API uses GET for QR code endpoints
+      const res = await fetch(`${baseUrl}/qr-code/image`, { method: 'GET', headers });
       const data = await res.json();
+      console.log('Z-API QR response:', JSON.stringify(data));
 
-      return new Response(JSON.stringify({ qr: data?.value || null }), {
+      // The response has a "value" field with base64 image
+      const qr = data?.value || data?.qrcode || data?.image || null;
+
+      return new Response(JSON.stringify({ qr }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     if (action === 'disconnect') {
       const res = await fetch(`${baseUrl}/disconnect`, {
-        method: 'POST',
+        method: 'DELETE',
         headers,
       });
       const data = await res.json();
@@ -95,6 +102,7 @@ serve(async (req) => {
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : 'Erro desconhecido';
+    console.error('Z-API proxy error:', msg);
     return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
