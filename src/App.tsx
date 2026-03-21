@@ -23,6 +23,7 @@ import Manutencao from "./pages/gestao/Manutencao";
 import Reservas from "./pages/gestao/Reservas";
 import InstitutoGestao from "./pages/gestao/InstitutoGestao";
 import WhatsAppGestao from "./pages/gestao/WhatsApp";
+import Agenda from "./pages/gestao/Agenda";
 
 const queryClient = new QueryClient();
 
