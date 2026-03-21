@@ -67,11 +67,23 @@ const WhatsApp = () => {
     }
   }, []);
 
+  // Auto-refresh: check status every 10s, and auto-fetch QR when disconnected
   useEffect(() => {
     checkStatus();
-    const interval = setInterval(checkStatus, 10000);
+    const interval = setInterval(async () => {
+      await checkStatus();
+    }, 10000);
     return () => clearInterval(interval);
   }, [checkStatus]);
+
+  // Auto-fetch QR code every 30s when disconnected and configured
+  useEffect(() => {
+    if (status === 'disconnected' && isConfigured) {
+      requestQrCode();
+      const qrInterval = setInterval(requestQrCode, 30000);
+      return () => clearInterval(qrInterval);
+    }
+  }, [status, isConfigured]);
 
   const requestQrCode = async () => {
     setStatus('connecting');
