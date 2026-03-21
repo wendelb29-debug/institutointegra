@@ -164,7 +164,7 @@ const Agenda = () => {
   };
 
   const updateAppointmentStatus = async (id: string, status: string) => {
-    const { error } = await supabase.from('appointments').update({ status }).eq('id', id);
+    const { error } = await supabase.from('appointments').update({ status } as any).eq('id', id);
     if (error) {
       toast({ title: 'Erro', description: 'Erro ao atualizar status.', variant: 'destructive' });
     } else {
