@@ -53,8 +53,9 @@ serve(async (req) => {
     if (action === 'qr') {
       const res = await fetch(`${baseUrl}/qr-code/image`, { method: 'GET', headers });
       const data = await res.json();
-      console.log('Z-API QR response:', JSON.stringify(data));
-      const qr = data?.value || data?.qrcode || data?.image || null;
+      console.log('Z-API QR response keys:', JSON.stringify(Object.keys(data)));
+      // Z-API returns QR in "value" field as data:image/png;base64,...
+      const qr = data?.value || null;
 
       return new Response(JSON.stringify({ qr }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
