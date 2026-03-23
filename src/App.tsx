@@ -24,6 +24,18 @@ import Reservas from "./pages/gestao/Reservas";
 import InstitutoGestao from "./pages/gestao/InstitutoGestao";
 import WhatsAppGestao from "./pages/gestao/WhatsApp";
 import Agenda from "./pages/gestao/Agenda";
+import DocumentosModelo from "./pages/gestao/cadastros/DocumentosModelo";
+import Contas from "./pages/gestao/cadastros/Contas";
+import Convenios from "./pages/gestao/cadastros/Convenios";
+import FormasPagamento from "./pages/gestao/cadastros/FormasPagamento";
+import Fornecedores from "./pages/gestao/cadastros/Fornecedores";
+import Materiais from "./pages/gestao/cadastros/Materiais";
+import StatusAgenda from "./pages/gestao/cadastros/StatusAgenda";
+import Pacientes from "./pages/gestao/cadastros/Pacientes";
+import PlanosSaude from "./pages/gestao/cadastros/PlanosSaude";
+import Procedimentos from "./pages/gestao/cadastros/Procedimentos";
+import ProfissionaisSaude from "./pages/gestao/cadastros/ProfissionaisSaude";
+import Secretarias from "./pages/gestao/cadastros/Secretarias";
 
 const queryClient = new QueryClient();
 
