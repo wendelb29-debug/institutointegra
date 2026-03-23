@@ -3,7 +3,7 @@ import {
   Wrench, CalendarDays, GraduationCap, LogOut, Building2, MessageCircle, Stethoscope,
   ClipboardList, CreditCard, Handshake, Truck, Package, Clock, HeartPulse, Scissors, UserCog, UserCheck,
   Landmark, Settings, Receipt, ShoppingCart, FileCheck,
-  ArrowDownToLine, Warehouse, ClipboardCheck, ArrowUpFromLine
+  ArrowDownToLine, Warehouse, ClipboardCheck, ArrowUpFromLine, ChevronDown
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -13,6 +13,7 @@ import {
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
   SidebarHeader, SidebarFooter, useSidebar,
 } from '@/components/ui/sidebar';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import logoIntegra from '@/assets/logo_integra.png';
 
