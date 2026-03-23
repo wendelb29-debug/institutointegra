@@ -1,6 +1,7 @@
 import {
   LayoutDashboard, DoorOpen, Users, FileText, DollarSign,
-  Wrench, CalendarDays, GraduationCap, LogOut, Building2, MessageCircle, Stethoscope
+  Wrench, CalendarDays, GraduationCap, LogOut, Building2, MessageCircle, Stethoscope,
+  ClipboardList, CreditCard, Handshake, Truck, Package, Clock, HeartPulse, Scissors, UserCog, UserCheck
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -28,6 +29,21 @@ const institutoItems = [
   { title: 'Instituto', url: '/gestao/instituto-gestao', icon: GraduationCap },
   { title: 'Agenda', url: '/gestao/agenda', icon: Stethoscope },
   { title: 'WhatsApp', url: '/gestao/whatsapp', icon: MessageCircle },
+];
+
+const cadastroItems = [
+  { title: 'Documentos Modelo', url: '/gestao/cadastros/documentos-modelo', icon: FileText },
+  { title: 'Contas', url: '/gestao/cadastros/contas', icon: DollarSign },
+  { title: 'Convênios', url: '/gestao/cadastros/convenios', icon: Handshake },
+  { title: 'Formas de Pagamento', url: '/gestao/cadastros/formas-pagamento', icon: CreditCard },
+  { title: 'Fornecedores', url: '/gestao/cadastros/fornecedores', icon: Truck },
+  { title: 'Materiais', url: '/gestao/cadastros/materiais', icon: Package },
+  { title: 'Status Agenda', url: '/gestao/cadastros/status-agenda', icon: Clock },
+  { title: 'Pacientes', url: '/gestao/cadastros/pacientes', icon: HeartPulse },
+  { title: 'Planos de Saúde', url: '/gestao/cadastros/planos-saude', icon: ClipboardList },
+  { title: 'Procedimentos', url: '/gestao/cadastros/procedimentos', icon: Scissors },
+  { title: 'Profissionais de Saúde', url: '/gestao/cadastros/profissionais', icon: UserCog },
+  { title: 'Secretárias(os)', url: '/gestao/cadastros/secretarias', icon: UserCheck },
 ];
 
 export function AppSidebar() {
@@ -79,6 +95,24 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url} className="hover:bg-sidebar-accent/60" activeClassName="bg-gold/8 text-gold font-medium">
+                      <item.icon className="h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/60 font-semibold">Cadastros</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {cadastroItems.map(item => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                    <NavLink to={item.url} className="hover:bg-sidebar-accent/60" activeClassName="bg-primary/8 text-primary font-medium">
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
