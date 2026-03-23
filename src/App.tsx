@@ -66,6 +66,18 @@ const App = () => (
               <Route path="instituto-gestao" element={<InstitutoGestao />} />
               <Route path="whatsapp" element={<WhatsAppGestao />} />
               <Route path="agenda" element={<Agenda />} />
+              <Route path="cadastros/documentos-modelo" element={<DocumentosModelo />} />
+              <Route path="cadastros/contas" element={<Contas />} />
+              <Route path="cadastros/convenios" element={<Convenios />} />
+              <Route path="cadastros/formas-pagamento" element={<FormasPagamento />} />
+              <Route path="cadastros/fornecedores" element={<Fornecedores />} />
+              <Route path="cadastros/materiais" element={<Materiais />} />
+              <Route path="cadastros/status-agenda" element={<StatusAgenda />} />
+              <Route path="cadastros/pacientes" element={<Pacientes />} />
+              <Route path="cadastros/planos-saude" element={<PlanosSaude />} />
+              <Route path="cadastros/procedimentos" element={<Procedimentos />} />
+              <Route path="cadastros/profissionais" element={<ProfissionaisSaude />} />
+              <Route path="cadastros/secretarias" element={<Secretarias />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
