@@ -43,6 +43,10 @@ import ContasReceber from "./pages/gestao/financeiro/ContasReceber";
 import Orcamentos from "./pages/gestao/financeiro/Orcamentos";
 import VendasPage from "./pages/gestao/financeiro/Vendas";
 import NFSe from "./pages/gestao/financeiro/NFSe";
+import AlmoxEntradas from "./pages/gestao/almoxarifado/Entradas";
+import AlmoxEstoque from "./pages/gestao/almoxarifado/Estoque";
+import AlmoxPedidos from "./pages/gestao/almoxarifado/Pedidos";
+import AlmoxSaidas from "./pages/gestao/almoxarifado/Saidas";
 
 const queryClient = new QueryClient();
 
@@ -92,6 +96,10 @@ const App = () => (
               <Route path="financeiro/orcamentos" element={<Orcamentos />} />
               <Route path="financeiro/vendas" element={<VendasPage />} />
               <Route path="financeiro/nfse" element={<NFSe />} />
+              <Route path="almoxarifado/entradas" element={<AlmoxEntradas />} />
+              <Route path="almoxarifado/estoque" element={<AlmoxEstoque />} />
+              <Route path="almoxarifado/pedidos" element={<AlmoxPedidos />} />
+              <Route path="almoxarifado/saidas" element={<AlmoxSaidas />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

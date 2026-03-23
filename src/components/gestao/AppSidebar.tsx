@@ -2,7 +2,8 @@ import {
   LayoutDashboard, DoorOpen, Users, FileText, DollarSign,
   Wrench, CalendarDays, GraduationCap, LogOut, Building2, MessageCircle, Stethoscope,
   ClipboardList, CreditCard, Handshake, Truck, Package, Clock, HeartPulse, Scissors, UserCog, UserCheck,
-  Landmark, Settings, Receipt, ShoppingCart, FileCheck
+  Landmark, Settings, Receipt, ShoppingCart, FileCheck,
+  ArrowDownToLine, Warehouse, ClipboardCheck, ArrowUpFromLine
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -55,6 +56,13 @@ const financeiroItems = [
   { title: 'Orçamentos', url: '/gestao/financeiro/orcamentos', icon: ClipboardList },
   { title: 'Vendas', url: '/gestao/financeiro/vendas', icon: ShoppingCart },
   { title: 'NFS-e', url: '/gestao/financeiro/nfse', icon: FileCheck },
+];
+
+const almoxarifadoItems = [
+  { title: 'Entradas', url: '/gestao/almoxarifado/entradas', icon: ArrowDownToLine },
+  { title: 'Estoque', url: '/gestao/almoxarifado/estoque', icon: Warehouse },
+  { title: 'Pedidos', url: '/gestao/almoxarifado/pedidos', icon: ClipboardCheck },
+  { title: 'Saídas', url: '/gestao/almoxarifado/saidas', icon: ArrowUpFromLine },
 ];
 
 export function AppSidebar() {
@@ -139,6 +147,24 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {financeiroItems.map(item => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                    <NavLink to={item.url} className="hover:bg-sidebar-accent/60" activeClassName="bg-primary/8 text-primary font-medium">
+                      <item.icon className="h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/60 font-semibold">Almoxarifado</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {almoxarifadoItems.map(item => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url} className="hover:bg-sidebar-accent/60" activeClassName="bg-primary/8 text-primary font-medium">
