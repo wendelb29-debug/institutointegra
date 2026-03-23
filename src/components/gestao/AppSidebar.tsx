@@ -120,8 +120,11 @@ export function AppSidebar() {
         <Collapsible defaultOpen={institutoItems.some(i => isActive(i.url))}>
           <SidebarGroup>
             <CollapsibleTrigger className="flex w-full items-center justify-between px-2 py-1.5 text-xs uppercase tracking-wider text-muted-foreground/60 font-semibold hover:text-muted-foreground transition-colors cursor-pointer">
-              Instituto
-              <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200" />
+              <span className="flex items-center gap-2">
+                <GraduationCap className="h-4 w-4" />
+                {!collapsed && 'Instituto'}
+              </span>
+              {!collapsed && <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200" />}
             </CollapsibleTrigger>
             <CollapsibleContent>
               <SidebarGroupContent>
