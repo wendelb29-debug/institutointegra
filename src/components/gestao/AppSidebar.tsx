@@ -31,6 +31,21 @@ const institutoItems = [
   { title: 'WhatsApp', url: '/gestao/whatsapp', icon: MessageCircle },
 ];
 
+const cadastroItems = [
+  { title: 'Documentos Modelo', url: '/gestao/cadastros/documentos-modelo', icon: FileText },
+  { title: 'Contas', url: '/gestao/cadastros/contas', icon: DollarSign },
+  { title: 'Convênios', url: '/gestao/cadastros/convenios', icon: Handshake },
+  { title: 'Formas de Pagamento', url: '/gestao/cadastros/formas-pagamento', icon: CreditCard },
+  { title: 'Fornecedores', url: '/gestao/cadastros/fornecedores', icon: Truck },
+  { title: 'Materiais', url: '/gestao/cadastros/materiais', icon: Package },
+  { title: 'Status Agenda', url: '/gestao/cadastros/status-agenda', icon: Clock },
+  { title: 'Pacientes', url: '/gestao/cadastros/pacientes', icon: HeartPulse },
+  { title: 'Planos de Saúde', url: '/gestao/cadastros/planos-saude', icon: ClipboardList },
+  { title: 'Procedimentos', url: '/gestao/cadastros/procedimentos', icon: Scissors },
+  { title: 'Profissionais de Saúde', url: '/gestao/cadastros/profissionais', icon: UserCog },
+  { title: 'Secretárias(os)', url: '/gestao/cadastros/secretarias', icon: UserCheck },
+];
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
