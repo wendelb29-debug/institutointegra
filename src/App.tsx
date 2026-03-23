@@ -43,6 +43,10 @@ import ContasReceber from "./pages/gestao/financeiro/ContasReceber";
 import Orcamentos from "./pages/gestao/financeiro/Orcamentos";
 import VendasPage from "./pages/gestao/financeiro/Vendas";
 import NFSe from "./pages/gestao/financeiro/NFSe";
+import AlmoxEntradas from "./pages/gestao/almoxarifado/Entradas";
+import AlmoxEstoque from "./pages/gestao/almoxarifado/Estoque";
+import AlmoxPedidos from "./pages/gestao/almoxarifado/Pedidos";
+import AlmoxSaidas from "./pages/gestao/almoxarifado/Saidas";
 
 const queryClient = new QueryClient();
 
