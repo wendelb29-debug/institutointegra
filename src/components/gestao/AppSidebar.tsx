@@ -58,6 +58,13 @@ const financeiroItems = [
   { title: 'NFS-e', url: '/gestao/financeiro/nfse', icon: FileCheck },
 ];
 
+const almoxarifadoItems = [
+  { title: 'Entradas', url: '/gestao/almoxarifado/entradas', icon: ArrowDownToLine },
+  { title: 'Estoque', url: '/gestao/almoxarifado/estoque', icon: Warehouse },
+  { title: 'Pedidos', url: '/gestao/almoxarifado/pedidos', icon: ClipboardCheck },
+  { title: 'Saídas', url: '/gestao/almoxarifado/saidas', icon: ArrowUpFromLine },
+];
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
