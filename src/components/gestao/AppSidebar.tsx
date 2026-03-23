@@ -122,6 +122,7 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+      </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-2">
         <Button
