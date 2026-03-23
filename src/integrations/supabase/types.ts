@@ -513,6 +513,62 @@ export type Database = {
           },
         ]
       }
+      materials: {
+        Row: {
+          codigo_barras: string | null
+          created_at: string | null
+          descricao: string | null
+          estoque_minimo: number
+          id: string
+          marca: string | null
+          modelo: string | null
+          nome: string
+          preco_unitario: number
+          supplier_id: string | null
+          unidade_medida: string | null
+          updated_at: string | null
+          validade: string | null
+        }
+        Insert: {
+          codigo_barras?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          estoque_minimo?: number
+          id?: string
+          marca?: string | null
+          modelo?: string | null
+          nome: string
+          preco_unitario?: number
+          supplier_id?: string | null
+          unidade_medida?: string | null
+          updated_at?: string | null
+          validade?: string | null
+        }
+        Update: {
+          codigo_barras?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          estoque_minimo?: number
+          id?: string
+          marca?: string | null
+          modelo?: string | null
+          nome?: string
+          preco_unitario?: number
+          supplier_id?: string | null
+          unidade_medida?: string | null
+          updated_at?: string | null
+          validade?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materials_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_costs: {
         Row: {
           created_at: string
@@ -708,6 +764,36 @@ export type Database = {
           phone?: string
           psychologist_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      payment_methods: {
+        Row: {
+          created_at: string | null
+          dia_recebimento: number
+          id: string
+          max_parcelas: number
+          nome: string
+          taxa: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dia_recebimento?: number
+          id?: string
+          max_parcelas?: number
+          nome: string
+          taxa?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dia_recebimento?: number
+          id?: string
+          max_parcelas?: number
+          nome?: string
+          taxa?: number
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -907,6 +993,69 @@ export type Database = {
           status?: Database["public"]["Enums"]["room_status"]
           type?: Database["public"]["Enums"]["room_type"]
           updated_at?: string
+        }
+        Relationships: []
+      }
+      suppliers: {
+        Row: {
+          bairro: string | null
+          cep: string | null
+          cidade: string | null
+          complemento: string | null
+          cpf_cnpj: string | null
+          created_at: string | null
+          email: string | null
+          estado: string | null
+          id: string
+          nome: string
+          numero: string | null
+          pais: string | null
+          razao_social: string | null
+          rua: string | null
+          telefone1: string | null
+          telefone2: string | null
+          tipo_pessoa: string
+          updated_at: string | null
+        }
+        Insert: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          cpf_cnpj?: string | null
+          created_at?: string | null
+          email?: string | null
+          estado?: string | null
+          id?: string
+          nome: string
+          numero?: string | null
+          pais?: string | null
+          razao_social?: string | null
+          rua?: string | null
+          telefone1?: string | null
+          telefone2?: string | null
+          tipo_pessoa?: string
+          updated_at?: string | null
+        }
+        Update: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          complemento?: string | null
+          cpf_cnpj?: string | null
+          created_at?: string | null
+          email?: string | null
+          estado?: string | null
+          id?: string
+          nome?: string
+          numero?: string | null
+          pais?: string | null
+          razao_social?: string | null
+          rua?: string | null
+          telefone1?: string | null
+          telefone2?: string | null
+          tipo_pessoa?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
