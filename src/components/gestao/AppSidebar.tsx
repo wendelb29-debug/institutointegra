@@ -114,23 +114,30 @@ export function AppSidebar() {
           </SidebarGroup>
         </Collapsible>
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/60 font-semibold">Instituto</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {institutoItems.map(item => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink to={item.url} className="hover:bg-sidebar-accent/60" activeClassName="bg-gold/8 text-gold font-medium">
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <Collapsible defaultOpen={institutoItems.some(i => isActive(i.url))}>
+          <SidebarGroup>
+            <CollapsibleTrigger className="flex w-full items-center justify-between px-2 py-1.5 text-xs uppercase tracking-wider text-muted-foreground/60 font-semibold hover:text-muted-foreground transition-colors cursor-pointer">
+              Instituto
+              <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200" />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {institutoItems.map(item => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                        <NavLink to={item.url} className="hover:bg-sidebar-accent/60" activeClassName="bg-gold/8 text-gold font-medium">
+                          <item.icon className="h-4 w-4" />
+                          {!collapsed && <span>{item.title}</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </SidebarGroup>
+        </Collapsible>
 
         <Collapsible defaultOpen={cadastroItems.some(i => isActive(i.url))}>
           <SidebarGroup>
