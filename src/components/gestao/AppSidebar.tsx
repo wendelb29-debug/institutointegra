@@ -47,6 +47,16 @@ const cadastroItems = [
   { title: 'Secretárias(os)', url: '/gestao/cadastros/secretarias', icon: UserCheck },
 ];
 
+const financeiroItems = [
+  { title: 'Caixa da Clínica', url: '/gestao/financeiro/caixa-clinica', icon: Landmark },
+  { title: 'Caixa de Profissionais', url: '/gestao/financeiro/caixa-profissionais', icon: Settings },
+  { title: 'Contas a Pagar', url: '/gestao/financeiro/contas-pagar', icon: CreditCard },
+  { title: 'Contas a Receber', url: '/gestao/financeiro/contas-receber', icon: Receipt },
+  { title: 'Orçamentos', url: '/gestao/financeiro/orcamentos', icon: ClipboardList },
+  { title: 'Vendas', url: '/gestao/financeiro/vendas', icon: ShoppingCart },
+  { title: 'NFS-e', url: '/gestao/financeiro/nfse', icon: FileCheck },
+];
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
