@@ -733,36 +733,111 @@ export type Database = {
       }
       patients: {
         Row: {
+          avatar_url: string | null
+          bairro: string | null
+          carga_horaria_horas: number | null
+          carga_horaria_minutos: number | null
+          cep: string | null
+          cidade: string | null
+          cids_permanentes: string | null
+          complemento: string | null
+          convenio_padrao: string | null
           cpf: string | null
           created_at: string
+          data_nascimento: string | null
+          data_nascimento_responsavel: string | null
           email: string | null
+          estado: string | null
+          estado_civil: string | null
           id: string
+          id_prontuario: string | null
           name: string
           notes: string | null
+          numero_carteirinha: string | null
+          numero_endereco: string | null
+          observacoes: string | null
+          pais: string | null
           phone: string
+          plano_saude: string | null
+          profissao: string | null
           psychologist_id: string
+          responsavel: string | null
+          rua: string | null
+          sexo: string | null
+          telefone2: string | null
+          telefone3: string | null
           updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
+          bairro?: string | null
+          carga_horaria_horas?: number | null
+          carga_horaria_minutos?: number | null
+          cep?: string | null
+          cidade?: string | null
+          cids_permanentes?: string | null
+          complemento?: string | null
+          convenio_padrao?: string | null
           cpf?: string | null
           created_at?: string
+          data_nascimento?: string | null
+          data_nascimento_responsavel?: string | null
           email?: string | null
+          estado?: string | null
+          estado_civil?: string | null
           id?: string
+          id_prontuario?: string | null
           name: string
           notes?: string | null
+          numero_carteirinha?: string | null
+          numero_endereco?: string | null
+          observacoes?: string | null
+          pais?: string | null
           phone: string
+          plano_saude?: string | null
+          profissao?: string | null
           psychologist_id: string
+          responsavel?: string | null
+          rua?: string | null
+          sexo?: string | null
+          telefone2?: string | null
+          telefone3?: string | null
           updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
+          bairro?: string | null
+          carga_horaria_horas?: number | null
+          carga_horaria_minutos?: number | null
+          cep?: string | null
+          cidade?: string | null
+          cids_permanentes?: string | null
+          complemento?: string | null
+          convenio_padrao?: string | null
           cpf?: string | null
           created_at?: string
+          data_nascimento?: string | null
+          data_nascimento_responsavel?: string | null
           email?: string | null
+          estado?: string | null
+          estado_civil?: string | null
           id?: string
+          id_prontuario?: string | null
           name?: string
           notes?: string | null
+          numero_carteirinha?: string | null
+          numero_endereco?: string | null
+          observacoes?: string | null
+          pais?: string | null
           phone?: string
+          plano_saude?: string | null
+          profissao?: string | null
           psychologist_id?: string
+          responsavel?: string | null
+          rua?: string | null
+          sexo?: string | null
+          telefone2?: string | null
+          telefone3?: string | null
           updated_at?: string
         }
         Relationships: []
