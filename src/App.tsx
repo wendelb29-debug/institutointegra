@@ -36,6 +36,13 @@ import PlanosSaude from "./pages/gestao/cadastros/PlanosSaude";
 import Procedimentos from "./pages/gestao/cadastros/Procedimentos";
 import ProfissionaisSaude from "./pages/gestao/cadastros/ProfissionaisSaude";
 import Secretarias from "./pages/gestao/cadastros/Secretarias";
+import CaixaClinica from "./pages/gestao/financeiro/CaixaClinica";
+import CaixaProfissionais from "./pages/gestao/financeiro/CaixaProfissionais";
+import ContasPagar from "./pages/gestao/financeiro/ContasPagar";
+import ContasReceber from "./pages/gestao/financeiro/ContasReceber";
+import Orcamentos from "./pages/gestao/financeiro/Orcamentos";
+import VendasPage from "./pages/gestao/financeiro/Vendas";
+import NFSe from "./pages/gestao/financeiro/NFSe";
 
 const queryClient = new QueryClient();
 
