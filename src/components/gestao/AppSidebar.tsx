@@ -1,7 +1,8 @@
 import {
   LayoutDashboard, DoorOpen, Users, FileText, DollarSign,
   Wrench, CalendarDays, GraduationCap, LogOut, Building2, MessageCircle, Stethoscope,
-  ClipboardList, CreditCard, Handshake, Truck, Package, Clock, HeartPulse, Scissors, UserCog, UserCheck
+  ClipboardList, CreditCard, Handshake, Truck, Package, Clock, HeartPulse, Scissors, UserCog, UserCheck,
+  Landmark, Settings, Receipt, ShoppingCart, FileCheck
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -44,6 +45,16 @@ const cadastroItems = [
   { title: 'Procedimentos', url: '/gestao/cadastros/procedimentos', icon: Scissors },
   { title: 'Profissionais de Saúde', url: '/gestao/cadastros/profissionais', icon: UserCog },
   { title: 'Secretárias(os)', url: '/gestao/cadastros/secretarias', icon: UserCheck },
+];
+
+const financeiroItems = [
+  { title: 'Caixa da Clínica', url: '/gestao/financeiro/caixa-clinica', icon: Landmark },
+  { title: 'Caixa de Profissionais', url: '/gestao/financeiro/caixa-profissionais', icon: Settings },
+  { title: 'Contas a Pagar', url: '/gestao/financeiro/contas-pagar', icon: CreditCard },
+  { title: 'Contas a Receber', url: '/gestao/financeiro/contas-receber', icon: Receipt },
+  { title: 'Orçamentos', url: '/gestao/financeiro/orcamentos', icon: ClipboardList },
+  { title: 'Vendas', url: '/gestao/financeiro/vendas', icon: ShoppingCart },
+  { title: 'NFS-e', url: '/gestao/financeiro/nfse', icon: FileCheck },
 ];
 
 export function AppSidebar() {
@@ -110,6 +121,24 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {cadastroItems.map(item => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                    <NavLink to={item.url} className="hover:bg-sidebar-accent/60" activeClassName="bg-primary/8 text-primary font-medium">
+                      <item.icon className="h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/60 font-semibold">Financeiro</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {financeiroItems.map(item => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url} className="hover:bg-sidebar-accent/60" activeClassName="bg-primary/8 text-primary font-medium">

@@ -36,6 +36,13 @@ import PlanosSaude from "./pages/gestao/cadastros/PlanosSaude";
 import Procedimentos from "./pages/gestao/cadastros/Procedimentos";
 import ProfissionaisSaude from "./pages/gestao/cadastros/ProfissionaisSaude";
 import Secretarias from "./pages/gestao/cadastros/Secretarias";
+import CaixaClinica from "./pages/gestao/financeiro/CaixaClinica";
+import CaixaProfissionais from "./pages/gestao/financeiro/CaixaProfissionais";
+import ContasPagar from "./pages/gestao/financeiro/ContasPagar";
+import ContasReceber from "./pages/gestao/financeiro/ContasReceber";
+import Orcamentos from "./pages/gestao/financeiro/Orcamentos";
+import VendasPage from "./pages/gestao/financeiro/Vendas";
+import NFSe from "./pages/gestao/financeiro/NFSe";
 
 const queryClient = new QueryClient();
 
@@ -78,6 +85,13 @@ const App = () => (
               <Route path="cadastros/procedimentos" element={<Procedimentos />} />
               <Route path="cadastros/profissionais" element={<ProfissionaisSaude />} />
               <Route path="cadastros/secretarias" element={<Secretarias />} />
+              <Route path="financeiro/caixa-clinica" element={<CaixaClinica />} />
+              <Route path="financeiro/caixa-profissionais" element={<CaixaProfissionais />} />
+              <Route path="financeiro/contas-pagar" element={<ContasPagar />} />
+              <Route path="financeiro/contas-receber" element={<ContasReceber />} />
+              <Route path="financeiro/orcamentos" element={<Orcamentos />} />
+              <Route path="financeiro/vendas" element={<VendasPage />} />
+              <Route path="financeiro/nfse" element={<NFSe />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
