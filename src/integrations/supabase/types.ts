@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          created_at: string | null
+          descricao: string
+          id: string
+          numero: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          descricao: string
+          id?: string
+          numero: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string
+          id?: string
+          numero?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           appointment_date: string
@@ -224,6 +248,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      document_templates: {
+        Row: {
+          associar_ciap: string | null
+          associar_cid: string | null
+          associar_cipe: string | null
+          created_at: string | null
+          id: string
+          nome: string
+          texto: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          associar_ciap?: string | null
+          associar_cid?: string | null
+          associar_cipe?: string | null
+          created_at?: string | null
+          id?: string
+          nome: string
+          texto?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          associar_ciap?: string | null
+          associar_cid?: string | null
+          associar_cipe?: string | null
+          created_at?: string | null
+          id?: string
+          nome?: string
+          texto?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       financial_transactions: {
         Row: {
