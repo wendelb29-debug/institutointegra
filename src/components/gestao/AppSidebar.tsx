@@ -1,7 +1,8 @@
 import {
   LayoutDashboard, DoorOpen, Users, FileText, DollarSign,
   Wrench, CalendarDays, GraduationCap, LogOut, Building2, MessageCircle, Stethoscope,
-  ClipboardList, CreditCard, Handshake, Truck, Package, Clock, HeartPulse, Scissors, UserCog, UserCheck
+  ClipboardList, CreditCard, Handshake, Truck, Package, Clock, HeartPulse, Scissors, UserCog, UserCheck,
+  Landmark, Settings, Receipt, ShoppingCart, FileCheck
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
