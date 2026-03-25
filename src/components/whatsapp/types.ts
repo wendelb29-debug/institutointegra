@@ -16,6 +16,10 @@ export interface ChatMessage {
   text: string;
   time: string;
   status?: 'sent' | 'delivered' | 'read';
+  mediaType?: 'image' | 'audio' | 'document' | 'video';
+  mediaUrl?: string;
+  mediaName?: string;
+  mediaMimeType?: string;
 }
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected';

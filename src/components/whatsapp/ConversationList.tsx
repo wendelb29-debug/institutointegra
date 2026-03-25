@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Search, Filter, MessageCircle, Eye, Users, Plus } from 'lucide-react';
+import { Search, Filter, Users, Plus } from 'lucide-react';
 import { Conversation, ConversationFilter } from './types';
+import { NewConversationModal } from './NewConversationModal';
 
 interface ConversationListProps {
   conversations: Conversation[];
   selectedId: string | null;
   onSelect: (conversation: Conversation) => void;
+  onNewConversation?: (phone: string, name?: string) => void;
 }
 
 const filterOptions: { key: ConversationFilter; label: string }[] = [
@@ -15,14 +17,8 @@ const filterOptions: { key: ConversationFilter; label: string }[] = [
 ];
 
 const avatarColors = [
-  'bg-blue-500',
-  'bg-emerald-500',
-  'bg-amber-500',
-  'bg-rose-500',
-  'bg-violet-500',
-  'bg-cyan-500',
-  'bg-pink-500',
-  'bg-indigo-500',
+  'bg-blue-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500',
+  'bg-violet-500', 'bg-cyan-500', 'bg-pink-500', 'bg-indigo-500',
 ];
 
 function getAvatarColor(id: string) {
@@ -31,7 +27,7 @@ function getAvatarColor(id: string) {
   return avatarColors[Math.abs(hash) % avatarColors.length];
 }
 
-export const ConversationList = ({ conversations, selectedId, onSelect }: ConversationListProps) => {
+export const ConversationList = ({ conversations, selectedId, onSelect, onNewConversation }: ConversationListProps) => {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<ConversationFilter>('all');
 
@@ -49,9 +45,9 @@ export const ConversationList = ({ conversations, selectedId, onSelect }: Conver
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <h2 className="text-sm font-semibold text-foreground">Conversas</h2>
         <div className="flex items-center gap-1">
-          <button className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
-            <Plus className="h-4 w-4" />
-          </button>
+          {onNewConversation && (
+            <NewConversationModal onStartConversation={onNewConversation} />
+          )}
           <button className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
             <Filter className="h-4 w-4" />
           </button>
@@ -114,9 +110,7 @@ export const ConversationList = ({ conversations, selectedId, onSelect }: Conver
                 </span>
               </div>
               <div className="flex items-center justify-between mt-0.5">
-                <p className="text-xs truncate pr-2 text-muted-foreground">
-                  {conv.lastMessage}
-                </p>
+                <p className="text-xs truncate pr-2 text-muted-foreground">{conv.lastMessage}</p>
                 {conv.unread > 0 && (
                   <span className="text-[10px] font-semibold h-5 min-w-[20px] flex items-center justify-center rounded-full px-1.5 bg-primary text-primary-foreground">
                     {conv.unread}
@@ -128,7 +122,7 @@ export const ConversationList = ({ conversations, selectedId, onSelect }: Conver
         ))}
         {filtered.length === 0 && (
           <div className="py-12 text-center text-sm text-muted-foreground">
-            Nenhuma conversa encontrada
+            {conversations.length === 0 ? 'Nenhuma conversa ainda' : 'Nenhuma conversa encontrada'}
           </div>
         )}
       </div>

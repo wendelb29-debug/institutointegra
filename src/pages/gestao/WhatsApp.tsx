@@ -17,27 +17,31 @@ const WhatsApp = () => {
   const [loading, setLoading] = useState(true);
   const selectedRef = useRef<Conversation | null>(null);
 
-  // Keep ref in sync
   useEffect(() => { selectedRef.current = selected; }, [selected]);
 
-  // Check Z-API connection status
+  const getProxyUrl = () => {
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'pktpabruwkvpesqqinxx';
+    return `https://${projectId}.supabase.co/functions/v1/zapi-proxy`;
+  };
+
+  const getHeaders = () => ({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+  });
+
+  // Check Z-API status
   useEffect(() => {
-    const checkStatus = async () => {
+    const check = async () => {
       try {
-        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'pktpabruwkvpesqqinxx';
-        const res = await fetch(`https://${projectId}.supabase.co/functions/v1/zapi-proxy`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-          body: JSON.stringify({ action: 'status' }),
-        });
+        const res = await fetch(getProxyUrl(), { method: 'POST', headers: getHeaders(), body: JSON.stringify({ action: 'status' }) });
         const data = await res.json();
         setStatus(data.connected ? 'connected' : 'disconnected');
       } catch { setStatus('disconnected'); }
     };
-    checkStatus();
+    check();
   }, []);
 
-  // Load conversations from DB
+  // Load conversations
   const loadConversations = useCallback(async () => {
     const { data, error } = await supabase
       .from('whatsapp_conversations')
@@ -47,23 +51,23 @@ const WhatsApp = () => {
 
     if (error) { console.error('Error loading conversations:', error); return; }
 
-    const convs: Conversation[] = (data || []).map(c => ({
+    setConversations((data || []).map(c => ({
       id: c.id,
       name: c.name || c.phone,
       phone: c.phone,
       lastMessage: c.last_message || '',
-      lastMessageTime: c.last_message_time ? new Date(c.last_message_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '',
+      lastMessageTime: c.last_message_time
+        ? new Date(c.last_message_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+        : '',
       unread: c.unread_count || 0,
       avatarInitial: (c.name || c.phone).charAt(0).toUpperCase(),
       isOnline: c.is_online || false,
       status: (c.unread_count || 0) > 0 ? 'unread' : 'all' as const,
-    }));
-
-    setConversations(convs);
+    })));
     setLoading(false);
   }, []);
 
-  // Load messages for selected conversation
+  // Load messages
   const loadMessages = useCallback(async (phone: string) => {
     const { data, error } = await supabase
       .from('whatsapp_messages')
@@ -73,21 +77,18 @@ const WhatsApp = () => {
 
     if (error) { console.error('Error loading messages:', error); return; }
 
-    const msgs: ChatMessage[] = (data || []).map(m => ({
+    setMessages((data || []).map(m => ({
       id: m.id,
       type: m.direction === 'sent' ? 'sent' as const : 'received' as const,
       text: m.body || '',
       time: new Date(m.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
       status: m.status === 'read' ? 'read' as const : m.status === 'delivered' ? 'delivered' as const : 'sent' as const,
-    }));
-
-    setMessages(msgs);
+    })));
   }, []);
 
-  // Initial load
   useEffect(() => { loadConversations(); }, [loadConversations]);
 
-  // Realtime subscriptions
+  // Realtime
   useEffect(() => {
     const channel = supabase
       .channel('whatsapp-realtime')
@@ -104,10 +105,7 @@ const WhatsApp = () => {
             time: new Date(msg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
             status: msg.status === 'read' ? 'read' : msg.status === 'delivered' ? 'delivered' : 'sent',
           };
-          setMessages(prev => {
-            if (prev.some(m => m.id === newMsg.id)) return prev;
-            return [...prev, newMsg];
-          });
+          setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]);
         }
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'whatsapp_messages' }, () => {
@@ -121,73 +119,86 @@ const WhatsApp = () => {
   const handleSelect = useCallback(async (conv: Conversation) => {
     setSelected(conv);
     await loadMessages(conv.phone);
-    // Reset unread
-    await supabase
-      .from('whatsapp_conversations')
-      .update({ unread_count: 0 })
-      .eq('phone', conv.phone);
+    await supabase.from('whatsapp_conversations').update({ unread_count: 0 }).eq('phone', conv.phone);
   }, [loadMessages]);
 
   const handleSendMessage = useCallback(async (text: string) => {
     if (!selected) return;
-
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'pktpabruwkvpesqqinxx';
-      const res = await fetch(`https://${projectId}.supabase.co/functions/v1/zapi-proxy`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+      const res = await fetch(getProxyUrl(), {
+        method: 'POST', headers: getHeaders(),
         body: JSON.stringify({ action: 'send', phone: selected.phone, message: text }),
       });
-
       const data = await res.json();
-      if (data.error) {
-        toast.error('Erro ao enviar: ' + data.error);
-        return;
-      }
+      if (data.error) { toast.error('Erro ao enviar: ' + data.error); return; }
 
-      // Optimistically add message to UI
-      const newMsg: ChatMessage = {
+      // Optimistic UI
+      setMessages(prev => [...prev, {
         id: Date.now().toString(),
         type: 'sent',
         text,
         time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
         status: 'sent',
-      };
-      setMessages(prev => [...prev, newMsg]);
+      }]);
 
-      // Also save to DB directly for immediate persistence
       await supabase.from('whatsapp_messages').insert({
-        conversation_phone: selected.phone,
-        direction: 'sent',
-        body: text,
-        status: 'sent',
-        from_me: true,
+        conversation_phone: selected.phone, direction: 'sent', body: text, status: 'sent', from_me: true,
       });
-
-      // Update conversation
       await supabase.from('whatsapp_conversations').upsert({
-        phone: selected.phone,
-        name: selected.name,
-        last_message: text,
-        last_message_time: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        phone: selected.phone, name: selected.name,
+        last_message: text, last_message_time: new Date().toISOString(), updated_at: new Date().toISOString(),
       }, { onConflict: 'phone' });
-
     } catch (err) {
       toast.error('Erro ao enviar mensagem');
       console.error(err);
     }
   }, [selected]);
 
+  const handleSendMedia = useCallback(async (file: File, type: 'image' | 'audio' | 'document') => {
+    if (!selected) return;
+    toast.info('Envio de mídia será integrado com Z-API em breve.');
+    // Future: upload file to storage, then call zapi-proxy with media action
+  }, [selected]);
+
+  const handleNewConversation = useCallback(async (phone: string, name?: string) => {
+    // Upsert conversation
+    const { error } = await supabase.from('whatsapp_conversations').upsert({
+      phone,
+      name: name || phone,
+      last_message: '',
+      last_message_time: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'phone' });
+
+    if (error) { toast.error('Erro ao criar conversa'); return; }
+
+    await loadConversations();
+
+    // Select the new conversation
+    const { data } = await supabase.from('whatsapp_conversations').select('*').eq('phone', phone).single();
+    if (data) {
+      const conv: Conversation = {
+        id: data.id,
+        name: data.name || data.phone,
+        phone: data.phone,
+        lastMessage: '',
+        lastMessageTime: '',
+        unread: 0,
+        avatarInitial: (data.name || data.phone).charAt(0).toUpperCase(),
+        isOnline: false,
+        status: 'all',
+      };
+      setSelected(conv);
+      setMessages([]);
+    }
+
+    toast.success('Conversa criada!');
+  }, [loadConversations]);
+
   const handleConnect = useCallback(async () => {
     setStatus('connecting');
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'pktpabruwkvpesqqinxx';
-      const res = await fetch(`https://${projectId}.supabase.co/functions/v1/zapi-proxy`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-        body: JSON.stringify({ action: 'status' }),
-      });
+      const res = await fetch(getProxyUrl(), { method: 'POST', headers: getHeaders(), body: JSON.stringify({ action: 'status' }) });
       const data = await res.json();
       setStatus(data.connected ? 'connected' : 'disconnected');
     } catch { setStatus('disconnected'); }
@@ -195,12 +206,7 @@ const WhatsApp = () => {
 
   const handleDisconnect = useCallback(async () => {
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'pktpabruwkvpesqqinxx';
-      await fetch(`https://${projectId}.supabase.co/functions/v1/zapi-proxy`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-        body: JSON.stringify({ action: 'disconnect' }),
-      });
+      await fetch(getProxyUrl(), { method: 'POST', headers: getHeaders(), body: JSON.stringify({ action: 'disconnect' }) });
       setStatus('disconnected');
     } catch { setStatus('disconnected'); }
   }, []);
@@ -216,22 +222,16 @@ const WhatsApp = () => {
             <MessageSquare className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-base font-semibold text-foreground">
-              Orbit Inbox – Central Inteligente de Conversas
-            </h1>
+            <h1 className="text-base font-semibold text-foreground">Orbit Inbox</h1>
             <p className="text-xs text-muted-foreground">
-              Gerencie atendimentos, responda clientes e automatize conversas com inteligência artificial.
+              Envie mensagens, gerencie conversas e use inteligência artificial para se comunicar melhor.
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <ZApiSettingsModal />
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            {status === 'connected' ? (
-              <Wifi className="h-3.5 w-3.5 text-emerald-500" />
-            ) : (
-              <WifiOff className="h-3.5 w-3.5 text-muted-foreground" />
-            )}
+            {status === 'connected' ? <Wifi className="h-3.5 w-3.5 text-emerald-500" /> : <WifiOff className="h-3.5 w-3.5" />}
             <span>{status === 'connected' ? 'Conectado' : 'Desconectado'}</span>
           </div>
           <QrCodeModal status={status} onConnect={handleConnect} onDisconnect={handleDisconnect} />
@@ -242,18 +242,18 @@ const WhatsApp = () => {
       <div className="flex-1 overflow-hidden bg-muted/30">
         <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] h-full">
           <div className="hidden lg:block h-full overflow-hidden border-r border-border bg-card">
-            <ConversationList conversations={conversations} selectedId={selected?.id ?? null} onSelect={handleSelect} />
+            <ConversationList conversations={conversations} selectedId={selected?.id ?? null} onSelect={handleSelect} onNewConversation={handleNewConversation} />
           </div>
           <div className="lg:hidden h-full">
             {!selected ? (
-              <ConversationList conversations={conversations} selectedId={null} onSelect={handleSelect} />
+              <ConversationList conversations={conversations} selectedId={null} onSelect={handleSelect} onNewConversation={handleNewConversation} />
             ) : (
-              <ChatPanel conversation={selected} messages={messages} onSendMessage={handleSendMessage} onBack={handleBack} />
+              <ChatPanel conversation={selected} messages={messages} onSendMessage={handleSendMessage} onSendMedia={handleSendMedia} onBack={handleBack} />
             )}
           </div>
           <div className="hidden lg:flex flex-col h-full">
             {selected ? (
-              <ChatPanel conversation={selected} messages={messages} onSendMessage={handleSendMessage} />
+              <ChatPanel conversation={selected} messages={messages} onSendMessage={handleSendMessage} onSendMedia={handleSendMedia} />
             ) : (
               <EmptyChatState />
             )}
