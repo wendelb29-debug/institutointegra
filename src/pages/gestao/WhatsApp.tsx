@@ -3,6 +3,7 @@ import { ConversationList } from '@/components/whatsapp/ConversationList';
 import { ChatPanel } from '@/components/whatsapp/ChatPanel';
 import { EmptyChatState } from '@/components/whatsapp/EmptyChatState';
 import { QrCodeModal } from '@/components/whatsapp/QrCodeModal';
+import { InstanceSettingsModal } from '@/components/whatsapp/InstanceSettingsModal';
 import { ZApiSettingsModal } from '@/components/whatsapp/ZApiSettingsModal';
 import { ContactsTab } from '@/components/whatsapp/ContactsTab';
 import { AttendanceTab } from '@/components/whatsapp/AttendanceTab';
@@ -30,22 +31,25 @@ const WhatsApp = () => {
     return `https://${projectId}.supabase.co/functions/v1/zapi-proxy`;
   };
 
-  const getHeaders = () => ({
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-  });
+  const getHeaders = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+    };
+  }, []);
 
   // Check Z-API status
-  useEffect(() => {
-    const check = async () => {
-      try {
-        const res = await fetch(getProxyUrl(), { method: 'POST', headers: getHeaders(), body: JSON.stringify({ action: 'status' }) });
-        const data = await res.json();
-        setStatus(data.connected ? 'connected' : 'disconnected');
-      } catch { setStatus('disconnected'); }
-    };
-    check();
-  }, []);
+  const checkStatus = useCallback(async () => {
+    try {
+      const headers = await getHeaders();
+      const res = await fetch(getProxyUrl(), { method: 'POST', headers, body: JSON.stringify({ action: 'status' }) });
+      const data = await res.json();
+      setStatus(data.connected ? 'connected' : 'disconnected');
+    } catch { setStatus('disconnected'); }
+  }, [getHeaders]);
+
+  useEffect(() => { checkStatus(); }, [checkStatus]);
 
   // ===== CONVERSATIONS =====
   const loadConversations = useCallback(async () => {
@@ -156,13 +160,12 @@ const WhatsApp = () => {
     if (!selected) return;
     try {
       const cleanPhone = selected.phone.replace(/\D/g, '');
-      console.log('[Orbit] Sending message to:', cleanPhone);
+      const headers = await getHeaders();
       const res = await fetch(getProxyUrl(), {
-        method: 'POST', headers: getHeaders(),
+        method: 'POST', headers,
         body: JSON.stringify({ action: 'send', phone: cleanPhone, message: text }),
       });
       const data = await res.json();
-      console.log('[Orbit] Send response:', data);
       if (data.error) { toast.error('Erro ao enviar: ' + data.error); return; }
 
       setMessages(prev => [...prev, {
@@ -172,16 +175,18 @@ const WhatsApp = () => {
 
       await supabase.from('whatsapp_messages').insert({
         conversation_phone: selected.phone, direction: 'sent', body: text, status: 'sent', from_me: true,
-      });
+        user_id: user?.id || null,
+      } as any);
       await supabase.from('whatsapp_conversations').upsert({
         phone: selected.phone, name: selected.name,
         last_message: text, last_message_time: new Date().toISOString(), updated_at: new Date().toISOString(),
-      }, { onConflict: 'phone' });
+        user_id: user?.id || null,
+      } as any, { onConflict: 'phone' });
     } catch (err) {
       toast.error('Erro ao enviar mensagem');
       console.error(err);
     }
-  }, [selected]);
+  }, [selected, getHeaders, user]);
 
   const handleSendMedia = useCallback(async (_file: File, _type: 'image' | 'audio' | 'document') => {
     if (!selected) return;
@@ -192,7 +197,8 @@ const WhatsApp = () => {
     const { error } = await supabase.from('whatsapp_conversations').upsert({
       phone, name: name || phone,
       last_message: '', last_message_time: new Date().toISOString(), updated_at: new Date().toISOString(),
-    }, { onConflict: 'phone' });
+      user_id: user?.id || null,
+    } as any, { onConflict: 'phone' });
     if (error) { toast.error('Erro ao criar conversa'); return; }
     await loadConversations();
     const { data } = await supabase.from('whatsapp_conversations').select('*').eq('phone', phone).single();
@@ -207,17 +213,18 @@ const WhatsApp = () => {
       setMessages([]);
     }
     toast.success('Conversa criada!');
-  }, [loadConversations]);
+  }, [loadConversations, user]);
 
   // ===== CONTACTS HANDLERS =====
   const handleSaveContact = useCallback(async (data: { phone: string; name: string; notes?: string }) => {
     const { error } = await supabase.from('whatsapp_contacts').upsert({
       phone: data.phone, name: data.name, notes: data.notes || null,
-    }, { onConflict: 'phone' });
+      user_id: user?.id || null,
+    } as any, { onConflict: 'phone' });
     if (error) { toast.error('Erro ao salvar contato'); return; }
     toast.success('Contato salvo!');
     loadContacts();
-  }, [loadContacts]);
+  }, [loadContacts, user]);
 
   const handleUpdateContact = useCallback(async (id: string, data: { name: string; notes?: string }) => {
     const { error } = await supabase.from('whatsapp_contacts').update({
@@ -268,19 +275,16 @@ const WhatsApp = () => {
 
   const handleConnect = useCallback(async () => {
     setStatus('connecting');
-    try {
-      const res = await fetch(getProxyUrl(), { method: 'POST', headers: getHeaders(), body: JSON.stringify({ action: 'status' }) });
-      const data = await res.json();
-      setStatus(data.connected ? 'connected' : 'disconnected');
-    } catch { setStatus('disconnected'); }
-  }, []);
+    await checkStatus();
+  }, [checkStatus]);
 
   const handleDisconnect = useCallback(async () => {
     try {
-      await fetch(getProxyUrl(), { method: 'POST', headers: getHeaders(), body: JSON.stringify({ action: 'disconnect' }) });
+      const headers = await getHeaders();
+      await fetch(getProxyUrl(), { method: 'POST', headers, body: JSON.stringify({ action: 'disconnect' }) });
       setStatus('disconnected');
     } catch { setStatus('disconnected'); }
-  }, []);
+  }, [getHeaders]);
 
   const handleBack = useCallback(() => { setSelected(null); }, []);
 
@@ -306,6 +310,7 @@ const WhatsApp = () => {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <InstanceSettingsModal onConfigSaved={checkStatus} />
           <ZApiSettingsModal />
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             {status === 'connected' ? <Wifi className="h-3.5 w-3.5 text-emerald-500" /> : <WifiOff className="h-3.5 w-3.5" />}

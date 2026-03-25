@@ -1161,6 +1161,7 @@ export type Database = {
           phone: string
           profile_pic_url: string | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -1170,6 +1171,7 @@ export type Database = {
           phone: string
           profile_pic_url?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -1179,6 +1181,7 @@ export type Database = {
           phone?: string
           profile_pic_url?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1199,6 +1202,7 @@ export type Database = {
           status: string | null
           unread_count: number | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           assigned_to?: string | null
@@ -1216,6 +1220,7 @@ export type Database = {
           status?: string | null
           unread_count?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           assigned_to?: string | null
@@ -1233,6 +1238,7 @@ export type Database = {
           status?: string | null
           unread_count?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1246,6 +1252,7 @@ export type Database = {
           id: string
           message_id: string | null
           status: string | null
+          user_id: string | null
         }
         Insert: {
           body?: string | null
@@ -1256,6 +1263,7 @@ export type Database = {
           id?: string
           message_id?: string | null
           status?: string | null
+          user_id?: string | null
         }
         Update: {
           body?: string | null
@@ -1266,6 +1274,7 @@ export type Database = {
           id?: string
           message_id?: string | null
           status?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
