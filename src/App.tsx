@@ -26,16 +26,12 @@ import WhatsAppGestao from "./pages/gestao/WhatsApp";
 import Agenda from "./pages/gestao/Agenda";
 import DocumentosModelo from "./pages/gestao/cadastros/DocumentosModelo";
 import Contas from "./pages/gestao/cadastros/Contas";
-import Convenios from "./pages/gestao/cadastros/Convenios";
+
 import FormasPagamento from "./pages/gestao/cadastros/FormasPagamento";
 import Fornecedores from "./pages/gestao/cadastros/Fornecedores";
 import Materiais from "./pages/gestao/cadastros/Materiais";
-import StatusAgenda from "./pages/gestao/cadastros/StatusAgenda";
+
 import Pacientes from "./pages/gestao/cadastros/Pacientes";
-import PlanosSaude from "./pages/gestao/cadastros/PlanosSaude";
-import Procedimentos from "./pages/gestao/cadastros/Procedimentos";
-import ProfissionaisSaude from "./pages/gestao/cadastros/ProfissionaisSaude";
-import Secretarias from "./pages/gestao/cadastros/Secretarias";
 import CaixaClinica from "./pages/gestao/financeiro/CaixaClinica";
 import CaixaProfissionais from "./pages/gestao/financeiro/CaixaProfissionais";
 import ContasPagar from "./pages/gestao/financeiro/ContasPagar";
@@ -79,16 +75,11 @@ const App = () => (
               <Route path="agenda" element={<Agenda />} />
               <Route path="cadastros/documentos-modelo" element={<DocumentosModelo />} />
               <Route path="cadastros/contas" element={<Contas />} />
-              <Route path="cadastros/convenios" element={<Convenios />} />
+              
               <Route path="cadastros/formas-pagamento" element={<FormasPagamento />} />
               <Route path="cadastros/fornecedores" element={<Fornecedores />} />
               <Route path="cadastros/materiais" element={<Materiais />} />
-              <Route path="cadastros/status-agenda" element={<StatusAgenda />} />
               <Route path="cadastros/pacientes" element={<Pacientes />} />
-              <Route path="cadastros/planos-saude" element={<PlanosSaude />} />
-              <Route path="cadastros/procedimentos" element={<Procedimentos />} />
-              <Route path="cadastros/profissionais" element={<ProfissionaisSaude />} />
-              <Route path="cadastros/secretarias" element={<Secretarias />} />
               <Route path="financeiro/caixa-clinica" element={<CaixaClinica />} />
               <Route path="financeiro/caixa-profissionais" element={<CaixaProfissionais />} />
               <Route path="financeiro/contas-pagar" element={<ContasPagar />} />
