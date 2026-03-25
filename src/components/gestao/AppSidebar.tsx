@@ -37,7 +37,7 @@ const institutoItems = [
 const cadastroItems = [
   { title: 'Documentos Modelo', url: '/gestao/cadastros/documentos-modelo', icon: FileText },
   { title: 'Contas', url: '/gestao/cadastros/contas', icon: DollarSign },
-  { title: 'Convênios', url: '/gestao/cadastros/convenios', icon: Handshake },
+  
   { title: 'Formas de Pagamento', url: '/gestao/cadastros/formas-pagamento', icon: CreditCard },
   { title: 'Fornecedores', url: '/gestao/cadastros/fornecedores', icon: Truck },
   { title: 'Materiais', url: '/gestao/cadastros/materiais', icon: Package },
