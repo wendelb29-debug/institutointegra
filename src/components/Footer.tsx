@@ -27,7 +27,7 @@ export function Footer() {
             <h4 className="font-sans font-semibold text-background text-sm uppercase tracking-wider mb-4">Contato</h4>
             <div className="space-y-3 text-sm">
               <p className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" /> (11) 99999-0000</p>
-              <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" /> São Paulo, SP</p>
+              <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" /> Uberlândia, MG</p>
               <p>contato@integra.com.br</p>
             </div>
           </div>
