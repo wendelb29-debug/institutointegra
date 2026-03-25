@@ -295,7 +295,7 @@ const WhatsApp = () => {
   ];
 
   return (
-    <div className="h-[calc(100vh-3.5rem)] flex flex-col bg-background -m-4 md:-m-8">
+    <div className="h-[calc(100vh-3.5rem)] flex flex-col bg-background -m-4 md:-m-8 -mb-4 md:-mb-8 overflow-hidden">
       {/* Tabs + Actions */}
       <div className="flex items-center justify-between border-b border-border bg-card px-2">
         <div className="flex gap-0">
