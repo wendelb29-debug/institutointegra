@@ -96,7 +96,7 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full min-h-0 bg-background">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card">
         <div className="flex items-center gap-3">
