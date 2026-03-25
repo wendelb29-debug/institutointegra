@@ -161,7 +161,7 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-[5%] py-4 space-y-2 bg-muted/20">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-[5%] py-4 space-y-2 bg-muted/20">
         {messages.length === 0 && (
           <div className="flex items-center justify-center h-full">
             <p className="text-sm text-muted-foreground">Nenhuma mensagem ainda. Envie a primeira!</p>
