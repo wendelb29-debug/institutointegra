@@ -8,6 +8,9 @@ export interface Conversation {
   avatarInitial: string;
   isOnline?: boolean;
   status?: 'all' | 'unread' | 'attending';
+  profilePicUrl?: string;
+  assignedTo?: string | null;
+  conversationStatus?: 'aberto' | 'em_atendimento' | 'finalizado';
 }
 
 export interface ChatMessage {
@@ -22,5 +25,16 @@ export interface ChatMessage {
   mediaMimeType?: string;
 }
 
+export interface WhatsAppContact {
+  id: string;
+  phone: string;
+  name: string;
+  profilePicUrl?: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected';
-export type ConversationFilter = 'all' | 'unread' | 'attending';
+export type ConversationFilter = 'all' | 'unread' | 'attending' | 'mine' | 'unassigned' | 'finished';
+export type OrbitTab = 'inbox' | 'contacts' | 'attendance';
