@@ -1,8 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, Loader2, Check, CheckCheck, Phone, MoreVertical } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Textarea } from '@/components/ui/textarea';
+import { Send, Bot, Loader2, Check, CheckCheck, MoreVertical, Search, Smile, Paperclip, Mic } from 'lucide-react';
 import { toast } from 'sonner';
 import { Conversation, ChatMessage } from './types';
 
@@ -10,9 +7,10 @@ interface ChatPanelProps {
   conversation: Conversation;
   messages: ChatMessage[];
   onSendMessage: (text: string) => void;
+  onBack?: () => void;
 }
 
-export const ChatPanel = ({ conversation, messages, onSendMessage }: ChatPanelProps) => {
+export const ChatPanel = ({ conversation, messages, onSendMessage, onBack }: ChatPanelProps) => {
   const [newMessage, setNewMessage] = useState('');
   const [orbitLoading, setOrbitLoading] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
@@ -38,17 +36,14 @@ export const ChatPanel = ({ conversation, messages, onSendMessage }: ChatPanelPr
       toast.error('Nenhuma mensagem recebida para responder.');
       return;
     }
-
     setOrbitLoading(true);
-    // Simulating AI response — ready for POST /chat integration
     setTimeout(() => {
       const aiResponses = [
         'Olá! Entendi sua solicitação. Posso ajudar a agendar um horário que seja conveniente para você. Temos disponibilidade nas terças e quintas. Qual horário prefere?',
         'Claro! Vou verificar as opções disponíveis e retorno em instantes. Obrigado pela preferência!',
         'Perfeito! Sua consulta está confirmada. Enviarei um lembrete 24h antes. Qualquer dúvida, estou à disposição.',
       ];
-      const response = aiResponses[Math.floor(Math.random() * aiResponses.length)];
-      setNewMessage(response);
+      setNewMessage(aiResponses[Math.floor(Math.random() * aiResponses.length)]);
       setOrbitLoading(false);
       toast.success('Orbit AI gerou uma sugestão de resposta.');
     }, 1500);
@@ -56,63 +51,69 @@ export const ChatPanel = ({ conversation, messages, onSendMessage }: ChatPanelPr
 
   const MessageStatus = ({ status }: { status?: string }) => {
     if (!status) return null;
-    if (status === 'read') return <CheckCheck className="h-3.5 w-3.5 text-sky-500" />;
-    if (status === 'delivered') return <CheckCheck className="h-3.5 w-3.5 text-muted-foreground/60" />;
-    return <Check className="h-3.5 w-3.5 text-muted-foreground/60" />;
+    if (status === 'read') return <CheckCheck className="h-4 w-4" style={{ color: '#53bdeb' }} />;
+    if (status === 'delivered') return <CheckCheck className="h-4 w-4" style={{ color: '#8696a0' }} />;
+    return <Check className="h-4 w-4" style={{ color: '#8696a0' }} />;
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full" style={{ backgroundColor: '#0b141a' }}>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
+      <div className="flex items-center justify-between px-4 py-2" style={{ backgroundColor: '#202c33' }}>
         <div className="flex items-center gap-3">
+          {onBack && (
+            <button onClick={onBack} className="p-1 mr-1 lg:hidden" style={{ color: '#aebac1' }}>
+              ←
+            </button>
+          )}
           <div className="relative">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-sm font-semibold text-primary">{conversation.avatarInitial}</span>
+            <div className="h-10 w-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#2a3942' }}>
+              <span className="text-sm font-medium" style={{ color: '#aebac1' }}>{conversation.avatarInitial}</span>
             </div>
             {conversation.isOnline && (
-              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-card" />
+              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2" style={{ backgroundColor: '#00a884', borderColor: '#202c33' }} />
             )}
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">{conversation.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {conversation.isOnline ? (
-                <span className="text-emerald-600">Online</span>
-              ) : (
-                conversation.phone
-              )}
+            <p className="text-[16px] font-normal" style={{ color: '#e9edef' }}>{conversation.name}</p>
+            <p className="text-[13px]" style={{ color: conversation.isOnline ? '#00a884' : '#8696a0' }}>
+              {conversation.isOnline ? 'online' : 'visto por último hoje'}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-            <Phone className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-            <MoreVertical className="h-4 w-4" />
-          </Button>
+        <div className="flex items-center gap-4">
+          <button className="p-1.5 rounded-full hover:bg-white/5">
+            <Search className="h-5 w-5" style={{ color: '#aebac1' }} />
+          </button>
+          <button className="p-1.5 rounded-full hover:bg-white/5">
+            <MoreVertical className="h-5 w-5" style={{ color: '#aebac1' }} />
+          </button>
         </div>
       </div>
 
       {/* Messages */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-4 space-y-2"
-        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%239C92AC\' fill-opacity=\'0.03\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }}
+        className="flex-1 overflow-y-auto px-[6%] py-4 space-y-1"
+        style={{
+          backgroundColor: '#0b141a',
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='400' height='400' viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M20 20h2v2h-2zM60 20h2v2h-2zM100 20h2v2h-2zM140 20h2v2h-2zM180 20h2v2h-2zM220 20h2v2h-2zM260 20h2v2h-2zM300 20h2v2h-2zM340 20h2v2h-2zM380 20h2v2h-2zM40 40h2v2h-2zM80 40h2v2h-2zM120 40h2v2h-2zM160 40h2v2h-2zM200 40h2v2h-2zM240 40h2v2h-2zM280 40h2v2h-2zM320 40h2v2h-2zM360 40h2v2h-2z'/%3E%3C/g%3E%3C/svg%3E")`,
+        }}
       >
         {messages.map(msg => (
           <div key={msg.id} className={`flex ${msg.type === 'sent' ? 'justify-end' : 'justify-start'}`}>
             <div
-              className={`max-w-[70%] px-3 py-2 rounded-2xl text-sm shadow-sm ${
-                msg.type === 'sent'
-                  ? 'bg-primary text-primary-foreground rounded-br-md'
-                  : 'bg-card text-foreground border border-border rounded-bl-md'
-              }`}
+              className="max-w-[65%] px-2.5 py-1.5 rounded-lg text-[14.2px] relative shadow-sm"
+              style={{
+                backgroundColor: msg.type === 'sent' ? '#005c4b' : '#202c33',
+                color: '#e9edef',
+                borderTopLeftRadius: msg.type === 'received' ? '0' : undefined,
+                borderTopRightRadius: msg.type === 'sent' ? '0' : undefined,
+              }}
             >
-              <p className="leading-relaxed">{msg.text}</p>
-              <div className={`flex items-center justify-end gap-1 mt-1 ${msg.type === 'sent' ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                <span className="text-[10px]">{msg.time}</span>
+              <p className="leading-[19px]">{msg.text}</p>
+              <div className="flex items-center justify-end gap-1 mt-0.5 -mb-0.5">
+                <span className="text-[11px]" style={{ color: msg.type === 'sent' ? 'rgba(255,255,255,0.6)' : '#8696a0' }}>{msg.time}</span>
                 {msg.type === 'sent' && <MessageStatus status={msg.status} />}
               </div>
             </div>
@@ -121,23 +122,29 @@ export const ChatPanel = ({ conversation, messages, onSendMessage }: ChatPanelPr
       </div>
 
       {/* Input */}
-      <div className="p-3 border-t border-border bg-card">
-        <div className="flex items-end gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleOrbitAI}
-            disabled={orbitLoading}
-            className="shrink-0 gap-1.5 text-xs border-accent text-accent hover:bg-accent/10 hover:text-accent"
-          >
-            {orbitLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Bot className="h-3.5 w-3.5" />}
-            Orbit AI
-          </Button>
-          <Textarea
+      <div className="px-3 py-2 flex items-end gap-1" style={{ backgroundColor: '#202c33' }}>
+        <button
+          onClick={handleOrbitAI}
+          disabled={orbitLoading}
+          className="p-2.5 rounded-full hover:bg-white/5 transition-colors shrink-0"
+          title="Orbit AI"
+          style={{ color: orbitLoading ? '#00a884' : '#8696a0' }}
+        >
+          {orbitLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Bot className="h-6 w-6" />}
+        </button>
+        <button className="p-2.5 rounded-full hover:bg-white/5 transition-colors shrink-0" style={{ color: '#8696a0' }}>
+          <Smile className="h-6 w-6" />
+        </button>
+        <button className="p-2.5 rounded-full hover:bg-white/5 transition-colors shrink-0" style={{ color: '#8696a0' }}>
+          <Paperclip className="h-6 w-6" />
+        </button>
+        <div className="flex-1 mx-1">
+          <input
             value={newMessage}
             onChange={e => setNewMessage(e.target.value)}
-            placeholder="Digite sua mensagem..."
-            className="min-h-[40px] max-h-[100px] resize-none text-sm flex-1"
+            placeholder="Digite uma mensagem"
+            className="w-full px-3 py-2.5 rounded-lg text-[15px] outline-none placeholder:text-[#8696a0]"
+            style={{ backgroundColor: '#2a3942', color: '#d1d7db', border: 'none' }}
             onKeyDown={e => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -145,15 +152,21 @@ export const ChatPanel = ({ conversation, messages, onSendMessage }: ChatPanelPr
               }
             }}
           />
-          <Button
-            onClick={handleSend}
-            size="icon"
-            disabled={!newMessage.trim() || sendingMessage}
-            className="shrink-0 bg-primary hover:bg-primary/90"
-          >
-            {sendingMessage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          </Button>
         </div>
+        {newMessage.trim() ? (
+          <button
+            onClick={handleSend}
+            disabled={sendingMessage}
+            className="p-2.5 rounded-full hover:bg-white/5 transition-colors shrink-0"
+            style={{ color: '#8696a0' }}
+          >
+            {sendingMessage ? <Loader2 className="h-6 w-6 animate-spin" /> : <Send className="h-6 w-6" />}
+          </button>
+        ) : (
+          <button className="p-2.5 rounded-full hover:bg-white/5 transition-colors shrink-0" style={{ color: '#8696a0' }}>
+            <Mic className="h-6 w-6" />
+          </button>
+        )}
       </div>
     </div>
   );
