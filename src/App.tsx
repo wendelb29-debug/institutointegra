@@ -79,7 +79,7 @@ const App = () => (
               <Route path="agenda" element={<Agenda />} />
               <Route path="cadastros/documentos-modelo" element={<DocumentosModelo />} />
               <Route path="cadastros/contas" element={<Contas />} />
-              <Route path="cadastros/convenios" element={<Convenios />} />
+              
               <Route path="cadastros/formas-pagamento" element={<FormasPagamento />} />
               <Route path="cadastros/fornecedores" element={<Fornecedores />} />
               <Route path="cadastros/materiais" element={<Materiais />} />
