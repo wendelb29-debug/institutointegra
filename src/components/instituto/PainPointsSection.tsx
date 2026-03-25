@@ -1,12 +1,12 @@
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { AlertCircle, Brain, HeartCrack, Frown, Compass } from "lucide-react";
+import { Brain, AlertCircle, HeartCrack, Frown, Zap } from "lucide-react";
 
 const painPoints = [
+  { icon: Brain, label: "Dificuldade de concentração" },
   { icon: AlertCircle, label: "Ansiedade constante" },
-  { icon: Brain, label: "Estresse e sobrecarga" },
-  { icon: HeartCrack, label: "Dificuldade nos relacionamentos" },
-  { icon: Frown, label: "Falta de motivação" },
-  { icon: Compass, label: "Sensação de estar perdido" },
+  { icon: Zap, label: "Problemas de memória" },
+  { icon: HeartCrack, label: "Dificuldade emocional" },
+  { icon: Frown, label: "Sobrecarga mental" },
 ];
 
 export function PainPointsSection() {
@@ -14,7 +14,7 @@ export function PainPointsSection() {
     <section className="section-padding py-20 bg-instituto-light">
       <div className="max-w-4xl mx-auto text-center">
         <ScrollReveal>
-          <h2 className="text-2xl lg:text-4xl mb-10">Você está se sentindo assim?</h2>
+          <h2 className="text-2xl lg:text-4xl mb-10">Você está passando por isso?</h2>
         </ScrollReveal>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 mb-10">
           {painPoints.map((p, i) => (
@@ -30,7 +30,7 @@ export function PainPointsSection() {
         </div>
         <ScrollReveal delay={400}>
           <p className="text-muted-foreground text-lg leading-relaxed max-w-xl mx-auto">
-            Se você se identificou com algum desses pontos, <span className="text-instituto font-semibold">podemos te ajudar.</span>
+            Você não precisa enfrentar isso sozinho. <span className="text-instituto font-semibold">Podemos te ajudar.</span>
           </p>
         </ScrollReveal>
       </div>

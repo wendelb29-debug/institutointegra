@@ -12,10 +12,10 @@ export function CtaSection() {
         <ScrollReveal>
           <Heart className="h-10 w-10 text-background/40 mx-auto mb-6" />
           <h2 className="text-2xl lg:text-4xl text-background mb-3">
-            Você não precisa passar por isso sozinho.
+            Comece seu cuidado emocional hoje.
           </h2>
           <p className="text-background/70 text-lg mb-10 leading-relaxed">
-            Comece seu processo de transformação hoje.
+            Dê o primeiro passo rumo ao seu bem-estar. Agende sua consulta agora.
           </p>
           <Button size="lg" className="bg-background text-primary hover:bg-background/90 text-base px-10 py-6 rounded-xl shadow-lg" asChild>
             <a href={WA_LINK} target="_blank" rel="noopener noreferrer">
