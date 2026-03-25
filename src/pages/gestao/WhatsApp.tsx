@@ -291,7 +291,7 @@ const WhatsApp = () => {
   ];
 
   return (
-    <div className="h-[calc(100vh-80px)] flex flex-col bg-background">
+    <div className="h-[calc(100vh-3.5rem)] flex flex-col bg-background -m-4 md:-m-8">
       {/* Top banner */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-card">
         <div className="flex items-center gap-3">
