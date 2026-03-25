@@ -7,6 +7,7 @@ export interface Conversation {
   unread: number;
   avatarInitial: string;
   isOnline?: boolean;
+  status?: 'all' | 'unread' | 'attending';
 }
 
 export interface ChatMessage {
@@ -18,3 +19,4 @@ export interface ChatMessage {
 }
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected';
+export type ConversationFilter = 'all' | 'unread' | 'attending';
