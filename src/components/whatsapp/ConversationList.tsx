@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Filter, Users, Plus } from 'lucide-react';
+import { Search, Filter, Plus, User } from 'lucide-react';
 import { Conversation, ConversationFilter } from './types';
 import { NewConversationModal } from './NewConversationModal';
 
@@ -8,12 +8,14 @@ interface ConversationListProps {
   selectedId: string | null;
   onSelect: (conversation: Conversation) => void;
   onNewConversation?: (phone: string, name?: string) => void;
+  currentUserId?: string;
 }
 
 const filterOptions: { key: ConversationFilter; label: string }[] = [
-  { key: 'all', label: 'Todos' },
-  { key: 'unread', label: 'Não lidas' },
-  { key: 'attending', label: 'Em atendimento' },
+  { key: 'all', label: 'Todas' },
+  { key: 'mine', label: 'Minhas' },
+  { key: 'unassigned', label: 'Não atribuídas' },
+  { key: 'finished', label: 'Finalizadas' },
 ];
 
 const avatarColors = [
@@ -27,15 +29,17 @@ function getAvatarColor(id: string) {
   return avatarColors[Math.abs(hash) % avatarColors.length];
 }
 
-export const ConversationList = ({ conversations, selectedId, onSelect, onNewConversation }: ConversationListProps) => {
+export const ConversationList = ({ conversations, selectedId, onSelect, onNewConversation, currentUserId }: ConversationListProps) => {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<ConversationFilter>('all');
 
   const filtered = conversations.filter(c => {
     const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) || c.phone.includes(search);
     if (!matchesSearch) return false;
+    if (filter === 'mine') return c.assignedTo === currentUserId;
+    if (filter === 'unassigned') return !c.assignedTo;
+    if (filter === 'finished') return c.conversationStatus === 'finalizado';
     if (filter === 'unread') return c.unread > 0;
-    if (filter === 'attending') return c.status === 'attending';
     return true;
   });
 
@@ -48,9 +52,6 @@ export const ConversationList = ({ conversations, selectedId, onSelect, onNewCon
           {onNewConversation && (
             <NewConversationModal onStartConversation={onNewConversation} />
           )}
-          <button className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
-            <Filter className="h-4 w-4" />
-          </button>
         </div>
       </div>
 
@@ -68,7 +69,7 @@ export const ConversationList = ({ conversations, selectedId, onSelect, onNewCon
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-1.5 px-3 py-1.5">
+      <div className="flex gap-1.5 px-3 py-1.5 flex-wrap">
         {filterOptions.map(opt => (
           <button
             key={opt.key}
@@ -95,9 +96,13 @@ export const ConversationList = ({ conversations, selectedId, onSelect, onNewCon
             }`}
           >
             <div className="relative shrink-0">
-              <div className={`h-11 w-11 rounded-full flex items-center justify-center text-white font-medium text-sm ${getAvatarColor(conv.id)}`}>
-                {conv.avatarInitial}
-              </div>
+              {conv.profilePicUrl ? (
+                <img src={conv.profilePicUrl} alt={conv.name} className="h-11 w-11 rounded-full object-cover" />
+              ) : (
+                <div className={`h-11 w-11 rounded-full flex items-center justify-center text-white font-medium text-sm ${getAvatarColor(conv.id)}`}>
+                  {conv.avatarInitial}
+                </div>
+              )}
               {conv.isOnline && (
                 <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card bg-emerald-500" />
               )}
