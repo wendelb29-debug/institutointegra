@@ -6,6 +6,7 @@ import { QrCodeModal } from '@/components/whatsapp/QrCodeModal';
 import { ZApiSettingsModal } from '@/components/whatsapp/ZApiSettingsModal';
 import { mockConversations, mockMessages } from '@/components/whatsapp/mockData';
 import { Conversation, ChatMessage, ConnectionStatus } from '@/components/whatsapp/types';
+import { Bot } from 'lucide-react';
 
 const WhatsApp = () => {
   const [status, setStatus] = useState<ConnectionStatus>('connected');
@@ -53,11 +54,19 @@ const WhatsApp = () => {
 
   return (
     <div className="h-[calc(100vh-80px)] flex flex-col">
-      {/* Thin status bar */}
-      <div className="flex items-center justify-between px-4 py-1.5" style={{ backgroundColor: '#202c33', borderBottom: '1px solid #2a3942' }}>
-        <span className="text-xs font-medium" style={{ color: '#8696a0' }}>
-          Orbit Inbox
-        </span>
+      {/* Top banner */}
+      <div className="flex items-center justify-between px-4 py-2" style={{ backgroundColor: '#202c33', borderBottom: '1px solid #2a3942' }}>
+        <div className="flex items-center gap-2">
+          <Bot className="h-4 w-4" style={{ color: '#00a884' }} />
+          <div>
+            <span className="text-xs font-semibold" style={{ color: '#e9edef' }}>
+              Central WhatsApp Inteligente
+            </span>
+            <span className="text-[10px] ml-2 hidden sm:inline" style={{ color: '#8696a0' }}>
+              Gerencie pacientes, confirme consultas e automatize atendimentos com IA
+            </span>
+          </div>
+        </div>
         <div className="flex items-center gap-2">
           <ZApiSettingsModal />
           <QrCodeModal status={status} onConnect={handleConnect} onDisconnect={handleDisconnect} />

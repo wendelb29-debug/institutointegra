@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, Loader2, Check, CheckCheck, MoreVertical, Search, Smile, Paperclip, Mic } from 'lucide-react';
+import { Send, Bot, Loader2, Check, CheckCheck, MoreVertical, Search, Smile, Paperclip, Mic, CalendarCheck, Bell } from 'lucide-react';
 import { toast } from 'sonner';
 import { Conversation, ChatMessage } from './types';
 
@@ -49,6 +49,18 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onBack }: Cha
     }, 1500);
   };
 
+  const handleConfirmConsulta = () => {
+    const msg = 'Olá! Estamos confirmando sua consulta. Poderia nos confirmar sua presença?';
+    onSendMessage(msg);
+    toast.success('Mensagem de confirmação enviada!');
+  };
+
+  const handleSendLembrete = () => {
+    const msg = 'Lembrete: você tem uma consulta agendada amanhã. Qualquer dúvida estamos à disposição.';
+    onSendMessage(msg);
+    toast.success('Lembrete enviado!');
+  };
+
   const MessageStatus = ({ status }: { status?: string }) => {
     if (!status) return null;
     if (status === 'read') return <CheckCheck className="h-4 w-4" style={{ color: '#53bdeb' }} />;
@@ -77,11 +89,29 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onBack }: Cha
           <div>
             <p className="text-[16px] font-normal" style={{ color: '#e9edef' }}>{conversation.name}</p>
             <p className="text-[13px]" style={{ color: conversation.isOnline ? '#00a884' : '#8696a0' }}>
-              {conversation.isOnline ? 'online' : 'visto por último hoje'}
+              {conversation.isOnline ? 'online' : 'visto por último hoje'} · {conversation.phone}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleConfirmConsulta}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors hover:opacity-90"
+            style={{ backgroundColor: '#00a884', color: '#111b21' }}
+            title="Confirmar consulta"
+          >
+            <CalendarCheck className="h-3.5 w-3.5" />
+            <span className="hidden xl:inline">Confirmar</span>
+          </button>
+          <button
+            onClick={handleSendLembrete}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors hover:opacity-90"
+            style={{ backgroundColor: '#2a3942', color: '#e9edef' }}
+            title="Enviar lembrete"
+          >
+            <Bell className="h-3.5 w-3.5" />
+            <span className="hidden xl:inline">Lembrete</span>
+          </button>
           <button className="p-1.5 rounded-full hover:bg-white/5">
             <Search className="h-5 w-5" style={{ color: '#aebac1' }} />
           </button>
@@ -127,7 +157,7 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onBack }: Cha
           onClick={handleOrbitAI}
           disabled={orbitLoading}
           className="p-2.5 rounded-full hover:bg-white/5 transition-colors shrink-0"
-          title="Orbit AI"
+          title="Responder com Orbit AI"
           style={{ color: orbitLoading ? '#00a884' : '#8696a0' }}
         >
           {orbitLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Bot className="h-6 w-6" />}

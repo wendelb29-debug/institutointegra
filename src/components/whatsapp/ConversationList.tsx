@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { Search, Filter } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Conversation } from './types';
+import { Search, Filter, MessageCircle, Eye, Users } from 'lucide-react';
+import { Conversation, ConversationFilter } from './types';
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -10,13 +8,23 @@ interface ConversationListProps {
   onSelect: (conversation: Conversation) => void;
 }
 
+const filterOptions: { key: ConversationFilter; label: string; icon: typeof Users }[] = [
+  { key: 'all', label: 'Todos', icon: Users },
+  { key: 'unread', label: 'Não lidas', icon: MessageCircle },
+  { key: 'attending', label: 'Em atendimento', icon: Eye },
+];
+
 export const ConversationList = ({ conversations, selectedId, onSelect }: ConversationListProps) => {
   const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<ConversationFilter>('all');
 
-  const filtered = conversations.filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.phone.includes(search)
-  );
+  const filtered = conversations.filter(c => {
+    const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) || c.phone.includes(search);
+    if (!matchesSearch) return false;
+    if (filter === 'unread') return c.unread > 0;
+    if (filter === 'attending') return c.status === 'attending';
+    return true;
+  });
 
   return (
     <div className="flex flex-col h-full" style={{ backgroundColor: '#111b21' }}>
@@ -39,13 +47,31 @@ export const ConversationList = ({ conversations, selectedId, onSelect }: Conver
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: '#8696a0' }} />
           <input
-            placeholder="Pesquisar ou começar uma nova conversa"
+            placeholder="Pesquisar por nome ou número"
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-1.5 rounded-lg text-sm outline-none placeholder:text-[#8696a0]"
             style={{ backgroundColor: '#202c33', color: '#d1d7db', border: 'none' }}
           />
         </div>
+      </div>
+
+      {/* Filter tabs */}
+      <div className="flex gap-1 px-2 py-1.5">
+        {filterOptions.map(opt => (
+          <button
+            key={opt.key}
+            onClick={() => setFilter(opt.key)}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium transition-colors"
+            style={{
+              backgroundColor: filter === opt.key ? '#00a884' : '#202c33',
+              color: filter === opt.key ? '#111b21' : '#8696a0',
+            }}
+          >
+            <opt.icon className="h-3 w-3" />
+            {opt.label}
+          </button>
+        ))}
       </div>
 
       {/* Conversations */}
@@ -78,7 +104,9 @@ export const ConversationList = ({ conversations, selectedId, onSelect }: Conver
                 </span>
               </div>
               <div className="flex items-center justify-between mt-0.5">
-                <p className="text-[13px] truncate pr-2" style={{ color: '#8696a0' }}>{conv.lastMessage}</p>
+                <p className="text-[13px] truncate pr-2" style={{ color: '#8696a0' }}>
+                  {conv.phone} · {conv.lastMessage}
+                </p>
                 {conv.unread > 0 && (
                   <span
                     className="text-[11px] font-medium h-5 min-w-[20px] flex items-center justify-center rounded-full px-1.5"
