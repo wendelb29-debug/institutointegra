@@ -31,17 +31,16 @@ const mainItems = [
 const institutoItems = [
   { title: 'Instituto', url: '/gestao/instituto-gestao', icon: GraduationCap },
   { title: 'Agenda', url: '/gestao/agenda', icon: Stethoscope },
+  { title: 'Pacientes', url: '/gestao/cadastros/pacientes', icon: HeartPulse },
   { title: 'WhatsApp', url: '/gestao/whatsapp', icon: MessageCircle },
 ];
 
 const cadastroItems = [
   { title: 'Documentos Modelo', url: '/gestao/cadastros/documentos-modelo', icon: FileText },
   { title: 'Contas', url: '/gestao/cadastros/contas', icon: DollarSign },
-  
   { title: 'Formas de Pagamento', url: '/gestao/cadastros/formas-pagamento', icon: CreditCard },
   { title: 'Fornecedores', url: '/gestao/cadastros/fornecedores', icon: Truck },
   { title: 'Materiais', url: '/gestao/cadastros/materiais', icon: Package },
-  { title: 'Pacientes', url: '/gestao/cadastros/pacientes', icon: HeartPulse },
 ];
 
 const financeiroItems = [
