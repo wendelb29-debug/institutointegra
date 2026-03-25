@@ -1,47 +1,33 @@
-import { useState, useEffect } from 'react';
-import { Settings, Copy, Check, Loader2, ExternalLink } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { Settings, Copy, Check, ExternalLink, Send, Download, LogOut, LogIn, Eye, MessageSquare } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 
 export const ZApiSettingsModal = () => {
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
 
-  // Webhook URLs (read-only, generated from project)
   const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'pktpabruwkvpesqqinxx';
-  const baseEdgeFn = `https://${projectId}.supabase.co/functions/v1`;
-  
-  const webhookReceive = `${baseEdgeFn}/zapi-webhook`;
-  const webhookStatus = `${baseEdgeFn}/zapi-webhook?type=status`;
-  const webhookDelivery = `${baseEdgeFn}/zapi-webhook?type=delivery`;
+  const base = `https://${projectId}.supabase.co/functions/v1/zapi-webhook`;
 
-  const handleCopy = async (text: string, label: string) => {
-    await navigator.clipboard.writeText(text);
-    setCopied(label);
-    toast.success(`URL copiada: ${label}`);
+  const webhooks = [
+    { label: 'Ao enviar', field: 'on-send', icon: Send, url: `${base}?type=send` },
+    { label: 'Presença do chat', field: 'chat-presence', icon: Eye, url: `${base}?type=presence` },
+    { label: 'Ao desconectar', field: 'on-disconnect', icon: LogOut, url: `${base}?type=disconnect` },
+    { label: 'Receber status da mensagem', field: 'message-status', icon: MessageSquare, url: `${base}?type=delivery` },
+    { label: 'Ao receber', field: 'on-receive', icon: Download, url: `${base}?type=message` },
+    { label: 'Ao conectar', field: 'on-connect', icon: LogIn, url: `${base}?type=connect` },
+  ];
+
+  const handleCopy = async (url: string, field: string) => {
+    await navigator.clipboard.writeText(url);
+    setCopied(field);
+    toast.success('URL copiada!');
     setTimeout(() => setCopied(null), 2000);
   };
-
-  const CopyButton = ({ text, label }: { text: string; label: string }) => (
-    <button
-      onClick={() => handleCopy(text, label)}
-      className="p-1.5 rounded hover:bg-white/10 transition-colors shrink-0"
-      title="Copiar"
-    >
-      {copied === label ? (
-        <Check className="h-4 w-4" style={{ color: '#00a884' }} />
-      ) : (
-        <Copy className="h-4 w-4" style={{ color: '#8696a0' }} />
-      )}
-    </button>
-  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -54,89 +40,62 @@ export const ZApiSettingsModal = () => {
           <Settings className="h-4 w-4" />
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg border-0" style={{ backgroundColor: '#222e35', color: '#e9edef' }}>
+      <DialogContent className="sm:max-w-2xl border-0" style={{ backgroundColor: '#222e35', color: '#e9edef' }}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-[#e9edef]">
             <Settings className="h-5 w-5" style={{ color: '#00a884' }} />
-            Configurações Z-API
+            Configure Webhooks
           </DialogTitle>
           <DialogDescription style={{ color: '#8696a0' }}>
-            Configure as URLs de webhook no painel da Z-API para receber mensagens.
+            Configurar webhooks para sua instância permite receber os eventos dela.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5 py-2">
-          {/* Instructions */}
-          <div className="rounded-lg p-3 text-[13px] space-y-2" style={{ backgroundColor: '#1a2730', color: '#8696a0' }}>
-            <p className="font-medium" style={{ color: '#e9edef' }}>📋 Como configurar:</p>
-            <ol className="list-decimal list-inside space-y-1">
-              <li>Acesse o painel da <span style={{ color: '#00a884' }}>Z-API</span></li>
-              <li>Vá em sua instância → <strong>Webhooks</strong></li>
-              <li>Cole as URLs abaixo nos campos correspondentes</li>
-              <li>Salve as configurações</li>
-            </ol>
-          </div>
-
-          {/* Webhook: Receber Mensagens */}
-          <div className="space-y-1.5">
-            <Label className="text-[13px] font-medium" style={{ color: '#aebac1' }}>
-              Webhook — Receber Mensagens
-            </Label>
-            <div className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ backgroundColor: '#2a3942' }}>
-              <code className="text-[12px] flex-1 break-all" style={{ color: '#00a884' }}>
-                {webhookReceive}
-              </code>
-              <CopyButton text={webhookReceive} label="receive" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-3">
+          {webhooks.map(wh => (
+            <div key={wh.field} className="space-y-1.5">
+              <Label className="text-[13px] font-semibold" style={{ color: '#e9edef' }}>
+                {wh.label}
+              </Label>
+              <div
+                className="flex items-center gap-2 rounded-lg px-3 py-2.5 cursor-pointer hover:opacity-80 transition-opacity"
+                style={{ backgroundColor: '#2a3942' }}
+                onClick={() => handleCopy(wh.url, wh.field)}
+              >
+                <wh.icon className="h-4 w-4 shrink-0" style={{ color: '#8696a0' }} />
+                <span className="text-[12px] flex-1 truncate" style={{ color: '#8696a0' }}>
+                  {wh.label}
+                </span>
+                {copied === wh.field ? (
+                  <Check className="h-4 w-4 shrink-0" style={{ color: '#00a884' }} />
+                ) : (
+                  <Copy className="h-4 w-4 shrink-0" style={{ color: '#8696a0' }} />
+                )}
+              </div>
             </div>
-            <p className="text-[11px]" style={{ color: '#8696a0' }}>
-              Cole no campo "URL de recebimento" ou "on-message" da Z-API
-            </p>
-          </div>
-
-          {/* Webhook: Status da Conexão */}
-          <div className="space-y-1.5">
-            <Label className="text-[13px] font-medium" style={{ color: '#aebac1' }}>
-              Webhook — Status da Conexão
-            </Label>
-            <div className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ backgroundColor: '#2a3942' }}>
-              <code className="text-[12px] flex-1 break-all" style={{ color: '#00a884' }}>
-                {webhookStatus}
-              </code>
-              <CopyButton text={webhookStatus} label="status" />
-            </div>
-            <p className="text-[11px]" style={{ color: '#8696a0' }}>
-              Cole no campo "on-connection-status" ou "status-instance"
-            </p>
-          </div>
-
-          {/* Webhook: Confirmação de Entrega */}
-          <div className="space-y-1.5">
-            <Label className="text-[13px] font-medium" style={{ color: '#aebac1' }}>
-              Webhook — Confirmação de Entrega
-            </Label>
-            <div className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ backgroundColor: '#2a3942' }}>
-              <code className="text-[12px] flex-1 break-all" style={{ color: '#00a884' }}>
-                {webhookDelivery}
-              </code>
-              <CopyButton text={webhookDelivery} label="delivery" />
-            </div>
-            <p className="text-[11px]" style={{ color: '#8696a0' }}>
-              Cole no campo "on-message-status" ou "delivery"
-            </p>
-          </div>
-
-          {/* Link to Z-API dashboard */}
-          <a
-            href="https://app.z-api.io"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full rounded-lg py-2.5 text-sm font-medium transition-colors hover:opacity-90"
-            style={{ backgroundColor: '#00a884', color: '#111b21' }}
-          >
-            <ExternalLink className="h-4 w-4" />
-            Abrir Painel Z-API
-          </a>
+          ))}
         </div>
+
+        {/* Instructions */}
+        <div className="rounded-lg p-3 text-[13px] space-y-2" style={{ backgroundColor: '#1a2730', color: '#8696a0' }}>
+          <p className="font-medium" style={{ color: '#e9edef' }}>📋 Como usar:</p>
+          <ol className="list-decimal list-inside space-y-1">
+            <li>Clique em cada campo acima para copiar a URL</li>
+            <li>No painel da Z-API, cole cada URL no campo de webhook correspondente</li>
+            <li>Salve as configurações na Z-API</li>
+          </ol>
+        </div>
+
+        <a
+          href="https://app.z-api.io"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full rounded-lg py-2.5 text-sm font-medium transition-colors hover:opacity-90"
+          style={{ backgroundColor: '#00a884', color: '#111b21' }}
+        >
+          <ExternalLink className="h-4 w-4" />
+          Abrir Painel Z-API
+        </a>
       </DialogContent>
     </Dialog>
   );

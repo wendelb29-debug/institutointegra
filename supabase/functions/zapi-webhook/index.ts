@@ -17,28 +17,56 @@ serve(async (req) => {
 
     console.log(`[zapi-webhook] type=${type}`, JSON.stringify(body).substring(0, 500));
 
-    if (type === 'message' || type === null) {
-      // Incoming message from Z-API
-      // body typically contains: { phone, body: { message, ... }, ... }
-      console.log('[zapi-webhook] Incoming message:', JSON.stringify({
-        phone: body.phone,
-        message: body.body?.message || body.text?.message || body.message,
-        isGroup: body.isGroup,
-        fromMe: body.fromMe,
-      }));
-    }
+    // Handle each webhook type from Z-API
+    switch (type) {
+      case 'message':
+        // "Ao receber" — incoming message
+        console.log('[zapi-webhook] Received message:', JSON.stringify({
+          phone: body.phone,
+          message: body.body?.message || body.text?.message || body.message,
+          isGroup: body.isGroup,
+          fromMe: body.fromMe,
+          messageId: body.messageId || body.id,
+        }));
+        break;
 
-    if (type === 'status') {
-      // Connection status change
-      console.log('[zapi-webhook] Connection status:', JSON.stringify(body));
-    }
+      case 'send':
+        // "Ao enviar" — outgoing message confirmation
+        console.log('[zapi-webhook] Sent message:', JSON.stringify({
+          phone: body.phone,
+          messageId: body.messageId || body.id,
+        }));
+        break;
 
-    if (type === 'delivery') {
-      // Message delivery status
-      console.log('[zapi-webhook] Delivery status:', JSON.stringify({
-        messageId: body.id || body.messageId,
-        status: body.status,
-      }));
+      case 'delivery':
+        // "Receber status da mensagem"
+        console.log('[zapi-webhook] Message status:', JSON.stringify({
+          messageId: body.id || body.messageId,
+          status: body.status,
+          phone: body.phone,
+        }));
+        break;
+
+      case 'connect':
+        // "Ao conectar"
+        console.log('[zapi-webhook] Connected:', JSON.stringify(body));
+        break;
+
+      case 'disconnect':
+        // "Ao desconectar"
+        console.log('[zapi-webhook] Disconnected:', JSON.stringify(body));
+        break;
+
+      case 'presence':
+        // "Presença do chat"
+        console.log('[zapi-webhook] Chat presence:', JSON.stringify({
+          phone: body.phone,
+          status: body.status,
+        }));
+        break;
+
+      default:
+        console.log(`[zapi-webhook] Unknown type: ${type}`, JSON.stringify(body));
     }
 
     return new Response(JSON.stringify({ received: true }), {
