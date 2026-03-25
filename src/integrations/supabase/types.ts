@@ -1152,9 +1152,41 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_contacts: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string
+          profile_pic_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone: string
+          profile_pic_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string
+          profile_pic_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       whatsapp_conversations: {
         Row: {
+          assigned_to: string | null
           avatar_url: string | null
+          conversation_status: string | null
           created_at: string | null
           id: string
           is_group: boolean | null
@@ -1163,12 +1195,15 @@ export type Database = {
           last_message_time: string | null
           name: string | null
           phone: string
+          profile_pic_url: string | null
           status: string | null
           unread_count: number | null
           updated_at: string | null
         }
         Insert: {
+          assigned_to?: string | null
           avatar_url?: string | null
+          conversation_status?: string | null
           created_at?: string | null
           id?: string
           is_group?: boolean | null
@@ -1177,12 +1212,15 @@ export type Database = {
           last_message_time?: string | null
           name?: string | null
           phone: string
+          profile_pic_url?: string | null
           status?: string | null
           unread_count?: number | null
           updated_at?: string | null
         }
         Update: {
+          assigned_to?: string | null
           avatar_url?: string | null
+          conversation_status?: string | null
           created_at?: string | null
           id?: string
           is_group?: boolean | null
@@ -1191,6 +1229,7 @@ export type Database = {
           last_message_time?: string | null
           name?: string | null
           phone?: string
+          profile_pic_url?: string | null
           status?: string | null
           unread_count?: number | null
           updated_at?: string | null
