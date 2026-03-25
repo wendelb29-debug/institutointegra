@@ -30,7 +30,7 @@ import Contas from "./pages/gestao/cadastros/Contas";
 import FormasPagamento from "./pages/gestao/cadastros/FormasPagamento";
 import Fornecedores from "./pages/gestao/cadastros/Fornecedores";
 import Materiais from "./pages/gestao/cadastros/Materiais";
-import StatusAgenda from "./pages/gestao/cadastros/StatusAgenda";
+
 import Pacientes from "./pages/gestao/cadastros/Pacientes";
 import PlanosSaude from "./pages/gestao/cadastros/PlanosSaude";
 import Procedimentos from "./pages/gestao/cadastros/Procedimentos";
