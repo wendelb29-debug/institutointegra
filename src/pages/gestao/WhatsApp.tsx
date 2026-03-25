@@ -296,49 +296,36 @@ const WhatsApp = () => {
 
   return (
     <div className="h-[calc(100vh-3.5rem)] flex flex-col bg-background -m-4 md:-m-8">
-      {/* Top banner */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-card">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <MessageSquare className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-base font-semibold text-foreground">Orbit Inbox</h1>
-            <p className="text-xs text-muted-foreground">
-              Centralize atendimentos, gerencie contatos e responda com inteligência.
-            </p>
-          </div>
+      {/* Tabs + Actions */}
+      <div className="flex items-center justify-between border-b border-border bg-card px-2">
+        <div className="flex gap-0">
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium transition-colors border-b-2 ${
+                  activeTab === tab.key
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <InstanceSettingsModal onConfigSaved={checkStatus} />
           <ZApiSettingsModal />
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             {status === 'connected' ? <Wifi className="h-3.5 w-3.5 text-emerald-500" /> : <WifiOff className="h-3.5 w-3.5" />}
-            <span>{status === 'connected' ? 'Conectado' : 'Desconectado'}</span>
+            <span className="hidden sm:inline">{status === 'connected' ? 'Conectado' : 'Desconectado'}</span>
           </div>
           <QrCodeModal status={status} onConnect={handleConnect} onDisconnect={handleDisconnect} />
         </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-0 border-b border-border bg-card">
-        {tabs.map(tab => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-6 py-2.5 text-sm font-medium transition-colors border-b-2 ${
-                activeTab === tab.key
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              {tab.label}
-            </button>
-          );
-        })}
       </div>
 
       {/* Content */}
