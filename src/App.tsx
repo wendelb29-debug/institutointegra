@@ -32,10 +32,6 @@ import Fornecedores from "./pages/gestao/cadastros/Fornecedores";
 import Materiais from "./pages/gestao/cadastros/Materiais";
 
 import Pacientes from "./pages/gestao/cadastros/Pacientes";
-import PlanosSaude from "./pages/gestao/cadastros/PlanosSaude";
-import Procedimentos from "./pages/gestao/cadastros/Procedimentos";
-import ProfissionaisSaude from "./pages/gestao/cadastros/ProfissionaisSaude";
-import Secretarias from "./pages/gestao/cadastros/Secretarias";
 import CaixaClinica from "./pages/gestao/financeiro/CaixaClinica";
 import CaixaProfissionais from "./pages/gestao/financeiro/CaixaProfissionais";
 import ContasPagar from "./pages/gestao/financeiro/ContasPagar";
