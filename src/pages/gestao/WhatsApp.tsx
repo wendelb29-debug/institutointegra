@@ -6,10 +6,10 @@ import { QrCodeModal } from '@/components/whatsapp/QrCodeModal';
 import { ZApiSettingsModal } from '@/components/whatsapp/ZApiSettingsModal';
 import { mockConversations, mockMessages } from '@/components/whatsapp/mockData';
 import { Conversation, ChatMessage, ConnectionStatus } from '@/components/whatsapp/types';
-import { Bot } from 'lucide-react';
+import { MessageSquare, Wifi, WifiOff } from 'lucide-react';
 
 const WhatsApp = () => {
-  const [status, setStatus] = useState<ConnectionStatus>('connected');
+  const [status, setStatus] = useState<ConnectionStatus>('disconnected');
   const [conversations, setConversations] = useState<Conversation[]>(mockConversations);
   const [selected, setSelected] = useState<Conversation | null>(null);
   const [messagesMap, setMessagesMap] = useState<Record<string, ChatMessage[]>>(mockMessages);
@@ -53,31 +53,41 @@ const WhatsApp = () => {
   }, []);
 
   return (
-    <div className="h-[calc(100vh-80px)] flex flex-col">
+    <div className="h-[calc(100vh-80px)] flex flex-col bg-background">
       {/* Top banner */}
-      <div className="flex items-center justify-between px-4 py-2" style={{ backgroundColor: '#202c33', borderBottom: '1px solid #2a3942' }}>
-        <div className="flex items-center gap-2">
-          <Bot className="h-4 w-4" style={{ color: '#00a884' }} />
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <MessageSquare className="h-5 w-5 text-primary" />
+          </div>
           <div>
-            <span className="text-xs font-semibold" style={{ color: '#e9edef' }}>
-              Central WhatsApp Inteligente
-            </span>
-            <span className="text-[10px] ml-2 hidden sm:inline" style={{ color: '#8696a0' }}>
-              Gerencie pacientes, confirme consultas e automatize atendimentos com IA
-            </span>
+            <h1 className="text-base font-semibold text-foreground">
+              Orbit Inbox – Central Inteligente de Conversas
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              Gerencie atendimentos, responda clientes e automatize conversas com inteligência artificial.
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <ZApiSettingsModal />
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            {status === 'connected' ? (
+              <Wifi className="h-3.5 w-3.5 text-emerald-500" />
+            ) : (
+              <WifiOff className="h-3.5 w-3.5 text-muted-foreground" />
+            )}
+            <span>{status === 'connected' ? 'Conectado' : 'Desconectado'}</span>
+          </div>
           <QrCodeModal status={status} onConnect={handleConnect} onDisconnect={handleDisconnect} />
         </div>
       </div>
 
       {/* Chat Layout */}
-      <div className="flex-1 overflow-hidden" style={{ backgroundColor: '#111b21' }}>
-        <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] h-full">
+      <div className="flex-1 overflow-hidden bg-muted/30">
+        <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] h-full">
           {/* Desktop: Left panel always visible */}
-          <div className="hidden lg:block h-full overflow-hidden" style={{ borderRight: '1px solid #2a3942' }}>
+          <div className="hidden lg:block h-full overflow-hidden border-r border-border bg-card">
             <ConversationList
               conversations={conversations}
               selectedId={selected?.id ?? null}
