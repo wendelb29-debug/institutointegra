@@ -64,7 +64,7 @@ const GestaoLayout = () => {
               </div>
             </div>
           </header>
-          <main className="flex-1 overflow-auto p-4 md:p-8 min-h-0">
+          <main className="flex-1 overflow-auto p-4 md:p-8 min-h-0" style={{ height: 'calc(100dvh - 3.5rem)', maxHeight: 'calc(100dvh - 3.5rem)' }}>
             <Outlet />
           </main>
         </div>
