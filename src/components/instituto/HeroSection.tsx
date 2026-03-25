@@ -19,17 +19,17 @@ export function HeroSection() {
       <div className="relative z-10 section-padding max-w-7xl mx-auto w-full py-20">
         <ScrollReveal>
           <span className="inline-block text-xs font-semibold uppercase tracking-[0.3em] text-instituto-light bg-instituto/20 backdrop-blur-sm px-4 py-1.5 rounded-full mb-6">
-            Instituto Integra · Psicologia Clínica
+            Instituto Integra · Neuropsicologia Clínica
           </span>
         </ScrollReveal>
         <ScrollReveal delay={100}>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl leading-[1.1] text-background max-w-2xl mb-6">
-            Você não precisa enfrentar tudo isso sozinho.
+            Cuidar da sua mente é o primeiro passo para transformar sua vida.
           </h1>
         </ScrollReveal>
         <ScrollReveal delay={200}>
           <p className="text-background/75 text-lg max-w-lg mb-10 leading-relaxed">
-            Atendimento psicológico humanizado para te ajudar a recuperar seu equilíbrio emocional e qualidade de vida.
+            Atendimento especializado em neuropsicologia com acolhimento e profissionalismo.
           </p>
         </ScrollReveal>
         <ScrollReveal delay={300}>
