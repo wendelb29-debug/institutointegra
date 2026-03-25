@@ -3,6 +3,7 @@ import { ConversationList } from '@/components/whatsapp/ConversationList';
 import { ChatPanel } from '@/components/whatsapp/ChatPanel';
 import { EmptyChatState } from '@/components/whatsapp/EmptyChatState';
 import { QrCodeModal } from '@/components/whatsapp/QrCodeModal';
+import { ZApiSettingsModal } from '@/components/whatsapp/ZApiSettingsModal';
 import { mockConversations, mockMessages } from '@/components/whatsapp/mockData';
 import { Conversation, ChatMessage, ConnectionStatus } from '@/components/whatsapp/types';
 
