@@ -58,7 +58,10 @@ const WhatsApp = () => {
         <span className="text-xs font-medium" style={{ color: '#8696a0' }}>
           Orbit Inbox
         </span>
-        <QrCodeModal status={status} onConnect={handleConnect} onDisconnect={handleDisconnect} />
+        <div className="flex items-center gap-2">
+          <ZApiSettingsModal />
+          <QrCodeModal status={status} onConnect={handleConnect} onDisconnect={handleDisconnect} />
+        </div>
       </div>
 
       {/* Chat Layout */}
