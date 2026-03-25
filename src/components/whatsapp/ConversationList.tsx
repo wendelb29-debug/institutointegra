@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Filter, MessageCircle, Eye, Users } from 'lucide-react';
+import { Search, Filter, MessageCircle, Eye, Users, Plus } from 'lucide-react';
 import { Conversation, ConversationFilter } from './types';
 
 interface ConversationListProps {
@@ -8,11 +8,28 @@ interface ConversationListProps {
   onSelect: (conversation: Conversation) => void;
 }
 
-const filterOptions: { key: ConversationFilter; label: string; icon: typeof Users }[] = [
-  { key: 'all', label: 'Todos', icon: Users },
-  { key: 'unread', label: 'Não lidas', icon: MessageCircle },
-  { key: 'attending', label: 'Em atendimento', icon: Eye },
+const filterOptions: { key: ConversationFilter; label: string }[] = [
+  { key: 'all', label: 'Todos' },
+  { key: 'unread', label: 'Não lidas' },
+  { key: 'attending', label: 'Em atendimento' },
 ];
+
+const avatarColors = [
+  'bg-blue-500',
+  'bg-emerald-500',
+  'bg-amber-500',
+  'bg-rose-500',
+  'bg-violet-500',
+  'bg-cyan-500',
+  'bg-pink-500',
+  'bg-indigo-500',
+];
+
+function getAvatarColor(id: string) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  return avatarColors[Math.abs(hash) % avatarColors.length];
+}
 
 export const ConversationList = ({ conversations, selectedId, onSelect }: ConversationListProps) => {
   const [search, setSearch] = useState('');
@@ -27,48 +44,45 @@ export const ConversationList = ({ conversations, selectedId, onSelect }: Conver
   });
 
   return (
-    <div className="flex flex-col h-full" style={{ backgroundColor: '#111b21' }}>
+    <div className="flex flex-col h-full bg-card">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3" style={{ backgroundColor: '#202c33' }}>
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#2a3942' }}>
-            <span className="text-sm font-medium" style={{ color: '#aebac1' }}>Eu</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="p-2 rounded-full hover:bg-white/5 transition-colors">
-            <Filter className="h-5 w-5" style={{ color: '#aebac1' }} />
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+        <h2 className="text-sm font-semibold text-foreground">Conversas</h2>
+        <div className="flex items-center gap-1">
+          <button className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
+            <Plus className="h-4 w-4" />
+          </button>
+          <button className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
+            <Filter className="h-4 w-4" />
           </button>
         </div>
       </div>
 
       {/* Search */}
-      <div className="px-2 py-1.5" style={{ backgroundColor: '#111b21' }}>
+      <div className="px-3 py-2">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: '#8696a0' }} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
-            placeholder="Pesquisar por nome ou número"
+            placeholder="Pesquisar contatos ou canais"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-1.5 rounded-lg text-sm outline-none placeholder:text-[#8696a0]"
-            style={{ backgroundColor: '#202c33', color: '#d1d7db', border: 'none' }}
+            className="w-full pl-10 pr-4 py-2 rounded-lg text-sm bg-muted/50 text-foreground border border-border outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground"
           />
         </div>
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-1 px-2 py-1.5">
+      <div className="flex gap-1.5 px-3 py-1.5">
         {filterOptions.map(opt => (
           <button
             key={opt.key}
             onClick={() => setFilter(opt.key)}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium transition-colors"
-            style={{
-              backgroundColor: filter === opt.key ? '#00a884' : '#202c33',
-              color: filter === opt.key ? '#111b21' : '#8696a0',
-            }}
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+              filter === opt.key
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
           >
-            <opt.icon className="h-3 w-3" />
             {opt.label}
           </button>
         ))}
@@ -80,38 +94,31 @@ export const ConversationList = ({ conversations, selectedId, onSelect }: Conver
           <button
             key={conv.id}
             onClick={() => onSelect(conv)}
-            className="w-full text-left px-3 py-3 transition-colors flex items-center gap-3 hover:bg-[#202c33]"
-            style={{
-              backgroundColor: selectedId === conv.id ? '#2a3942' : 'transparent',
-            }}
+            className={`w-full text-left px-3 py-3 transition-colors flex items-center gap-3 hover:bg-muted/50 ${
+              selectedId === conv.id ? 'bg-muted' : ''
+            }`}
           >
             <div className="relative shrink-0">
-              <div
-                className="h-12 w-12 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: '#2a3942' }}
-              >
-                <span className="text-base font-medium" style={{ color: '#aebac1' }}>{conv.avatarInitial}</span>
+              <div className={`h-11 w-11 rounded-full flex items-center justify-center text-white font-medium text-sm ${getAvatarColor(conv.id)}`}>
+                {conv.avatarInitial}
               </div>
               {conv.isOnline && (
-                <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2" style={{ backgroundColor: '#00a884', borderColor: '#111b21' }} />
+                <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card bg-emerald-500" />
               )}
             </div>
-            <div className="min-w-0 flex-1 border-b" style={{ borderColor: '#222d34', paddingBottom: '12px' }}>
+            <div className="min-w-0 flex-1 border-b border-border pb-3">
               <div className="flex items-center justify-between">
-                <p className="text-[15px] font-normal truncate" style={{ color: '#e9edef' }}>{conv.name}</p>
-                <span className="text-[12px] shrink-0" style={{ color: conv.unread > 0 ? '#00a884' : '#8696a0' }}>
+                <p className="text-sm font-medium truncate text-foreground">{conv.name}</p>
+                <span className={`text-[11px] shrink-0 ${conv.unread > 0 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
                   {conv.lastMessageTime}
                 </span>
               </div>
               <div className="flex items-center justify-between mt-0.5">
-                <p className="text-[13px] truncate pr-2" style={{ color: '#8696a0' }}>
-                  {conv.phone} · {conv.lastMessage}
+                <p className="text-xs truncate pr-2 text-muted-foreground">
+                  {conv.lastMessage}
                 </p>
                 {conv.unread > 0 && (
-                  <span
-                    className="text-[11px] font-medium h-5 min-w-[20px] flex items-center justify-center rounded-full px-1.5"
-                    style={{ backgroundColor: '#00a884', color: '#111b21' }}
-                  >
+                  <span className="text-[10px] font-semibold h-5 min-w-[20px] flex items-center justify-center rounded-full px-1.5 bg-primary text-primary-foreground">
                     {conv.unread}
                   </span>
                 )}
@@ -120,7 +127,7 @@ export const ConversationList = ({ conversations, selectedId, onSelect }: Conver
           </button>
         ))}
         {filtered.length === 0 && (
-          <div className="py-12 text-center text-sm" style={{ color: '#8696a0' }}>
+          <div className="py-12 text-center text-sm text-muted-foreground">
             Nenhuma conversa encontrada
           </div>
         )}

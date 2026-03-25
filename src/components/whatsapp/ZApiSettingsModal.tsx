@@ -32,21 +32,17 @@ export const ZApiSettingsModal = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button
-          className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
-          title="Configurações Z-API"
-          style={{ color: '#8696a0' }}
-        >
+        <button className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground" title="Configurações Z-API">
           <Settings className="h-4 w-4" />
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl border-0" style={{ backgroundColor: '#222e35', color: '#e9edef' }}>
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-[#e9edef]">
-            <Settings className="h-5 w-5" style={{ color: '#00a884' }} />
+          <DialogTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5 text-primary" />
             Configure Webhooks
           </DialogTitle>
-          <DialogDescription style={{ color: '#8696a0' }}>
+          <DialogDescription>
             Configurar webhooks para sua instância permite receber os eventos dela.
           </DialogDescription>
         </DialogHeader>
@@ -54,32 +50,26 @@ export const ZApiSettingsModal = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-3">
           {webhooks.map(wh => (
             <div key={wh.field} className="space-y-1.5">
-              <Label className="text-[13px] font-semibold" style={{ color: '#e9edef' }}>
-                {wh.label}
-              </Label>
+              <Label className="text-xs font-semibold">{wh.label}</Label>
               <div
-                className="flex items-center gap-2 rounded-lg px-3 py-2.5 cursor-pointer hover:opacity-80 transition-opacity"
-                style={{ backgroundColor: '#2a3942' }}
+                className="flex items-center gap-2 rounded-lg px-3 py-2.5 cursor-pointer hover:opacity-80 transition-opacity bg-muted border border-border"
                 onClick={() => handleCopy(wh.url, wh.field)}
               >
-                <wh.icon className="h-4 w-4 shrink-0" style={{ color: '#8696a0' }} />
-                <span className="text-[12px] flex-1 truncate" style={{ color: '#8696a0' }}>
-                  {wh.label}
-                </span>
+                <wh.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span className="text-xs flex-1 truncate text-muted-foreground">{wh.label}</span>
                 {copied === wh.field ? (
-                  <Check className="h-4 w-4 shrink-0" style={{ color: '#00a884' }} />
+                  <Check className="h-4 w-4 shrink-0 text-primary" />
                 ) : (
-                  <Copy className="h-4 w-4 shrink-0" style={{ color: '#8696a0' }} />
+                  <Copy className="h-4 w-4 shrink-0 text-muted-foreground" />
                 )}
               </div>
             </div>
           ))}
         </div>
 
-        {/* Instructions */}
-        <div className="rounded-lg p-3 text-[13px] space-y-2" style={{ backgroundColor: '#1a2730', color: '#8696a0' }}>
-          <p className="font-medium" style={{ color: '#e9edef' }}>📋 Como usar:</p>
-          <ol className="list-decimal list-inside space-y-1">
+        <div className="rounded-lg p-3 text-xs space-y-2 bg-muted border border-border">
+          <p className="font-medium text-foreground">📋 Como usar:</p>
+          <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
             <li>Clique em cada campo acima para copiar a URL</li>
             <li>No painel da Z-API, cole cada URL no campo de webhook correspondente</li>
             <li>Salve as configurações na Z-API</li>
@@ -90,8 +80,7 @@ export const ZApiSettingsModal = () => {
           href="https://app.z-api.io"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full rounded-lg py-2.5 text-sm font-medium transition-colors hover:opacity-90"
-          style={{ backgroundColor: '#00a884', color: '#111b21' }}
+          className="flex items-center justify-center gap-2 w-full rounded-lg py-2.5 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
         >
           <ExternalLink className="h-4 w-4" />
           Abrir Painel Z-API

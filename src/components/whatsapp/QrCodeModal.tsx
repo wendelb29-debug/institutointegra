@@ -19,9 +19,9 @@ export const QrCodeModal = ({ status, onConnect, onDisconnect }: QrCodeModalProp
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          variant={status === 'connected' ? 'outline' : 'default'}
           size="sm"
           className="gap-2"
+          variant={status === 'connected' ? 'outline' : 'default'}
         >
           {status === 'connected' ? (
             <>
@@ -71,7 +71,6 @@ export const QrCodeModal = ({ status, onConnect, onDisconnect }: QrCodeModalProp
             </div>
           ) : (
             <div className="text-center space-y-4">
-              {/* Placeholder QR — will be replaced by real API call */}
               <div className="p-4 bg-white rounded-2xl shadow-inner border border-border mx-auto w-fit">
                 <div className="w-56 h-56 bg-muted/30 rounded-lg flex items-center justify-center border border-dashed border-border">
                   <QrCode className="h-16 w-16 text-muted-foreground/40" />
