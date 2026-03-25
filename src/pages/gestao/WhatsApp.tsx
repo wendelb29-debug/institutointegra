@@ -155,11 +155,14 @@ const WhatsApp = () => {
   const handleSendMessage = useCallback(async (text: string) => {
     if (!selected) return;
     try {
+      const cleanPhone = selected.phone.replace(/\D/g, '');
+      console.log('[Orbit] Sending message to:', cleanPhone);
       const res = await fetch(getProxyUrl(), {
         method: 'POST', headers: getHeaders(),
-        body: JSON.stringify({ action: 'send', phone: selected.phone, message: text }),
+        body: JSON.stringify({ action: 'send', phone: cleanPhone, message: text }),
       });
       const data = await res.json();
+      console.log('[Orbit] Send response:', data);
       if (data.error) { toast.error('Erro ao enviar: ' + data.error); return; }
 
       setMessages(prev => [...prev, {
