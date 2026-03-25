@@ -26,7 +26,7 @@ import WhatsAppGestao from "./pages/gestao/WhatsApp";
 import Agenda from "./pages/gestao/Agenda";
 import DocumentosModelo from "./pages/gestao/cadastros/DocumentosModelo";
 import Contas from "./pages/gestao/cadastros/Contas";
-import Convenios from "./pages/gestao/cadastros/Convenios";
+
 import FormasPagamento from "./pages/gestao/cadastros/FormasPagamento";
 import Fornecedores from "./pages/gestao/cadastros/Fornecedores";
 import Materiais from "./pages/gestao/cadastros/Materiais";
