@@ -4,14 +4,20 @@ import { ChatPanel } from '@/components/whatsapp/ChatPanel';
 import { EmptyChatState } from '@/components/whatsapp/EmptyChatState';
 import { QrCodeModal } from '@/components/whatsapp/QrCodeModal';
 import { ZApiSettingsModal } from '@/components/whatsapp/ZApiSettingsModal';
-import { Conversation, ChatMessage, ConnectionStatus } from '@/components/whatsapp/types';
-import { MessageSquare, Wifi, WifiOff } from 'lucide-react';
+import { ContactsTab } from '@/components/whatsapp/ContactsTab';
+import { AttendanceTab } from '@/components/whatsapp/AttendanceTab';
+import { Conversation, ChatMessage, ConnectionStatus, WhatsAppContact, OrbitTab } from '@/components/whatsapp/types';
+import { MessageSquare, Wifi, WifiOff, Inbox, Users, Headphones } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 const WhatsApp = () => {
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<OrbitTab>('inbox');
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [contacts, setContacts] = useState<WhatsAppContact[]>([]);
   const [selected, setSelected] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +47,7 @@ const WhatsApp = () => {
     check();
   }, []);
 
-  // Load conversations
+  // ===== CONVERSATIONS =====
   const loadConversations = useCallback(async () => {
     const { data, error } = await supabase
       .from('whatsapp_conversations')
@@ -63,11 +69,14 @@ const WhatsApp = () => {
       avatarInitial: (c.name || c.phone).charAt(0).toUpperCase(),
       isOnline: c.is_online || false,
       status: (c.unread_count || 0) > 0 ? 'unread' : 'all' as const,
+      profilePicUrl: (c as any).profile_pic_url || c.avatar_url || undefined,
+      assignedTo: (c as any).assigned_to || null,
+      conversationStatus: ((c as any).conversation_status || 'aberto') as 'aberto' | 'em_atendimento' | 'finalizado',
     })));
     setLoading(false);
   }, []);
 
-  // Load messages
+  // ===== MESSAGES =====
   const loadMessages = useCallback(async (phone: string) => {
     const { data, error } = await supabase
       .from('whatsapp_messages')
@@ -81,20 +90,38 @@ const WhatsApp = () => {
       id: m.id,
       type: m.direction === 'sent' ? 'sent' as const : 'received' as const,
       text: m.body || '',
-      time: new Date(m.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      time: new Date(m.created_at!).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
       status: m.status === 'read' ? 'read' as const : m.status === 'delivered' ? 'delivered' as const : 'sent' as const,
     })));
   }, []);
 
-  useEffect(() => { loadConversations(); }, [loadConversations]);
+  // ===== CONTACTS =====
+  const loadContacts = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('whatsapp_contacts')
+      .select('*')
+      .order('name', { ascending: true });
 
-  // Realtime
+    if (error) { console.error('Error loading contacts:', error); return; }
+
+    setContacts((data || []).map(c => ({
+      id: c.id,
+      phone: c.phone,
+      name: c.name,
+      profilePicUrl: c.profile_pic_url || undefined,
+      notes: c.notes || undefined,
+      createdAt: c.created_at || undefined,
+      updatedAt: c.updated_at || undefined,
+    })));
+  }, []);
+
+  useEffect(() => { loadConversations(); loadContacts(); }, [loadConversations, loadContacts]);
+
+  // ===== REALTIME =====
   useEffect(() => {
     const channel = supabase
       .channel('whatsapp-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_conversations' }, () => {
-        loadConversations();
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_conversations' }, () => loadConversations())
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'whatsapp_messages' }, (payload) => {
         const msg = payload.new as any;
         if (selectedRef.current && msg.conversation_phone === selectedRef.current.phone) {
@@ -111,13 +138,16 @@ const WhatsApp = () => {
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'whatsapp_messages' }, () => {
         if (selectedRef.current) loadMessages(selectedRef.current.phone);
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_contacts' }, () => loadContacts())
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [loadConversations, loadMessages]);
+  }, [loadConversations, loadMessages, loadContacts]);
 
+  // ===== HANDLERS =====
   const handleSelect = useCallback(async (conv: Conversation) => {
     setSelected(conv);
+    setActiveTab('inbox');
     await loadMessages(conv.phone);
     await supabase.from('whatsapp_conversations').update({ unread_count: 0 }).eq('phone', conv.phone);
   }, [loadMessages]);
@@ -132,13 +162,9 @@ const WhatsApp = () => {
       const data = await res.json();
       if (data.error) { toast.error('Erro ao enviar: ' + data.error); return; }
 
-      // Optimistic UI
       setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        type: 'sent',
-        text,
-        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        status: 'sent',
+        id: Date.now().toString(), type: 'sent', text,
+        time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }), status: 'sent',
       }]);
 
       await supabase.from('whatsapp_messages').insert({
@@ -154,45 +180,87 @@ const WhatsApp = () => {
     }
   }, [selected]);
 
-  const handleSendMedia = useCallback(async (file: File, type: 'image' | 'audio' | 'document') => {
+  const handleSendMedia = useCallback(async (_file: File, _type: 'image' | 'audio' | 'document') => {
     if (!selected) return;
     toast.info('Envio de mídia será integrado com Z-API em breve.');
-    // Future: upload file to storage, then call zapi-proxy with media action
   }, [selected]);
 
   const handleNewConversation = useCallback(async (phone: string, name?: string) => {
-    // Upsert conversation
     const { error } = await supabase.from('whatsapp_conversations').upsert({
-      phone,
-      name: name || phone,
-      last_message: '',
-      last_message_time: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      phone, name: name || phone,
+      last_message: '', last_message_time: new Date().toISOString(), updated_at: new Date().toISOString(),
     }, { onConflict: 'phone' });
-
     if (error) { toast.error('Erro ao criar conversa'); return; }
-
     await loadConversations();
-
-    // Select the new conversation
     const { data } = await supabase.from('whatsapp_conversations').select('*').eq('phone', phone).single();
     if (data) {
       const conv: Conversation = {
-        id: data.id,
-        name: data.name || data.phone,
-        phone: data.phone,
-        lastMessage: '',
-        lastMessageTime: '',
-        unread: 0,
+        id: data.id, name: data.name || data.phone, phone: data.phone,
+        lastMessage: '', lastMessageTime: '', unread: 0,
         avatarInitial: (data.name || data.phone).charAt(0).toUpperCase(),
-        isOnline: false,
-        status: 'all',
+        isOnline: false, status: 'all', conversationStatus: 'aberto',
       };
       setSelected(conv);
       setMessages([]);
     }
-
     toast.success('Conversa criada!');
+  }, [loadConversations]);
+
+  // ===== CONTACTS HANDLERS =====
+  const handleSaveContact = useCallback(async (data: { phone: string; name: string; notes?: string }) => {
+    const { error } = await supabase.from('whatsapp_contacts').upsert({
+      phone: data.phone, name: data.name, notes: data.notes || null,
+    }, { onConflict: 'phone' });
+    if (error) { toast.error('Erro ao salvar contato'); return; }
+    toast.success('Contato salvo!');
+    loadContacts();
+  }, [loadContacts]);
+
+  const handleUpdateContact = useCallback(async (id: string, data: { name: string; notes?: string }) => {
+    const { error } = await supabase.from('whatsapp_contacts').update({
+      name: data.name, notes: data.notes || null, updated_at: new Date().toISOString(),
+    }).eq('id', id);
+    if (error) { toast.error('Erro ao atualizar contato'); return; }
+    toast.success('Contato atualizado!');
+    loadContacts();
+  }, [loadContacts]);
+
+  const handleDeleteContact = useCallback(async (id: string) => {
+    const { error } = await supabase.from('whatsapp_contacts').delete().eq('id', id);
+    if (error) { toast.error('Erro ao excluir contato'); return; }
+    toast.success('Contato excluído!');
+    loadContacts();
+  }, [loadContacts]);
+
+  const handleOpenChatFromContact = useCallback(async (phone: string) => {
+    await handleNewConversation(phone);
+    setActiveTab('inbox');
+  }, [handleNewConversation]);
+
+  // ===== ATTENDANCE HANDLERS =====
+  const handleAssign = useCallback(async (phone: string) => {
+    if (!user) return;
+    await supabase.from('whatsapp_conversations').update({
+      assigned_to: user.id, conversation_status: 'em_atendimento',
+    } as any).eq('phone', phone);
+    toast.success('Conversa assumida!');
+    loadConversations();
+  }, [user, loadConversations]);
+
+  const handleFinish = useCallback(async (phone: string) => {
+    await supabase.from('whatsapp_conversations').update({
+      conversation_status: 'finalizado',
+    } as any).eq('phone', phone);
+    toast.success('Conversa finalizada!');
+    loadConversations();
+  }, [loadConversations]);
+
+  const handleReopen = useCallback(async (phone: string) => {
+    await supabase.from('whatsapp_conversations').update({
+      conversation_status: 'aberto', assigned_to: null,
+    } as any).eq('phone', phone);
+    toast.success('Conversa reaberta!');
+    loadConversations();
   }, [loadConversations]);
 
   const handleConnect = useCallback(async () => {
@@ -213,10 +281,16 @@ const WhatsApp = () => {
 
   const handleBack = useCallback(() => { setSelected(null); }, []);
 
+  const tabs: { key: OrbitTab; label: string; icon: typeof Inbox }[] = [
+    { key: 'inbox', label: 'Inbox', icon: Inbox },
+    { key: 'contacts', label: 'Contatos', icon: Users },
+    { key: 'attendance', label: 'Atendimento', icon: Headphones },
+  ];
+
   return (
     <div className="h-[calc(100vh-80px)] flex flex-col bg-background">
       {/* Top banner */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card">
+      <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-card">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
             <MessageSquare className="h-5 w-5 text-primary" />
@@ -224,7 +298,7 @@ const WhatsApp = () => {
           <div>
             <h1 className="text-base font-semibold text-foreground">Orbit Inbox</h1>
             <p className="text-xs text-muted-foreground">
-              Envie mensagens, gerencie conversas e use inteligência artificial para se comunicar melhor.
+              Centralize atendimentos, gerencie contatos e responda com inteligência.
             </p>
           </div>
         </div>
@@ -238,27 +312,73 @@ const WhatsApp = () => {
         </div>
       </div>
 
-      {/* Chat Layout */}
+      {/* Tabs */}
+      <div className="flex gap-0 border-b border-border bg-card">
+        {tabs.map(tab => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex items-center gap-2 px-6 py-2.5 text-sm font-medium transition-colors border-b-2 ${
+                activeTab === tab.key
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Content */}
       <div className="flex-1 overflow-hidden bg-muted/30">
-        <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] h-full">
-          <div className="hidden lg:block h-full overflow-hidden border-r border-border bg-card">
-            <ConversationList conversations={conversations} selectedId={selected?.id ?? null} onSelect={handleSelect} onNewConversation={handleNewConversation} />
+        {activeTab === 'inbox' && (
+          <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] h-full">
+            <div className="hidden lg:block h-full overflow-hidden border-r border-border bg-card">
+              <ConversationList conversations={conversations} selectedId={selected?.id ?? null} onSelect={handleSelect} onNewConversation={handleNewConversation} currentUserId={user?.id} />
+            </div>
+            <div className="lg:hidden h-full">
+              {!selected ? (
+                <ConversationList conversations={conversations} selectedId={null} onSelect={handleSelect} onNewConversation={handleNewConversation} currentUserId={user?.id} />
+              ) : (
+                <ChatPanel conversation={selected} messages={messages} onSendMessage={handleSendMessage} onSendMedia={handleSendMedia} onBack={handleBack} onSaveContact={handleSaveContact} onAssign={handleAssign} />
+              )}
+            </div>
+            <div className="hidden lg:flex flex-col h-full">
+              {selected ? (
+                <ChatPanel conversation={selected} messages={messages} onSendMessage={handleSendMessage} onSendMedia={handleSendMedia} onSaveContact={handleSaveContact} onAssign={handleAssign} />
+              ) : (
+                <EmptyChatState />
+              )}
+            </div>
           </div>
-          <div className="lg:hidden h-full">
-            {!selected ? (
-              <ConversationList conversations={conversations} selectedId={null} onSelect={handleSelect} onNewConversation={handleNewConversation} />
-            ) : (
-              <ChatPanel conversation={selected} messages={messages} onSendMessage={handleSendMessage} onSendMedia={handleSendMedia} onBack={handleBack} />
-            )}
-          </div>
-          <div className="hidden lg:flex flex-col h-full">
-            {selected ? (
-              <ChatPanel conversation={selected} messages={messages} onSendMessage={handleSendMessage} onSendMedia={handleSendMedia} />
-            ) : (
-              <EmptyChatState />
-            )}
-          </div>
-        </div>
+        )}
+
+        {activeTab === 'contacts' && (
+          <ContactsTab
+            contacts={contacts}
+            onSave={handleSaveContact}
+            onUpdate={handleUpdateContact}
+            onDelete={handleDeleteContact}
+            onOpenChat={handleOpenChatFromContact}
+          />
+        )}
+
+        {activeTab === 'attendance' && (
+          <AttendanceTab
+            conversations={conversations}
+            currentUserId={user?.id}
+            currentUserName={user?.email}
+            isAdmin={true}
+            onAssign={handleAssign}
+            onFinish={handleFinish}
+            onReopen={handleReopen}
+            onSelect={handleSelect}
+          />
+        )}
       </div>
     </div>
   );
