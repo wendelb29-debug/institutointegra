@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, Loader2, Check, CheckCheck, MoreVertical, Search, Smile, Paperclip, Mic, CalendarCheck, Bell, ArrowLeft, Sparkles, X } from 'lucide-react';
+import { Send, Loader2, Check, CheckCheck, MoreVertical, Search, Smile, Paperclip, Mic, CalendarCheck, Bell, ArrowLeft, Sparkles, X, UserPlus, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { Conversation, ChatMessage } from './types';
 import { EmojiPicker } from './EmojiPicker';
 import { AttachmentMenu } from './AttachmentMenu';
 import { MediaMessage } from './MediaMessage';
+import { SaveContactModal } from './SaveContactModal';
 
 interface ChatPanelProps {
   conversation: Conversation;
@@ -12,6 +13,8 @@ interface ChatPanelProps {
   onSendMessage: (text: string) => void;
   onSendMedia?: (file: File, type: 'image' | 'audio' | 'document') => void;
   onBack?: () => void;
+  onSaveContact?: (data: { phone: string; name: string; notes?: string }) => void;
+  onAssign?: (phone: string) => void;
 }
 
 const avatarColors: Record<string, string> = {};
@@ -25,7 +28,7 @@ function getColor(id: string) {
   return avatarColors[id];
 }
 
-export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, onBack }: ChatPanelProps) => {
+export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, onBack, onSaveContact, onAssign }: ChatPanelProps) => {
   const [newMessage, setNewMessage] = useState('');
   const [orbitLoading, setOrbitLoading] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
@@ -48,29 +51,18 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
   };
 
   const handleImproveWithAI = async () => {
-    if (!newMessage.trim()) {
-      toast.error('Digite uma mensagem para melhorar.');
-      return;
-    }
+    if (!newMessage.trim()) { toast.error('Digite uma mensagem para melhorar.'); return; }
     setOrbitLoading(true);
-    // Simulate AI improvement - will be replaced with real endpoint
     setTimeout(() => {
-      const improvements: Record<string, string> = {
-        default: `Olá! ${newMessage.charAt(0).toUpperCase() + newMessage.slice(1)}. Agradeço pela sua mensagem e fico à disposição para qualquer dúvida.`,
-      };
       const original = newMessage.toLowerCase();
-      let improved = improvements.default;
-
+      let improved = `Olá! ${newMessage.charAt(0).toUpperCase() + newMessage.slice(1)}. Agradeço pela sua mensagem e fico à disposição para qualquer dúvida.`;
       if (original.includes('confirm') || original.includes('consulta')) {
         improved = 'Olá! Gostaria de confirmar sua consulta agendada. Poderia nos confirmar sua presença? Agradecemos pela preferência!';
-      } else if (original.includes('horário') || original.includes('horario') || original.includes('agendar')) {
-        improved = 'Olá! Temos horários disponíveis para atendê-lo(a). Gostaria de agendar para qual dia e horário? Estou à disposição para ajudá-lo(a).';
-      } else if (original.includes('lembrete') || original.includes('amanhã') || original.includes('amanha')) {
-        improved = 'Olá! Este é um lembrete sobre sua consulta agendada para amanhã. Caso tenha alguma dúvida ou precise reagendar, estamos à disposição. Até breve!';
-      } else if (original.includes('obrigad')) {
-        improved = 'Obrigado(a) pelo seu contato! Foi um prazer atendê-lo(a). Qualquer dúvida futura, não hesite em nos procurar. Desejamos saúde e bem-estar!';
+      } else if (original.includes('horário') || original.includes('agendar')) {
+        improved = 'Olá! Temos horários disponíveis para atendê-lo(a). Gostaria de agendar para qual dia e horário?';
+      } else if (original.includes('lembrete') || original.includes('amanhã')) {
+        improved = 'Olá! Este é um lembrete sobre sua consulta agendada para amanhã. Caso tenha alguma dúvida ou precise reagendar, estamos à disposição.';
       }
-
       setNewMessage(improved);
       setOrbitLoading(false);
       toast.success('Mensagem melhorada com Orbit AI ✨');
@@ -93,20 +85,7 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
   };
 
   const handleCancelPreview = () => {
-    if (previewFile) {
-      URL.revokeObjectURL(previewFile.url);
-      setPreviewFile(null);
-    }
-  };
-
-  const handleConfirmConsulta = () => {
-    onSendMessage('Olá! Estamos confirmando sua consulta. Poderia nos confirmar sua presença?');
-    toast.success('Mensagem de confirmação enviada!');
-  };
-
-  const handleSendLembrete = () => {
-    onSendMessage('Lembrete: você tem uma consulta agendada amanhã. Qualquer dúvida estamos à disposição.');
-    toast.success('Lembrete enviado!');
+    if (previewFile) { URL.revokeObjectURL(previewFile.url); setPreviewFile(null); }
   };
 
   const MessageStatus = ({ status }: { status?: string }) => {
@@ -127,9 +106,13 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
             </button>
           )}
           <div className="relative">
-            <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-medium text-sm ${getColor(conversation.id)}`}>
-              {conversation.avatarInitial}
-            </div>
+            {conversation.profilePicUrl ? (
+              <img src={conversation.profilePicUrl} alt={conversation.name} className="h-10 w-10 rounded-full object-cover" />
+            ) : (
+              <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-medium text-sm ${getColor(conversation.id)}`}>
+                {conversation.avatarInitial}
+              </div>
+            )}
             {conversation.isOnline && (
               <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card bg-emerald-500" />
             )}
@@ -142,15 +125,27 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
           </div>
         </div>
         <div className="flex items-center gap-1.5">
+          {onSaveContact && (
+            <SaveContactModal phone={conversation.phone} currentName={conversation.name} onSave={onSaveContact} />
+          )}
+          {onAssign && (
+            <button
+              onClick={() => onAssign(conversation.phone)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-muted text-foreground hover:bg-muted/80 transition-colors"
+            >
+              <User className="h-3.5 w-3.5" />
+              <span className="hidden xl:inline">Assumir</span>
+            </button>
+          )}
           <button
-            onClick={handleConfirmConsulta}
+            onClick={() => onSendMessage('Olá! Estamos confirmando sua consulta. Poderia nos confirmar sua presença?')}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             <CalendarCheck className="h-3.5 w-3.5" />
             <span className="hidden xl:inline">Confirmar</span>
           </button>
           <button
-            onClick={handleSendLembrete}
+            onClick={() => onSendMessage('Lembrete: você tem uma consulta agendada amanhã. Qualquer dúvida estamos à disposição.')}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-muted text-foreground hover:bg-muted/80 transition-colors"
           >
             <Bell className="h-3.5 w-3.5" />
@@ -195,62 +190,29 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
         <div className="px-4 py-3 border-t border-border bg-card">
           <div className="flex items-center gap-3">
             <div className="relative">
-              {previewFile.type === 'image' && (
-                <img src={previewFile.url} alt="Preview" className="h-16 w-16 rounded-lg object-cover" />
-              )}
-              {previewFile.type === 'audio' && (
-                <div className="h-16 w-16 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                  <Mic className="h-6 w-6 text-orange-500" />
-                </div>
-              )}
-              {previewFile.type === 'document' && (
-                <div className="h-16 w-16 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                  <span className="text-xs font-medium text-blue-500">{previewFile.file.name.split('.').pop()?.toUpperCase()}</span>
-                </div>
-              )}
+              {previewFile.type === 'image' && <img src={previewFile.url} alt="Preview" className="h-16 w-16 rounded-lg object-cover" />}
+              {previewFile.type === 'audio' && <div className="h-16 w-16 rounded-lg bg-orange-500/10 flex items-center justify-center"><Mic className="h-6 w-6 text-orange-500" /></div>}
+              {previewFile.type === 'document' && <div className="h-16 w-16 rounded-lg bg-blue-500/10 flex items-center justify-center"><span className="text-xs font-medium text-blue-500">{previewFile.file.name.split('.').pop()?.toUpperCase()}</span></div>}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">{previewFile.file.name}</p>
               <p className="text-xs text-muted-foreground">{(previewFile.file.size / 1024).toFixed(1)} KB</p>
             </div>
-            <button onClick={handleCancelPreview} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground">
-              <X className="h-4 w-4" />
-            </button>
-            <button onClick={handleSendMedia} className="p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90">
-              <Send className="h-4 w-4" />
-            </button>
+            <button onClick={handleCancelPreview} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"><X className="h-4 w-4" /></button>
+            <button onClick={handleSendMedia} className="p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"><Send className="h-4 w-4" /></button>
           </div>
         </div>
       )}
 
       {/* Input */}
       <div className="px-4 py-3 flex items-end gap-2 border-t border-border bg-card relative">
-        {showEmojis && (
-          <EmojiPicker
-            onSelect={emoji => {
-              setNewMessage(prev => prev + emoji);
-              inputRef.current?.focus();
-            }}
-            onClose={() => setShowEmojis(false)}
-          />
-        )}
-        {showAttachments && (
-          <AttachmentMenu
-            onFileSelected={handleFileSelected}
-            onClose={() => setShowAttachments(false)}
-          />
-        )}
+        {showEmojis && <EmojiPicker onSelect={emoji => { setNewMessage(prev => prev + emoji); inputRef.current?.focus(); }} onClose={() => setShowEmojis(false)} />}
+        {showAttachments && <AttachmentMenu onFileSelected={handleFileSelected} onClose={() => setShowAttachments(false)} />}
 
-        <button
-          onClick={() => { setShowEmojis(!showEmojis); setShowAttachments(false); }}
-          className={`p-2 rounded-lg hover:bg-muted transition-colors shrink-0 ${showEmojis ? 'text-primary' : 'text-muted-foreground'}`}
-        >
+        <button onClick={() => { setShowEmojis(!showEmojis); setShowAttachments(false); }} className={`p-2 rounded-lg hover:bg-muted transition-colors shrink-0 ${showEmojis ? 'text-primary' : 'text-muted-foreground'}`}>
           <Smile className="h-5 w-5" />
         </button>
-        <button
-          onClick={() => { setShowAttachments(!showAttachments); setShowEmojis(false); }}
-          className={`p-2 rounded-lg hover:bg-muted transition-colors shrink-0 ${showAttachments ? 'text-primary' : 'text-muted-foreground'}`}
-        >
+        <button onClick={() => { setShowAttachments(!showAttachments); setShowEmojis(false); }} className={`p-2 rounded-lg hover:bg-muted transition-colors shrink-0 ${showAttachments ? 'text-primary' : 'text-muted-foreground'}`}>
           <Paperclip className="h-5 w-5" />
         </button>
 
@@ -266,13 +228,7 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
           />
         </div>
 
-        {/* Orbit AI Improve Button */}
-        <button
-          onClick={handleImproveWithAI}
-          disabled={orbitLoading || !newMessage.trim()}
-          className="p-2 rounded-lg hover:bg-muted transition-colors shrink-0 text-muted-foreground disabled:opacity-40"
-          title="Melhorar com Orbit AI"
-        >
+        <button onClick={handleImproveWithAI} disabled={orbitLoading || !newMessage.trim()} className="p-2 rounded-lg hover:bg-muted transition-colors shrink-0 text-muted-foreground disabled:opacity-40" title="Melhorar com Orbit AI">
           {orbitLoading ? <Loader2 className="h-5 w-5 animate-spin text-primary" /> : <Sparkles className="h-5 w-5" />}
         </button>
 
