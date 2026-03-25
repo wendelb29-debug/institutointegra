@@ -77,9 +77,11 @@ serve(async (req) => {
           console.error('[zapi-webhook] Conv upsert error:', convError.message);
         } else if (!fromMe) {
           // Increment unread count for received messages
-          await supabase.rpc('increment_unread', { p_phone: phone }).catch(() => {
+          try {
+            await supabase.rpc('increment_unread', { p_phone: phone });
+          } catch {
             // Function may not exist yet, that's ok
-          });
+          }
         }
 
         // Insert message
