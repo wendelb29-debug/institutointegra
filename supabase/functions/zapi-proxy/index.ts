@@ -14,9 +14,9 @@ serve(async (req) => {
     const body = await req.json();
     const { action, phone, message, instanceId, token, clientToken, fileUrl, mimeType } = body;
 
-    const ZAPI_INSTANCE_ID = instanceId || Deno.env.get('ZAPI_INSTANCE_ID') || '3F0A839B3D4A131C158AA248D27FDCD6';
-    const ZAPI_TOKEN = token || Deno.env.get('ZAPI_TOKEN') || 'A714392518FBCFACC066D258';
-    const ZAPI_CLIENT_TOKEN = clientToken || Deno.env.get('ZAPI_CLIENT_TOKEN') || 'F2bd5df5779e047e489ca72f794289888S';
+    const ZAPI_INSTANCE_ID = instanceId || '3F0A839B3D4A131C158AA248D27FDCD6';
+    const ZAPI_TOKEN = token || 'A714392518FBCFACC066D258';
+    const ZAPI_CLIENT_TOKEN = clientToken || 'F2bd5df5779e047e489ca72f794289888S';
 
     console.log('Action:', action);
     console.log('Using ZAPI_INSTANCE_ID:', ZAPI_INSTANCE_ID);
