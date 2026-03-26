@@ -20,7 +20,7 @@ interface PatientProfileProps {
   initialTab?: string;
 }
 
-export function PatientProfile({ patient, onBack }: PatientProfileProps) {
+export function PatientProfile({ patient, onBack, initialTab = 'dados' }: PatientProfileProps) {
   const [absences, setAbsences] = useState(0);
 
   useEffect(() => {
