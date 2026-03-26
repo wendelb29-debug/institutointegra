@@ -69,6 +69,14 @@ const InstitutoGestao = () => {
     setOpen(false); setForm({}); fetchData();
   };
 
+  const handleDeleteEvent = async (id: string) => {
+    if (!confirm('Deseja realmente excluir este evento?')) return;
+    const { error } = await supabase.from('instituto_events').delete().eq('id', id);
+    if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return; }
+    toast({ title: 'Evento excluído!' });
+    fetchData();
+  };
+
   const filteredPatients = patients.filter(p =>
     p.name.toLowerCase().includes(searchPatient.toLowerCase()) ||
     p.phone.includes(searchPatient)
