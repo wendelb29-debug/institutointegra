@@ -195,6 +195,10 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
 
       {/* Messages */}
       <div ref={scrollRef} onScroll={handleScroll} className="flex-1 min-h-0 overflow-y-auto px-[5%] py-4 space-y-2 bg-muted/20 relative">
+        {/* Logo watermark */}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-0">
+          <img src={logoIntegra} alt="" className="w-64 h-auto opacity-[0.06]" />
+        </div>
         {messages.length === 0 && (
           <div className="flex items-center justify-center h-full">
             <p className="text-sm text-muted-foreground">Nenhuma mensagem ainda. Envie a primeira!</p>
