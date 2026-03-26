@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useWhatsAppNotifications } from '@/hooks/useWhatsAppNotifications';
 
 const WhatsApp = () => {
   const { user } = useAuth();
