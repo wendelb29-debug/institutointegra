@@ -154,6 +154,47 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_records: {
+        Row: {
+          attachments: Json | null
+          created_at: string
+          id: string
+          observations: string | null
+          patient_id: string
+          psychologist_id: string
+          session_date: string
+          updated_at: string
+        }
+        Insert: {
+          attachments?: Json | null
+          created_at?: string
+          id?: string
+          observations?: string | null
+          patient_id: string
+          psychologist_id: string
+          session_date?: string
+          updated_at?: string
+        }
+        Update: {
+          attachments?: Json | null
+          created_at?: string
+          id?: string
+          observations?: string | null
+          patient_id?: string
+          psychologist_id?: string
+          session_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_records_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_signatures: {
         Row: {
           contract_id: string
@@ -754,6 +795,236 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      patient_anamnesis: {
+        Row: {
+          alergias: string | null
+          created_at: string
+          habitos: string | null
+          historico_doenca: string | null
+          historico_familiar: string | null
+          id: string
+          medicamentos: string | null
+          observacoes: string | null
+          patient_id: string
+          psychologist_id: string
+          queixa_principal: string | null
+          updated_at: string
+        }
+        Insert: {
+          alergias?: string | null
+          created_at?: string
+          habitos?: string | null
+          historico_doenca?: string | null
+          historico_familiar?: string | null
+          id?: string
+          medicamentos?: string | null
+          observacoes?: string | null
+          patient_id: string
+          psychologist_id: string
+          queixa_principal?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alergias?: string | null
+          created_at?: string
+          habitos?: string | null
+          historico_doenca?: string | null
+          historico_familiar?: string | null
+          id?: string
+          medicamentos?: string | null
+          observacoes?: string | null
+          patient_id?: string
+          psychologist_id?: string
+          queixa_principal?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_anamnesis_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_attendance: {
+        Row: {
+          appointment_id: string | null
+          attendance_date: string
+          created_at: string
+          id: string
+          notes: string | null
+          patient_id: string
+          psychologist_id: string
+          status: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          attendance_date?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          patient_id: string
+          psychologist_id: string
+          status?: string
+        }
+        Update: {
+          appointment_id?: string | null
+          attendance_date?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          psychologist_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_attendance_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_attendance_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_diagnoses: {
+        Row: {
+          cid_code: string | null
+          created_at: string
+          description: string
+          diagnosis_date: string
+          id: string
+          patient_id: string
+          psychologist_id: string
+          updated_at: string
+        }
+        Insert: {
+          cid_code?: string | null
+          created_at?: string
+          description: string
+          diagnosis_date?: string
+          id?: string
+          patient_id: string
+          psychologist_id: string
+          updated_at?: string
+        }
+        Update: {
+          cid_code?: string | null
+          created_at?: string
+          description?: string
+          diagnosis_date?: string
+          id?: string
+          patient_id?: string
+          psychologist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_diagnoses_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_evolutions: {
+        Row: {
+          comparison_notes: string | null
+          created_at: string
+          description: string
+          id: string
+          patient_id: string
+          psychologist_id: string
+          session_date: string
+          updated_at: string
+        }
+        Insert: {
+          comparison_notes?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          patient_id: string
+          psychologist_id: string
+          session_date?: string
+          updated_at?: string
+        }
+        Update: {
+          comparison_notes?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          patient_id?: string
+          psychologist_id?: string
+          session_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_evolutions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_packages: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          patient_id: string
+          price: number | null
+          psychologist_id: string
+          total_sessions: number
+          updated_at: string
+          used_sessions: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          patient_id: string
+          price?: number | null
+          psychologist_id: string
+          total_sessions?: number
+          updated_at?: string
+          used_sessions?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          patient_id?: string
+          price?: number | null
+          psychologist_id?: string
+          total_sessions?: number
+          updated_at?: string
+          used_sessions?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_packages_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       patients: {
         Row: {
