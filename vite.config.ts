@@ -74,7 +74,6 @@ export default defineConfig(({ mode }) => ({
     dedupe: ["react", "react-dom"],
   },
   optimizeDeps: {
-    include: ["react", "react-dom", "@tanstack/react-query", "react-router-dom"],
-    force: true,
+    include: ["react", "react-dom", "@tanstack/react-query", "react-router-dom", "jspdf"],
   },
 }));
