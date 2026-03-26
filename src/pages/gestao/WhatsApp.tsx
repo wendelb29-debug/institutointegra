@@ -94,7 +94,7 @@ const WhatsApp = () => {
       unread: c.unread_count || 0,
       avatarInitial: (c.name || c.phone).charAt(0).toUpperCase(),
       isOnline: c.is_online || false,
-      status: (c.unread_count || 0) > 0 ? 'unread' : 'all' as const,
+      status: ((c.unread_count || 0) > 0 ? 'unread' : 'all') as 'all' | 'unread' | 'attending',
       profilePicUrl: (c as any).profile_pic_url || c.avatar_url || undefined,
       assignedTo: (c as any).assigned_to || null,
       conversationStatus: ((c as any).conversation_status || 'aberto') as 'aberto' | 'em_atendimento' | 'finalizado',
