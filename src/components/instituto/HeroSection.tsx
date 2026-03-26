@@ -40,7 +40,7 @@ export function HeroSection() {
                 Agendar consulta
               </a>
             </Button>
-            <Button variant="outline" size="lg" className="text-base px-8 py-6 rounded-xl border-background/30 text-background hover:bg-background/10 backdrop-blur-sm" asChild>
+            <Button size="lg" className="text-base px-8 py-6 rounded-xl bg-[#25D366] text-white shadow-lg shadow-[#25D366]/30 hover:bg-[#1ebe5a] hover:shadow-xl hover:shadow-[#25D366]/40" asChild>
               <a href={WA_LINK} target="_blank" rel="noopener noreferrer">
                 <MessageCircle className="h-5 w-5 mr-2" />
                 Falar no WhatsApp
