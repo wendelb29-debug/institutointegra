@@ -30,6 +30,12 @@ REGRAS:
 - Sempre responda em português brasileiro
 - Use markdown para formatação quando apropriado
 
+CAPACIDADES MULTIMODAIS:
+- Você pode receber e analisar imagens enviadas pelo usuário
+- Quando receber uma imagem, descreva o que vê e ofereça ajuda relevante
+- Você pode gerar imagens quando solicitado (o sistema cuida da geração)
+- Quando o usuário enviar um arquivo/documento, analise o conteúdo e responda
+
 SERVIÇOS DO INSTITUTO:
 - Neuropsicologia e avaliação neuropsicológica
 - Psicologia clínica e terapia
@@ -55,42 +61,103 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { messages, currentPage, action } = await req.json();
+    const { messages, currentPage, action, generateImage } = await req.json();
 
-    // Fetch context data based on action
+    // --- Image generation request ---
+    if (generateImage) {
+      const imageResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3.1-flash-image-preview",
+          messages: [{ role: "user", content: generateImage }],
+          modalities: ["image", "text"],
+        }),
+      });
+
+      if (!imageResponse.ok) {
+        const t = await imageResponse.text();
+        console.error("Image gen error:", imageResponse.status, t);
+        throw new Error("Erro ao gerar imagem");
+      }
+
+      const imageData = await imageResponse.json();
+      const generatedImage = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      const textContent = imageData.choices?.[0]?.message?.content || "Aqui está a imagem gerada! 🎨";
+
+      if (generatedImage) {
+        // Upload to storage
+        const base64Data = generatedImage.replace(/^data:image\/\w+;base64,/, "");
+        const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+        const fileName = `generated/${crypto.randomUUID()}.png`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("helena-chat-files")
+          .upload(fileName, binaryData, { contentType: "image/png" });
+
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          throw new Error("Erro ao salvar imagem");
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("helena-chat-files")
+          .getPublicUrl(fileName);
+
+        return new Response(JSON.stringify({
+          result: textContent,
+          generatedImageUrl: publicUrl,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({ result: textContent }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // --- Regular chat (with optional image/file context) ---
     let contextData = "";
 
-    if (action === "list_professionals" || messages?.some((m: any) => 
-      m.content?.toLowerCase().includes("profission") || 
-      m.content?.toLowerCase().includes("consult") ||
-      m.content?.toLowerCase().includes("agendar")
+    if (action === "list_professionals" || messages?.some((m: any) =>
+      typeof m.content === "string" && (
+        m.content.toLowerCase().includes("profission") ||
+        m.content.toLowerCase().includes("consult") ||
+        m.content.toLowerCase().includes("agendar")
+      )
     )) {
       const { data: professionals } = await supabase
         .from("health_professionals")
         .select("full_name, specialty, registration_number")
         .limit(20);
-      
+
       if (professionals?.length) {
-        contextData += "\n\nPROFISSIONAIS DISPONÍVEIS:\n" + 
+        contextData += "\n\nPROFISSIONAIS DISPONÍVEIS:\n" +
           professionals.map(p => `- ${p.full_name} | ${p.specialty}${p.registration_number ? ` | Registro: ${p.registration_number}` : ''}`).join("\n");
       } else {
         contextData += "\n\nNão há profissionais cadastrados no momento. Oriente o usuário a entrar em contato pelo WhatsApp.";
       }
     }
 
-    if (action === "list_rooms" || messages?.some((m: any) => 
-      m.content?.toLowerCase().includes("sala") || 
-      m.content?.toLowerCase().includes("reserv") ||
-      m.content?.toLowerCase().includes("coworking")
+    if (action === "list_rooms" || messages?.some((m: any) =>
+      typeof m.content === "string" && (
+        m.content.toLowerCase().includes("sala") ||
+        m.content.toLowerCase().includes("reserv") ||
+        m.content.toLowerCase().includes("coworking")
+      )
     )) {
       const { data: rooms } = await supabase
         .from("rooms")
         .select("name, type, capacity, price_hour, price_day, price_month, status, description")
         .eq("status", "disponivel")
         .limit(20);
-      
+
       if (rooms?.length) {
-        contextData += "\n\nSALAS DISPONÍVEIS:\n" + 
+        contextData += "\n\nSALAS DISPONÍVEIS:\n" +
           rooms.map(r => {
             let pricing = "";
             if (r.price_hour) pricing += `R$${r.price_hour}/hora `;
@@ -110,6 +177,15 @@ serve(async (req) => {
 
     const systemMessage = SYSTEM_PROMPT + contextData + pageContext;
 
+    // Build messages for the API - support multimodal content
+    const apiMessages = messages.map((m: any) => {
+      // If content is already multimodal (array), pass through
+      if (Array.isArray(m.content)) {
+        return { role: m.role, content: m.content };
+      }
+      return { role: m.role, content: m.content };
+    });
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -120,7 +196,7 @@ serve(async (req) => {
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemMessage },
-          ...messages.map((m: any) => ({ role: m.role, content: m.content })),
+          ...apiMessages,
         ],
       }),
     });
