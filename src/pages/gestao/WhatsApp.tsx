@@ -132,6 +132,10 @@ const WhatsApp = () => {
       text: m.body || '',
       time: new Date(m.created_at!).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
       status: m.status === 'read' ? 'read' as const : m.status === 'delivered' ? 'delivered' as const : 'sent' as const,
+      mediaType: (m as any).media_type || undefined,
+      mediaUrl: (m as any).media_url || undefined,
+      mediaName: (m as any).media_name || undefined,
+      mediaMimeType: (m as any).media_mime_type || undefined,
     })));
   }, []);
 
@@ -171,6 +175,10 @@ const WhatsApp = () => {
             text: msg.body || '',
             time: new Date(msg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
             status: msg.status === 'read' ? 'read' : msg.status === 'delivered' ? 'delivered' : 'sent',
+            mediaType: msg.media_type || undefined,
+            mediaUrl: msg.media_url || undefined,
+            mediaName: msg.media_name || undefined,
+            mediaMimeType: msg.media_mime_type || undefined,
           };
           setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]);
         }
@@ -223,10 +231,70 @@ const WhatsApp = () => {
     }
   }, [selected, getHeaders, user]);
 
-  const handleSendMedia = useCallback(async (_file: File, _type: 'image' | 'audio' | 'document') => {
+  const handleSendMedia = useCallback(async (file: File, type: 'image' | 'audio' | 'document') => {
     if (!selected) return;
-    toast.info('Envio de mídia será integrado com Z-API em breve.');
-  }, [selected]);
+
+    // Validate file size (20MB limit)
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error('Arquivo muito grande! Limite de 20MB.');
+      return;
+    }
+
+    const tempId = `temp-${Date.now()}`;
+    const localUrl = URL.createObjectURL(file);
+
+    // Optimistic UI: show uploading message
+    setMessages(prev => [...prev, {
+      id: tempId, type: 'sent', text: '',
+      time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      status: 'sent', mediaType: type, mediaUrl: localUrl, mediaName: file.name, mediaMimeType: file.type,
+    }]);
+
+    try {
+      // 1. Upload to Storage
+      const ext = file.name.split('.').pop() || 'bin';
+      const path = `${selected.phone}/${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from('whatsapp-media').upload(path, file);
+      if (uploadErr) throw uploadErr;
+
+      const { data: urlData } = supabase.storage.from('whatsapp-media').getPublicUrl(path);
+      const publicUrl = urlData.publicUrl;
+
+      // 2. Send via Z-API proxy
+      const cleanPhone = selected.phone.replace(/\D/g, '');
+      const headers = await getHeaders();
+      const res = await fetch(getProxyUrl(), {
+        method: 'POST', headers,
+        body: JSON.stringify({
+          action: 'send-media', phone: cleanPhone, fileUrl: publicUrl, mimeType: file.type, message: file.name,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      // 3. Save to DB
+      await supabase.from('whatsapp_messages').insert({
+        conversation_phone: selected.phone, direction: 'sent', body: file.name, status: 'sent', from_me: true,
+        user_id: user?.id || null, media_type: type, media_url: publicUrl, media_name: file.name, media_mime_type: file.type,
+      } as any);
+
+      // Replace temp message with final
+      setMessages(prev => prev.map(m => m.id === tempId ? { ...m, mediaUrl: publicUrl } : m));
+      URL.revokeObjectURL(localUrl);
+
+      await supabase.from('whatsapp_conversations').upsert({
+        phone: selected.phone, name: selected.name,
+        last_message: `📎 ${file.name}`, last_message_time: new Date().toISOString(), updated_at: new Date().toISOString(),
+      } as any, { onConflict: 'phone,tenant_id' });
+
+      toast.success('Mídia enviada!');
+    } catch (err: any) {
+      console.error('Error sending media:', err);
+      toast.error('Erro ao enviar mídia: ' + (err.message || 'erro desconhecido'));
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+      URL.revokeObjectURL(localUrl);
+    }
+  }, [selected, getHeaders, user]);
 
   const handleNewConversation = useCallback(async (phone: string, name?: string) => {
     const { error } = await supabase.from('whatsapp_conversations').upsert({

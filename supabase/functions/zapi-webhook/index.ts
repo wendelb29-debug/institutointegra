@@ -18,14 +18,41 @@ function extractMessageText(body: any): string {
   if (body.body?.message) return body.body.message;
   if (typeof body.body === 'string') return body.body;
   if (typeof body.message === 'string') return body.message;
-  if (body.image?.caption) return `[Imagem] ${body.image.caption}`;
-  if (body.image) return '[Imagem]';
-  if (body.audio) return '[Áudio]';
-  if (body.video) return '[Vídeo]';
-  if (body.document) return '[Documento]';
+  if (body.image?.caption) return body.image.caption;
+  if (body.image) return '';
+  if (body.audio) return '';
+  if (body.video) return '';
+  if (body.document) return '';
   if (body.sticker) return '[Figurinha]';
   if (body.contact) return '[Contato]';
   if (body.location) return '[Localização]';
+  return '';
+}
+
+function extractMediaInfo(body: any): { mediaType: string | null; mediaUrl: string | null; mediaName: string | null; mediaMimeType: string | null } {
+  if (body.image) {
+    return { mediaType: 'image', mediaUrl: body.image.imageUrl || body.image.url || null, mediaName: body.image.caption || 'imagem', mediaMimeType: body.image.mimetype || 'image/jpeg' };
+  }
+  if (body.audio) {
+    return { mediaType: 'audio', mediaUrl: body.audio.audioUrl || body.audio.url || null, mediaName: 'audio', mediaMimeType: body.audio.mimetype || 'audio/ogg' };
+  }
+  if (body.video) {
+    return { mediaType: 'video', mediaUrl: body.video.videoUrl || body.video.url || null, mediaName: body.video.caption || 'video', mediaMimeType: body.video.mimetype || 'video/mp4' };
+  }
+  if (body.document) {
+    return { mediaType: 'document', mediaUrl: body.document.documentUrl || body.document.url || null, mediaName: body.document.fileName || 'documento', mediaMimeType: body.document.mimetype || 'application/pdf' };
+  }
+  return { mediaType: null, mediaUrl: null, mediaName: null, mediaMimeType: null };
+}
+
+function getLastMessagePreview(body: any): string {
+  const text = extractMessageText(body);
+  if (text) return text;
+  const media = extractMediaInfo(body);
+  if (media.mediaType === 'image') return '📷 Imagem';
+  if (media.mediaType === 'audio') return '🎤 Áudio';
+  if (media.mediaType === 'video') return '🎥 Vídeo';
+  if (media.mediaType === 'document') return `📄 ${media.mediaName}`;
   return '';
 }
 
@@ -133,6 +160,7 @@ async function handleMessage(supabase: any, body: any, tenantId: string | null, 
   const fromMe = body.fromMe || false;
   const messageId = body.messageId || body.id;
   const messageText = extractMessageText(body);
+  const lastMsgPreview = getLastMessagePreview(body);
   const chatName = body.chatName || body.senderName || phone;
   let senderPhoto = body.photo || body.senderPhoto || null;
 
@@ -166,7 +194,7 @@ async function handleMessage(supabase: any, body: any, tenantId: string | null, 
     phone,
     name: chatName || phone,
     is_group: isGroup,
-    last_message: messageText || '',
+    last_message: lastMsgPreview || '',
     last_message_time: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     tenant_id: tenantId,
@@ -193,6 +221,7 @@ async function handleMessage(supabase: any, body: any, tenantId: string | null, 
   }
 
   // Insert message
+  const media = extractMediaInfo(body);
   const msgData: Record<string, any> = {
     conversation_phone: phone,
     message_id: messageId,
@@ -203,6 +232,12 @@ async function handleMessage(supabase: any, body: any, tenantId: string | null, 
     tenant_id: tenantId,
   };
   if (assignedTo) msgData.user_id = assignedTo;
+  if (media.mediaType) {
+    msgData.media_type = media.mediaType;
+    msgData.media_url = media.mediaUrl;
+    msgData.media_name = media.mediaName;
+    msgData.media_mime_type = media.mediaMimeType;
+  }
 
   const { error: msgError } = await supabase
     .from('whatsapp_messages')

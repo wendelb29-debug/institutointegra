@@ -2213,6 +2213,10 @@ export type Database = {
           direction: string
           from_me: boolean | null
           id: string
+          media_mime_type: string | null
+          media_name: string | null
+          media_type: string | null
+          media_url: string | null
           message_id: string | null
           status: string | null
           tenant_id: string
@@ -2225,6 +2229,10 @@ export type Database = {
           direction: string
           from_me?: boolean | null
           id?: string
+          media_mime_type?: string | null
+          media_name?: string | null
+          media_type?: string | null
+          media_url?: string | null
           message_id?: string | null
           status?: string | null
           tenant_id?: string
@@ -2237,6 +2245,10 @@ export type Database = {
           direction?: string
           from_me?: boolean | null
           id?: string
+          media_mime_type?: string | null
+          media_name?: string | null
+          media_type?: string | null
+          media_url?: string | null
           message_id?: string | null
           status?: string | null
           tenant_id?: string
