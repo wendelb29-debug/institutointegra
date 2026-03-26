@@ -273,6 +273,14 @@ const WhatsApp = () => {
     loadConversations();
   }, [loadConversations]);
 
+  const handleTransfer = useCallback(async (phone: string, newUserId: string) => {
+    await supabase.from('whatsapp_conversations').update({
+      assigned_to: newUserId, conversation_status: 'em_atendimento',
+    } as any).eq('phone', phone);
+    toast.success('Conversa transferida!');
+    loadConversations();
+  }, [loadConversations]);
+
   const handleConnect = useCallback(async () => {
     setStatus('connecting');
     await checkStatus();
