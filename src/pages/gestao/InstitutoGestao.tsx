@@ -178,9 +178,14 @@ const InstitutoGestao = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {events.map(ev => (
               <Card key={ev.id} className="border-border/60 shadow-sm hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-semibold">{ev.title}</CardTitle>
-                  {ev.category && <p className="text-xs text-accent font-medium">{ev.category}</p>}
+                <CardHeader className="pb-2 flex flex-row items-start justify-between">
+                  <div>
+                    <CardTitle className="text-base font-semibold">{ev.title}</CardTitle>
+                    {ev.category && <p className="text-xs text-accent font-medium">{ev.category}</p>}
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive shrink-0" onClick={() => handleDeleteEvent(ev.id)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2"><CalendarDays className="h-3.5 w-3.5" /><span>{new Date(ev.event_date).toLocaleDateString('pt-BR')}</span>{ev.start_time && <span>{ev.start_time.slice(0,5)} - {ev.end_time?.slice(0,5)}</span>}</div>
