@@ -16,6 +16,7 @@ interface ChatPanelProps {
   onBack?: () => void;
   onSaveContact?: (data: { phone: string; name: string; notes?: string }) => void;
   onAssign?: (phone: string) => void;
+  onTransfer?: (phone: string, newUserId: string) => void;
 }
 
 const avatarColors: Record<string, string> = {};
