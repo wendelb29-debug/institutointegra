@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Check, CheckCheck, MoreVertical, Search, Smile, Paperclip, Mic, CalendarCheck, Bell, ArrowLeft, Sparkles, X, UserPlus, User } from 'lucide-react';
+import { Send, Loader2, Check, CheckCheck, MoreVertical, Search, Smile, Paperclip, Mic, CalendarCheck, Bell, ArrowLeft, Sparkles, X, UserPlus, User, ArrowDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { Conversation, ChatMessage } from './types';
 import { EmojiPicker } from './EmojiPicker';
@@ -40,8 +40,23 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [showNewMsgIndicator, setShowNewMsgIndicator] = useState(false);
+
+  const scrollToBottom = (force = false) => {
+    if (!scrollRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 150;
+
+    if (isAtBottom || force) {
+      scrollRef.current.scrollTo({ top: scrollHeight, behavior: 'smooth' });
+      setShowNewMsgIndicator(false);
+    } else {
+      setShowNewMsgIndicator(true);
+    }
+  };
+
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    scrollToBottom();
   }, [messages]);
 
   const handleSend = () => {
@@ -170,7 +185,7 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-[5%] py-4 space-y-2 bg-muted/20">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-[5%] py-4 space-y-2 bg-muted/20 relative">
         {messages.length === 0 && (
           <div className="flex items-center justify-center h-full">
             <p className="text-sm text-muted-foreground">Nenhuma mensagem ainda. Envie a primeira!</p>
@@ -193,6 +208,19 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
           </div>
         ))}
       </div>
+
+      {/* New messages indicator */}
+      {showNewMsgIndicator && (
+        <div className="relative shrink-0">
+          <button
+            onClick={() => scrollToBottom(true)}
+            className="absolute -top-12 right-4 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-lg hover:bg-primary/90 transition-colors"
+          >
+            <ArrowDown className="h-3.5 w-3.5" />
+            Novas mensagens
+          </button>
+        </div>
+      )}
 
       {/* File Preview */}
       {previewFile && (
