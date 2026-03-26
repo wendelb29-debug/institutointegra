@@ -22,7 +22,7 @@ export function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/85 backdrop-blur-md border-b border-border/40">
       <div className="max-w-7xl mx-auto flex items-center justify-between h-16 section-padding">
         <Link to="/" className="flex items-center gap-2.5">
-          <img src={logoIntegra} alt="Integra" className="h-[108px] w-auto" />
+          <img src={logoIntegra} alt="Integra" className="h-[54px] w-auto" />
           
         </Link>
 
