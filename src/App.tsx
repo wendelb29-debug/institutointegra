@@ -56,6 +56,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <TenantProvider>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/coworking" element={<Coworking />} />
