@@ -427,6 +427,48 @@ export type Database = {
           },
         ]
       }
+      health_professionals: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          phone: string | null
+          registration_number: string | null
+          role_title: string | null
+          signature_url: string | null
+          specialty: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          phone?: string | null
+          registration_number?: string | null
+          role_title?: string | null
+          signature_url?: string | null
+          specialty?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          phone?: string | null
+          registration_number?: string | null
+          role_title?: string | null
+          signature_url?: string | null
+          specialty?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       instituto_events: {
         Row: {
           category: string | null

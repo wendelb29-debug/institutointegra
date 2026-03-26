@@ -13,6 +13,7 @@ import { AIAssistantButton } from './AIAssistantButton';
 import { TemplatesPanel } from './TemplatesPanel';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { generateClinicalPdf } from '@/lib/generateClinicalPdf';
 
 interface Props {
   patientId: string;
@@ -24,6 +25,7 @@ export function PatientDiagnoses({ patientId, patientName }: Props) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState({ diagnosis_date: new Date().toISOString().split('T')[0], description: '', cid_code: '' });
+  const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -54,30 +56,45 @@ export function PatientDiagnoses({ patientId, patientName }: Props) {
     fetch_();
   };
 
-  const generatePDF = (diag: any) => {
-    const content = `
-DIAGNÓSTICO CLÍNICO
-═══════════════════════════════════════
+  const handleGeneratePdf = async (diag: any) => {
+    if (!user) return;
+    setGeneratingPdf(diag.id);
+    try {
+      const { data: prof } = await supabase
+        .from('health_professionals' as any)
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-Paciente: ${patientName}
-Data: ${format(new Date(diag.diagnosis_date), "dd/MM/yyyy")}
-${diag.cid_code ? `CID: ${diag.cid_code}` : ''}
+      const professional = prof ? {
+        full_name: (prof as any).full_name,
+        specialty: (prof as any).specialty,
+        registration_number: (prof as any).registration_number,
+        signature_url: (prof as any).signature_url,
+      } : {
+        full_name: user.user_metadata?.full_name || user.email || 'Profissional',
+        specialty: '',
+      };
 
-DESCRIÇÃO:
-${diag.description}
+      const blob = await generateClinicalPdf({
+        type: 'diagnostico',
+        patientName,
+        professional,
+        content: [{ date: diag.diagnosis_date, text: diag.description }],
+        diagnosisCid: diag.cid_code || undefined,
+      });
 
-═══════════════════════════════════════
-Instituto Integra
-    `.trim();
-
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `diagnostico_${patientName.replace(/\s+/g, '_')}_${diag.diagnosis_date}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast({ title: 'Diagnóstico exportado!' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `diagnostico_${patientName.replace(/\s+/g, '_')}_${diag.diagnosis_date}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: 'PDF do diagnóstico gerado!' });
+    } catch {
+      toast({ title: 'Erro ao gerar PDF', variant: 'destructive' });
+    }
+    setGeneratingPdf(null);
   };
 
   const startEdit = (diag: any) => {
@@ -136,7 +153,15 @@ Instituto Integra
                   </div>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(d)}><Pencil className="h-3.5 w-3.5" /></Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => generatePDF(d)}><FileDown className="h-3.5 w-3.5" /></Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => handleGeneratePdf(d)}
+                      disabled={generatingPdf === d.id}
+                    >
+                      <FileDown className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </div>
                 <p className="text-sm whitespace-pre-wrap">{d.description}</p>
