@@ -396,7 +396,7 @@ const WhatsApp = () => {
                 <ChatPanel conversation={selected} messages={messages} onSendMessage={handleSendMessage} onSendMedia={handleSendMedia} onBack={handleBack} onSaveContact={handleSaveContact} onAssign={handleAssign} onTransfer={handleTransfer} />
               )}
             </div>
-            <div className="hidden lg:flex flex-col h-full">
+            <div className="hidden lg:flex flex-col h-full min-h-0 overflow-hidden">
               {selected ? (
                 <ChatPanel conversation={selected} messages={messages} onSendMessage={handleSendMessage} onSendMedia={handleSendMedia} onSaveContact={handleSaveContact} onAssign={handleAssign} onTransfer={handleTransfer} />
               ) : (
