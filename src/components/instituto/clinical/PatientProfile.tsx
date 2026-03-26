@@ -17,9 +17,10 @@ import { PatientAnamnesisForm } from './PatientAnamnesisForm';
 interface PatientProfileProps {
   patient: any;
   onBack: () => void;
+  initialTab?: string;
 }
 
-export function PatientProfile({ patient, onBack }: PatientProfileProps) {
+export function PatientProfile({ patient, onBack, initialTab = 'dados' }: PatientProfileProps) {
   const [absences, setAbsences] = useState(0);
 
   useEffect(() => {
@@ -57,7 +58,7 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
         </div>
       </div>
 
-      <Tabs defaultValue="dados" className="w-full">
+      <Tabs defaultValue={initialTab} className="w-full">
         <TabsList className="flex flex-wrap h-auto gap-1">
           <TabsTrigger value="dados" className="gap-1"><User className="h-3.5 w-3.5" />Dados</TabsTrigger>
           <TabsTrigger value="prontuario" className="gap-1"><FileText className="h-3.5 w-3.5" />Prontuário</TabsTrigger>

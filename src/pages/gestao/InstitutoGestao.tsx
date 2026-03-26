@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/hooks/use-toast';
 import {
   Plus, CalendarDays, Users, GraduationCap, Search,
-  FileText, TrendingUp, Stethoscope, AlertTriangle, Package, ClipboardList, BarChart3
+  FileText, TrendingUp, Stethoscope, AlertTriangle, Package, ClipboardList, BarChart3, Trash2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -29,6 +29,7 @@ const InstitutoGestao = () => {
   const [rooms, setRooms] = useState<any[]>([]);
   const [patients, setPatients] = useState<any[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [selectedInitialTab, setSelectedInitialTab] = useState('dados');
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>({});
   const [searchPatient, setSearchPatient] = useState('');
@@ -69,13 +70,21 @@ const InstitutoGestao = () => {
     setOpen(false); setForm({}); fetchData();
   };
 
+  const handleDeleteEvent = async (id: string) => {
+    if (!confirm('Deseja realmente excluir este evento?')) return;
+    const { error } = await supabase.from('instituto_events').delete().eq('id', id);
+    if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return; }
+    toast({ title: 'Evento excluído!' });
+    fetchData();
+  };
+
   const filteredPatients = patients.filter(p =>
     p.name.toLowerCase().includes(searchPatient.toLowerCase()) ||
     p.phone.includes(searchPatient)
   );
 
   if (selectedPatient) {
-    return <PatientProfile patient={selectedPatient} onBack={() => { setSelectedPatient(null); fetchData(); }} />;
+    return <PatientProfile patient={selectedPatient} onBack={() => { setSelectedPatient(null); setSelectedInitialTab('dados'); fetchData(); }} initialTab={selectedInitialTab} />;
   }
 
   return (
@@ -170,9 +179,14 @@ const InstitutoGestao = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {events.map(ev => (
               <Card key={ev.id} className="border-border/60 shadow-sm hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-semibold">{ev.title}</CardTitle>
-                  {ev.category && <p className="text-xs text-accent font-medium">{ev.category}</p>}
+                <CardHeader className="pb-2 flex flex-row items-start justify-between">
+                  <div>
+                    <CardTitle className="text-base font-semibold">{ev.title}</CardTitle>
+                    {ev.category && <p className="text-xs text-accent font-medium">{ev.category}</p>}
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive shrink-0" onClick={() => handleDeleteEvent(ev.id)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2"><CalendarDays className="h-3.5 w-3.5" /><span>{new Date(ev.event_date).toLocaleDateString('pt-BR')}</span>{ev.start_time && <span>{ev.start_time.slice(0,5)} - {ev.end_time?.slice(0,5)}</span>}</div>
@@ -231,7 +245,17 @@ const InstitutoGestao = () => {
                 {searchPatient && (
                   <div className="max-w-md mx-auto space-y-1">
                     {filteredPatients.slice(0, 5).map(p => (
-                      <div key={p.id} className="flex items-center justify-between border border-border/60 rounded-lg px-4 py-2 cursor-pointer hover:bg-muted/50" onClick={() => setSelectedPatient(p)}>
+                      <div key={p.id} className="flex items-center justify-between border border-border/60 rounded-lg px-4 py-2 cursor-pointer hover:bg-muted/50" onClick={() => { setSelectedInitialTab(tabKey); setSelectedPatient(p); }}>
+                        <span className="text-sm font-medium">{p.name}</span>
+                        <span className="text-xs text-muted-foreground">{p.phone}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {!searchPatient && filteredPatients.length > 0 && (
+                  <div className="max-w-md mx-auto space-y-1 max-h-60 overflow-y-auto">
+                    {filteredPatients.map(p => (
+                      <div key={p.id} className="flex items-center justify-between border border-border/60 rounded-lg px-4 py-2 cursor-pointer hover:bg-muted/50" onClick={() => { setSelectedInitialTab(tabKey); setSelectedPatient(p); }}>
                         <span className="text-sm font-medium">{p.name}</span>
                         <span className="text-xs text-muted-foreground">{p.phone}</span>
                       </div>

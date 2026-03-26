@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Link2, Copy, Eye, FileSignature, FileText, Download, MessageCircle } from 'lucide-react';
+import { usePermissions } from '@/hooks/usePermissions';
+import { Plus, Link2, Copy, Eye, FileSignature, FileText, Download, MessageCircle, Trash2, ShieldAlert } from 'lucide-react';
 
 const statusColors: Record<string, string> = {
   ativo: 'bg-primary/10 text-primary',
@@ -98,6 +99,7 @@ const Contratos = () => {
   const [signatureDialog, setSignatureDialog] = useState<any>(null);
   const [sigContract, setSigContract] = useState<any>(null);
   const { toast } = useToast();
+  const { isAdmin, isLoading: permLoading } = usePermissions();
 
   const fetch_ = async () => {
     const [cRes, clRes, rRes] = await Promise.all([
@@ -158,6 +160,28 @@ const Contratos = () => {
     const { data: sig } = await supabase.from('contract_signatures').select('*').eq('contract_id', c.id).order('signed_at', { ascending: false }).limit(1).single();
     downloadPDF(generateContractHTML(c, sig, 'final'), `Contrato_${c.clients?.name || 'contrato'}.pdf`);
   };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Deseja realmente excluir este contrato?')) return;
+    const { error } = await supabase.from('contracts').delete().eq('id', id);
+    if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return; }
+    toast({ title: 'Contrato excluído!' });
+    fetch_();
+  };
+
+  if (permLoading) return <div className="flex items-center justify-center py-12 text-muted-foreground">Carregando...</div>;
+
+  if (!isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 space-y-4">
+        <ShieldAlert className="h-16 w-16 text-muted-foreground" />
+        <h2 className="text-xl font-semibold text-foreground">Acesso Restrito</h2>
+        <p className="text-muted-foreground text-center max-w-md">
+          Esta seção é acessível apenas para administradores. Entre em contato com o administrador do sistema para obter acesso.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -252,6 +276,9 @@ const Contratos = () => {
                         <Link2 className="h-3.5 w-3.5" /> Gerar link
                       </Button>
                     )}
+                    <Button variant="ghost" size="sm" className="gap-1 text-destructive hover:text-destructive" onClick={() => handleDelete(c.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
