@@ -55,6 +55,14 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
     }
   };
 
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    if (scrollHeight - scrollTop - clientHeight < 150) {
+      setShowNewMsgIndicator(false);
+    }
+  };
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
