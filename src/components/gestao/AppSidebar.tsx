@@ -1,16 +1,17 @@
 import {
   LayoutDashboard, DoorOpen, Users, FileText, DollarSign,
   Wrench, CalendarDays, GraduationCap, LogOut, Building2, MessageCircle, Stethoscope,
-  ClipboardList, CreditCard, Handshake, Truck, Package, Clock, HeartPulse, Scissors, UserCog, UserCheck,
+  ClipboardList, CreditCard, Truck, Package, HeartPulse, UserCog,
   Landmark, Settings, Receipt, ShoppingCart, FileCheck,
   ArrowDownToLine, Warehouse, ClipboardCheck, ArrowUpFromLine, ChevronDown
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions, Module } from '@/hooks/usePermissions';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
-  SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem,
   SidebarHeader, SidebarFooter, useSidebar,
 } from '@/components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -60,11 +61,29 @@ const almoxarifadoItems = [
   { title: 'Saídas', url: '/gestao/almoxarifado/saidas', icon: ArrowUpFromLine },
 ];
 
+interface SectionConfig {
+  id: string;
+  label: string;
+  icon: any;
+  items: typeof mainItems;
+  module: Module;
+  activeClassName?: string;
+}
+
+const sections: SectionConfig[] = [
+  { id: 'coworking', label: 'Coworking', icon: Building2, items: mainItems, module: 'coworking', activeClassName: 'bg-primary/8 text-primary font-medium' },
+  { id: 'instituto', label: 'Instituto', icon: GraduationCap, items: institutoItems, module: 'instituto', activeClassName: 'bg-gold/8 text-gold font-medium' },
+  { id: 'cadastros', label: 'Cadastros', icon: ClipboardList, items: cadastroItems, module: 'cadastros', activeClassName: 'bg-primary/8 text-primary font-medium' },
+  { id: 'financeiro', label: 'Financeiro', icon: DollarSign, items: financeiroItems, module: 'financeiro', activeClassName: 'bg-primary/8 text-primary font-medium' },
+  { id: 'almoxarifado', label: 'Almoxarifado', icon: Warehouse, items: almoxarifadoItems, module: 'almoxarifado', activeClassName: 'bg-primary/8 text-primary font-medium' },
+];
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const location = useLocation();
   const { signOut } = useAuth();
+  const { isAdmin, canViewModule } = usePermissions();
 
   const isActive = (path: string) =>
     path === '/gestao'
@@ -83,145 +102,74 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <Collapsible defaultOpen={mainItems.some(i => isActive(i.url))}>
-          <SidebarGroup>
-            <CollapsibleTrigger className="flex w-full items-center justify-between px-2 py-1.5 text-xs uppercase tracking-wider text-muted-foreground/60 font-semibold hover:text-muted-foreground transition-colors cursor-pointer">
-              <span className="flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
-                {!collapsed && 'Coworking'}
-              </span>
-              {!collapsed && <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200" />}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {mainItems.map(item => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                        <NavLink to={item.url} end={item.url === '/gestao'} className="hover:bg-sidebar-accent/60" activeClassName="bg-primary/8 text-primary font-medium">
-                          <item.icon className="h-4 w-4" />
-                          {!collapsed && <span>{item.title}</span>}
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </SidebarGroup>
-        </Collapsible>
+        {sections.map(section => {
+          const visible = isAdmin || canViewModule(section.module);
+          if (!visible) return null;
 
-        <Collapsible defaultOpen={institutoItems.some(i => isActive(i.url))}>
-          <SidebarGroup>
-            <CollapsibleTrigger className="flex w-full items-center justify-between px-2 py-1.5 text-xs uppercase tracking-wider text-muted-foreground/60 font-semibold hover:text-muted-foreground transition-colors cursor-pointer">
-              <span className="flex items-center gap-2">
-                <GraduationCap className="h-4 w-4" />
-                {!collapsed && 'Instituto'}
-              </span>
-              {!collapsed && <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200" />}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {institutoItems.map(item => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                        <NavLink to={item.url} className="hover:bg-sidebar-accent/60" activeClassName="bg-gold/8 text-gold font-medium">
-                          <item.icon className="h-4 w-4" />
-                          {!collapsed && <span>{item.title}</span>}
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </SidebarGroup>
-        </Collapsible>
+          return (
+            <Collapsible key={section.id} defaultOpen={section.items.some(i => isActive(i.url))}>
+              <SidebarGroup>
+                <CollapsibleTrigger className="flex w-full items-center justify-between px-2 py-1.5 text-xs uppercase tracking-wider text-muted-foreground/60 font-semibold hover:text-muted-foreground transition-colors cursor-pointer">
+                  <span className="flex items-center gap-2">
+                    <section.icon className="h-4 w-4" />
+                    {!collapsed && section.label}
+                  </span>
+                  {!collapsed && <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200" />}
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {section.items.map(item => (
+                        <SidebarMenuItem key={item.title}>
+                          <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                            <NavLink
+                              to={item.url}
+                              end={item.url === '/gestao'}
+                              className="hover:bg-sidebar-accent/60"
+                              activeClassName={section.activeClassName || 'bg-primary/8 text-primary font-medium'}
+                            >
+                              <item.icon className="h-4 w-4" />
+                              {!collapsed && <span>{item.title}</span>}
+                            </NavLink>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ))}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </SidebarGroup>
+            </Collapsible>
+          );
+        })}
 
-        <Collapsible defaultOpen={cadastroItems.some(i => isActive(i.url))}>
-          <SidebarGroup>
-            <CollapsibleTrigger className="flex w-full items-center justify-between px-2 py-1.5 text-xs uppercase tracking-wider text-muted-foreground/60 font-semibold hover:text-muted-foreground transition-colors cursor-pointer">
-              <span className="flex items-center gap-2">
-                <ClipboardList className="h-4 w-4" />
-                {!collapsed && 'Cadastros'}
-              </span>
-              {!collapsed && <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200" />}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {cadastroItems.map(item => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                        <NavLink to={item.url} className="hover:bg-sidebar-accent/60" activeClassName="bg-primary/8 text-primary font-medium">
-                          <item.icon className="h-4 w-4" />
-                          {!collapsed && <span>{item.title}</span>}
+        {/* Admin-only: User Management */}
+        {isAdmin && (
+          <Collapsible defaultOpen={isActive('/gestao/usuarios')}>
+            <SidebarGroup>
+              <CollapsibleTrigger className="flex w-full items-center justify-between px-2 py-1.5 text-xs uppercase tracking-wider text-muted-foreground/60 font-semibold hover:text-muted-foreground transition-colors cursor-pointer">
+                <span className="flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  {!collapsed && 'Configurações'}
+                </span>
+                {!collapsed && <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200" />}
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={isActive('/gestao/usuarios')}>
+                        <NavLink to="/gestao/usuarios" className="hover:bg-sidebar-accent/60" activeClassName="bg-primary/8 text-primary font-medium">
+                          <UserCog className="h-4 w-4" />
+                          {!collapsed && <span>Usuários</span>}
                         </NavLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </SidebarGroup>
-        </Collapsible>
-
-        <Collapsible defaultOpen={financeiroItems.some(i => isActive(i.url))}>
-          <SidebarGroup>
-            <CollapsibleTrigger className="flex w-full items-center justify-between px-2 py-1.5 text-xs uppercase tracking-wider text-muted-foreground/60 font-semibold hover:text-muted-foreground transition-colors cursor-pointer">
-              <span className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                {!collapsed && 'Financeiro'}
-              </span>
-              {!collapsed && <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200" />}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {financeiroItems.map(item => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                        <NavLink to={item.url} className="hover:bg-sidebar-accent/60" activeClassName="bg-primary/8 text-primary font-medium">
-                          <item.icon className="h-4 w-4" />
-                          {!collapsed && <span>{item.title}</span>}
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </SidebarGroup>
-        </Collapsible>
-
-        <Collapsible defaultOpen={almoxarifadoItems.some(i => isActive(i.url))}>
-          <SidebarGroup>
-            <CollapsibleTrigger className="flex w-full items-center justify-between px-2 py-1.5 text-xs uppercase tracking-wider text-muted-foreground/60 font-semibold hover:text-muted-foreground transition-colors cursor-pointer">
-              <span className="flex items-center gap-2">
-                <Warehouse className="h-4 w-4" />
-                {!collapsed && 'Almoxarifado'}
-              </span>
-              {!collapsed && <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200" />}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {almoxarifadoItems.map(item => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                        <NavLink to={item.url} className="hover:bg-sidebar-accent/60" activeClassName="bg-primary/8 text-primary font-medium">
-                          <item.icon className="h-4 w-4" />
-                          {!collapsed && <span>{item.title}</span>}
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </SidebarGroup>
-        </Collapsible>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </SidebarGroup>
+          </Collapsible>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-2">

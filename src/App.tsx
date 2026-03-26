@@ -43,6 +43,7 @@ import AlmoxEntradas from "./pages/gestao/almoxarifado/Entradas";
 import AlmoxEstoque from "./pages/gestao/almoxarifado/Estoque";
 import AlmoxPedidos from "./pages/gestao/almoxarifado/Pedidos";
 import AlmoxSaidas from "./pages/gestao/almoxarifado/Saidas";
+import Usuarios from "./pages/gestao/Usuarios";
 
 const queryClient = new QueryClient();
 
@@ -91,6 +92,7 @@ const App = () => (
               <Route path="almoxarifado/estoque" element={<AlmoxEstoque />} />
               <Route path="almoxarifado/pedidos" element={<AlmoxPedidos />} />
               <Route path="almoxarifado/saidas" element={<AlmoxSaidas />} />
+              <Route path="usuarios" element={<Usuarios />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
