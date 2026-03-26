@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/hooks/use-toast';
 import {
   Plus, CalendarDays, Users, GraduationCap, Search,
-  FileText, TrendingUp, Stethoscope, AlertTriangle, Package, ClipboardList, BarChart3
+  FileText, TrendingUp, Stethoscope, AlertTriangle, Package, ClipboardList, BarChart3, Trash2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
