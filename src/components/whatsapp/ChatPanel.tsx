@@ -40,8 +40,23 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [showNewMsgIndicator, setShowNewMsgIndicator] = useState(false);
+
+  const scrollToBottom = (force = false) => {
+    if (!scrollRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 150;
+
+    if (isAtBottom || force) {
+      scrollRef.current.scrollTo({ top: scrollHeight, behavior: 'smooth' });
+      setShowNewMsgIndicator(false);
+    } else {
+      setShowNewMsgIndicator(true);
+    }
+  };
+
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    scrollToBottom();
   }, [messages]);
 
   const handleSend = () => {
