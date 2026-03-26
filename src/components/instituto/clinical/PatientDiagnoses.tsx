@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, FileDown, Calendar, Pencil } from 'lucide-react';
+import { AIAssistantButton } from './AIAssistantButton';
+import { TemplatesPanel } from './TemplatesPanel';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
