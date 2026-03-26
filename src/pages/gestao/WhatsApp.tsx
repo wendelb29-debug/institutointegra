@@ -132,6 +132,10 @@ const WhatsApp = () => {
       text: m.body || '',
       time: new Date(m.created_at!).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
       status: m.status === 'read' ? 'read' as const : m.status === 'delivered' ? 'delivered' as const : 'sent' as const,
+      mediaType: (m as any).media_type || undefined,
+      mediaUrl: (m as any).media_url || undefined,
+      mediaName: (m as any).media_name || undefined,
+      mediaMimeType: (m as any).media_mime_type || undefined,
     })));
   }, []);
 
