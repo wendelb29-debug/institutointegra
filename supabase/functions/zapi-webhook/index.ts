@@ -276,12 +276,12 @@ serve(async (req) => {
     const instanceId = body.instanceId || null;
 
     // Resolve user and tenant from instance
-    const { userId: instanceUserId, tenantId } = await findUserByInstance(supabase, instanceId);
+    const { userId: instanceUserId, tenantId, instanceToken, clientToken: instClientToken } = await findUserByInstance(supabase, instanceId);
     console.log(`[zapi-webhook] instanceId=${instanceId}, userId=${instanceUserId}, tenantId=${tenantId}`);
 
     switch (type) {
       case 'message':
-        await handleMessage(supabase, body, tenantId, instanceUserId);
+        await handleMessage(supabase, body, tenantId, instanceUserId, instanceId, instanceToken || undefined, instClientToken);
         break;
 
       case 'send':
