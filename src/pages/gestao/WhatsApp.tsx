@@ -377,7 +377,7 @@ const WhatsApp = () => {
             conversations={conversations}
             currentUserId={user?.id}
             currentUserName={user?.email}
-            isAdmin={true}
+            isAdmin={isAdmin}
             onAssign={handleAssign}
             onFinish={handleFinish}
             onReopen={handleReopen}
