@@ -182,8 +182,7 @@ const WhatsApp = () => {
       await supabase.from('whatsapp_conversations').upsert({
         phone: selected.phone, name: selected.name,
         last_message: text, last_message_time: new Date().toISOString(), updated_at: new Date().toISOString(),
-        user_id: user?.id || null,
-      } as any, { onConflict: 'phone' });
+      } as any, { onConflict: 'phone,tenant_id' });
     } catch (err) {
       toast.error('Erro ao enviar mensagem');
       console.error(err);
