@@ -12,6 +12,7 @@ import Contato from "./pages/Contato";
 import ReservasPublicas from "./pages/ReservasPublicas";
 import Auth from "./pages/Auth";
 import AssinarContrato from "./pages/AssinarContrato";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import GestaoLayout from "./components/gestao/GestaoLayout";
 import Dashboard from "./pages/gestao/Dashboard";
