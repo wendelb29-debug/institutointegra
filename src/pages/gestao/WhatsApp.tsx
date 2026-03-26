@@ -53,6 +53,26 @@ const WhatsApp = () => {
 
   useEffect(() => { checkStatus(); }, [checkStatus]);
 
+  // Fetch profile picture from Z-API and update DB
+  const fetchAndSaveProfilePic = useCallback(async (phone: string) => {
+    try {
+      const headers = await getHeaders();
+      const res = await fetch(getProxyUrl(), {
+        method: 'POST', headers,
+        body: JSON.stringify({ action: 'profile-picture', phone }),
+      });
+      const data = await res.json();
+      if (data?.profilePicUrl) {
+        await supabase
+          .from('whatsapp_conversations')
+          .update({ profile_pic_url: data.profilePicUrl, avatar_url: data.profilePicUrl })
+          .eq('phone', phone);
+        return data.profilePicUrl;
+      }
+    } catch (e) { console.error('Error fetching profile pic:', e); }
+    return null;
+  }, [getHeaders]);
+
   // ===== CONVERSATIONS =====
   const loadConversations = useCallback(async () => {
     const { data, error } = await supabase
@@ -63,7 +83,7 @@ const WhatsApp = () => {
 
     if (error) { console.error('Error loading conversations:', error); return; }
 
-    setConversations((data || []).map(c => ({
+    const mapped = (data || []).map(c => ({
       id: c.id,
       name: c.name || c.phone,
       phone: c.phone,
@@ -78,9 +98,23 @@ const WhatsApp = () => {
       profilePicUrl: (c as any).profile_pic_url || c.avatar_url || undefined,
       assignedTo: (c as any).assigned_to || null,
       conversationStatus: ((c as any).conversation_status || 'aberto') as 'aberto' | 'em_atendimento' | 'finalizado',
-    })));
+    }));
+
+    setConversations(mapped);
     setLoading(false);
-  }, []);
+
+    // Fetch missing profile pics in background (max 5 at a time)
+    const missingPics = mapped.filter(c => !c.profilePicUrl).slice(0, 5);
+    for (const conv of missingPics) {
+      fetchAndSaveProfilePic(conv.phone).then(url => {
+        if (url) {
+          setConversations(prev => prev.map(c =>
+            c.phone === conv.phone ? { ...c, profilePicUrl: url } : c
+          ));
+        }
+      });
+    }
+  }, [fetchAndSaveProfilePic]);
 
   // ===== MESSAGES =====
   const loadMessages = useCallback(async (phone: string) => {
