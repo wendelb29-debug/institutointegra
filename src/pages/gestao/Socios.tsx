@@ -123,8 +123,7 @@ const Socios = () => {
         return;
       }
 
-      const [year, month] = costForm.reference_month.split('-');
-      const dueDate = `${year}-${month}-05`;
+      const dueDate = costForm.due_date || `${year}-${month}-05`;
 
       const invoiceInserts = active.map(p => ({
         partner_id: p.id, cost_id: costData.id, amount: valuePerPartner,
