@@ -347,7 +347,7 @@ const WhatsApp = () => {
             </div>
             <div className="lg:hidden h-full">
               {!selected ? (
-                <ConversationList conversations={conversations} selectedId={null} onSelect={handleSelect} onNewConversation={handleNewConversation} currentUserId={user?.id} />
+                <ConversationList conversations={conversations} selectedId={null} onSelect={handleSelect} onNewConversation={handleNewConversation} currentUserId={user?.id} isAdmin={isAdmin} />
               ) : (
                 <ChatPanel conversation={selected} messages={messages} onSendMessage={handleSendMessage} onSendMedia={handleSendMedia} onBack={handleBack} onSaveContact={handleSaveContact} onAssign={handleAssign} onTransfer={handleTransfer} />
               )}
