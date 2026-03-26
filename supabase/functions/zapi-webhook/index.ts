@@ -152,7 +152,7 @@ serve(async (req) => {
 
         const { error: convError } = await supabase
           .from('whatsapp_conversations')
-          .upsert(convData, { onConflict: 'phone' });
+          .upsert(convData, { onConflict: 'phone,tenant_id' });
 
         if (convError) {
           console.error('[zapi-webhook] Conv upsert error:', convError.message);
