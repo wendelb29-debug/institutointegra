@@ -201,6 +201,17 @@ const WhatsApp = () => {
     return () => { supabase.removeChannel(channel); };
   }, [loadConversations, loadMessages, loadContacts, notifyNewMessage]);
 
+  // ===== ESC TO CLOSE CHAT =====
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selected) {
+        setSelected(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selected]);
+
   // ===== HANDLERS =====
   const handleSelect = useCallback(async (conv: Conversation) => {
     setSelected(conv);
