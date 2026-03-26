@@ -29,6 +29,7 @@ const Socios = () => {
   const [form, setForm] = useState<any>({ status: 'ativo' });
   const [costForm, setCostForm] = useState<any>({});
   const [selectedMonth, setSelectedMonth] = useState('all');
+  const [filterOverdue, setFilterOverdue] = useState(false);
   const [launching, setLaunching] = useState(false);
   const [partnerDetail, setPartnerDetail] = useState<any>(null);
   const { toast } = useToast();
