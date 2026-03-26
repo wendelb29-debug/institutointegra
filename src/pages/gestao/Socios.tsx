@@ -29,6 +29,7 @@ const Socios = () => {
   const [form, setForm] = useState<any>({ status: 'ativo' });
   const [costForm, setCostForm] = useState<any>({});
   const [selectedMonth, setSelectedMonth] = useState('all');
+  const [filterOverdue, setFilterOverdue] = useState(false);
   const [launching, setLaunching] = useState(false);
   const [partnerDetail, setPartnerDetail] = useState<any>(null);
   const { toast } = useToast();
@@ -123,7 +124,7 @@ const Socios = () => {
       }
 
       const [year, month] = costForm.reference_month.split('-');
-      const dueDate = `${year}-${month}-05`;
+      const dueDate = costForm.due_date || `${year}-${month}-05`;
 
       const invoiceInserts = active.map(p => ({
         partner_id: p.id, cost_id: costData.id, amount: valuePerPartner,
@@ -166,9 +167,14 @@ const Socios = () => {
   };
 
   const filteredInvoices = useMemo(() => {
-    if (selectedMonth === 'all') return invoices;
-    return invoices.filter(i => i.reference_month === selectedMonth);
-  }, [invoices, selectedMonth]);
+    let result = invoices;
+    if (filterOverdue) {
+      result = result.filter(i => i.status === 'pendente' && new Date(i.due_date) < now);
+    } else if (selectedMonth !== 'all') {
+      result = result.filter(i => i.reference_month === selectedMonth);
+    }
+    return result;
+  }, [invoices, selectedMonth, filterOverdue]);
 
   const formatMonth = (ref: string) => {
     const [y, m] = ref.split('-');
@@ -220,6 +226,7 @@ const Socios = () => {
                   </Select>
                 </div>
                 <div><Label>Descrição (opcional)</Label><Input placeholder="Aluguel + manutenção" value={costForm.description || ''} onChange={e => setCostForm({ ...costForm, description: e.target.value })} /></div>
+                <div><Label>Prazo para pagamento</Label><Input type="date" value={costForm.due_date || ''} onChange={e => setCostForm({ ...costForm, due_date: e.target.value })} /></div>
                 {costForm.total_value && activePartners.length > 0 && (
                   <div className="rounded-lg bg-muted/50 border p-4 space-y-2">
                     <p className="text-sm font-medium">Prévia do rateio:</p>
@@ -348,8 +355,8 @@ const Socios = () => {
               <p className="text-sm font-medium text-red-700">{overdueInvoices.length} cobrança(s) em atraso</p>
               <p className="text-xs text-red-600/80">Total: R$ {overdueInvoices.reduce((s, i) => s + Number(i.amount), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
             </div>
-            <Button size="sm" variant="outline" className="ml-auto text-xs border-red-200 text-red-700 hover:bg-red-100" onClick={() => setSelectedMonth('all')}>
-              Ver todas
+            <Button size="sm" variant="outline" className="ml-auto text-xs border-red-200 text-red-700 hover:bg-red-100" onClick={() => { setFilterOverdue(true); setSelectedMonth('all'); }}>
+              Ver todas em atraso
             </Button>
           </CardContent>
         </Card>
@@ -365,17 +372,24 @@ const Socios = () => {
 
         {/* Invoices Tab */}
         <TabsContent value="invoices" className="space-y-3">
-          <div className="flex items-center gap-3">
-            <Label className="text-sm text-muted-foreground">Mês:</Label>
-            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-              <SelectTrigger className="w-[220px] h-9"><SelectValue placeholder="Todos os meses" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os meses</SelectItem>
-                {[...new Set(invoices.map(i => i.reference_month))].sort().reverse().map(m => (
-                  <SelectItem key={m} value={m}>{formatMonth(m)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Label className="text-sm text-muted-foreground">Mês:</Label>
+              <Select value={selectedMonth} onValueChange={v => { setSelectedMonth(v); setFilterOverdue(false); }}>
+                <SelectTrigger className="w-[220px] h-9"><SelectValue placeholder="Todos os meses" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os meses</SelectItem>
+                  {[...new Set(invoices.map(i => i.reference_month))].sort().reverse().map(m => (
+                    <SelectItem key={m} value={m}>{formatMonth(m)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {filterOverdue && (
+              <Badge variant="outline" className="bg-red-500/10 text-red-700 border-red-300 gap-1 cursor-pointer" onClick={() => setFilterOverdue(false)}>
+                🔴 Somente em atraso <XCircle className="h-3 w-3" />
+              </Badge>
+            )}
           </div>
 
           <div className="rounded-lg border overflow-hidden">
