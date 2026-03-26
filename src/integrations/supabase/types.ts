@@ -2244,13 +2244,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "whatsapp_messages_conversation_phone_fkey"
-            columns: ["conversation_phone"]
-            isOneToOne: false
-            referencedRelation: "whatsapp_conversations"
-            referencedColumns: ["phone"]
-          },
-          {
             foreignKeyName: "whatsapp_messages_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
