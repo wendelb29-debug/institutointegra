@@ -30,9 +30,9 @@ function getAvatarColor(id: string) {
   return avatarColors[Math.abs(hash) % avatarColors.length];
 }
 
-export const ConversationList = ({ conversations, selectedId, onSelect, onNewConversation, currentUserId }: ConversationListProps) => {
+export const ConversationList = ({ conversations, selectedId, onSelect, onNewConversation, currentUserId, isAdmin }: ConversationListProps) => {
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<ConversationFilter>('all');
+  const [filter, setFilter] = useState<ConversationFilter>(isAdmin ? 'all' : 'mine');
 
   const filtered = conversations.filter(c => {
     const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) || c.phone.includes(search);
