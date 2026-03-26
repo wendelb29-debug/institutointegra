@@ -171,6 +171,12 @@ const WhatsApp = () => {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_conversations' }, () => loadConversations())
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'whatsapp_messages' }, (payload) => {
         const msg = payload.new as any;
+
+        // Notify on received messages
+        if (msg.direction === 'received') {
+          notifyNewMessage(msg.conversation_phone || 'Contato', msg.body || '');
+        }
+
         if (selectedRef.current && msg.conversation_phone === selectedRef.current.phone) {
           const newMsg: ChatMessage = {
             id: msg.id,
