@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { TenantProvider } from "@/contexts/TenantContext";
 import Index from "./pages/Index";
 import Coworking from "./pages/Coworking";
 import Instituto from "./pages/Instituto";
@@ -44,6 +45,7 @@ import AlmoxEstoque from "./pages/gestao/almoxarifado/Estoque";
 import AlmoxPedidos from "./pages/gestao/almoxarifado/Pedidos";
 import AlmoxSaidas from "./pages/gestao/almoxarifado/Saidas";
 import Usuarios from "./pages/gestao/Usuarios";
+import Equipe from "./pages/gestao/Equipe";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +56,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <TenantProvider>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/coworking" element={<Coworking />} />
@@ -93,9 +96,11 @@ const App = () => (
               <Route path="almoxarifado/pedidos" element={<AlmoxPedidos />} />
               <Route path="almoxarifado/saidas" element={<AlmoxSaidas />} />
               <Route path="usuarios" element={<Usuarios />} />
+              <Route path="equipe" element={<Equipe />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </TenantProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
