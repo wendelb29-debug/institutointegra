@@ -102,6 +102,7 @@ const Agenda = () => {
       toast({ title: 'Sucesso', description: 'Paciente cadastrado.' });
       setNewPatient({ name: '', phone: '', email: '', cpf: '', notes: '' });
       setShowNewPatient(false);
+      setActiveTab('pacientes');
       fetchData();
     }
   };
