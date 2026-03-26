@@ -30,25 +30,46 @@ function extractMessageText(body: any): string {
 }
 
 // Look up which user owns this Z-API instance
-async function findUserByInstance(supabase: any, instanceId: string): Promise<string | null> {
-  if (!instanceId) return null;
+async function findUserByInstance(supabase: any, instanceId: string): Promise<{ userId: string | null; tenantId: string | null }> {
+  if (!instanceId) return { userId: null, tenantId: null };
+  
   const { data } = await supabase
     .from('psychologist_whatsapp_config')
-    .select('psychologist_id')
+    .select('psychologist_id, tenant_id')
     .eq('instance_id', instanceId)
     .maybeSingle();
-  return data?.psychologist_id || null;
-}
-
-// Get tenant_id from user or from the whatsapp config
-async function getTenantForUser(supabase: any, userId: string | null): Promise<string | null> {
-  if (!userId) return null;
-  const { data } = await supabase
-    .from('profiles')
-    .select('tenant_id')
-    .eq('user_id', userId)
-    .maybeSingle();
-  return data?.tenant_id || null;
+  
+  if (data) {
+    return { userId: data.psychologist_id, tenantId: data.tenant_id };
+  }
+  
+  // Fallback: check if instance matches global secret, use first admin tenant
+  const globalInstanceId = Deno.env.get('ZAPI_INSTANCE_ID');
+  if (globalInstanceId && instanceId === globalInstanceId) {
+    // Find the default tenant (Instituto Integra)
+    const { data: defaultTenant } = await supabase
+      .from('tenants')
+      .select('id')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    
+    if (defaultTenant) {
+      // Find admin user for this tenant
+      const { data: adminRole } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('tenant_id', defaultTenant.id)
+        .eq('role', 'admin')
+        .limit(1)
+        .maybeSingle();
+      
+      console.log(`[zapi-webhook] Fallback: resolved to tenant=${defaultTenant.id}, admin=${adminRole?.user_id}`);
+      return { userId: adminRole?.user_id || null, tenantId: defaultTenant.id };
+    }
+  }
+  
+  return { userId: null, tenantId: null };
 }
 
 // Auto-assign: find existing conversation assignment or round-robin among tenant users
@@ -94,6 +115,131 @@ async function getOrAssignUser(supabase: any, phone: string, tenantId: string, i
   return assignTo;
 }
 
+async function handleMessage(supabase: any, body: any, tenantId: string | null, instanceUserId: string | null) {
+  const phone = body.phone;
+  const isGroup = body.isGroup || false;
+  const fromMe = body.fromMe || false;
+  const messageId = body.messageId || body.id;
+  const messageText = extractMessageText(body);
+  const chatName = body.chatName || body.senderName || phone;
+  const senderPhoto = body.photo || body.senderPhoto || null;
+
+  if (isGroup) {
+    console.log('[zapi-webhook] Skipping group message');
+    return;
+  }
+
+  // Skip @lid phone numbers (internal WhatsApp IDs)
+  if (phone && phone.includes('@lid')) {
+    console.log('[zapi-webhook] Skipping @lid phone:', phone);
+    return;
+  }
+
+  if (!tenantId) {
+    console.error('[zapi-webhook] No tenant_id resolved, cannot save message');
+    return;
+  }
+
+  // Auto-assign the conversation to a user
+  const assignedTo = await getOrAssignUser(supabase, phone, tenantId, instanceUserId);
+
+  // Upsert conversation
+  const convData: Record<string, any> = {
+    phone,
+    name: chatName || phone,
+    avatar_url: senderPhoto,
+    profile_pic_url: senderPhoto,
+    is_group: isGroup,
+    last_message: messageText || '',
+    last_message_time: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    tenant_id: tenantId,
+  };
+  if (instanceUserId) convData.user_id = instanceUserId;
+  if (assignedTo) convData.assigned_to = assignedTo;
+  if (!fromMe) convData.unread_count = 1;
+
+  const { error: convError } = await supabase
+    .from('whatsapp_conversations')
+    .upsert(convData, { onConflict: 'phone,tenant_id' });
+
+  if (convError) {
+    console.error('[zapi-webhook] Conv upsert error:', convError.message);
+  } else if (!fromMe) {
+    // Increment unread if conversation already existed
+    try {
+      await supabase.rpc('increment_unread', { p_phone: phone });
+    } catch { /* ok */ }
+  }
+
+  // Insert message
+  const msgData: Record<string, any> = {
+    conversation_phone: phone,
+    message_id: messageId,
+    direction: fromMe ? 'sent' : 'received',
+    body: messageText,
+    status: fromMe ? 'sent' : 'received',
+    from_me: fromMe,
+    tenant_id: tenantId,
+  };
+  if (assignedTo) msgData.user_id = assignedTo;
+
+  const { error: msgError } = await supabase
+    .from('whatsapp_messages')
+    .insert(msgData);
+
+  if (msgError) {
+    console.error('[zapi-webhook] Message insert error:', msgError.message);
+  }
+
+  console.log('[zapi-webhook] Saved message:', { phone, fromMe, assignedTo, tenantId, messageText: messageText?.substring(0, 50) });
+}
+
+async function handleSend(supabase: any, body: any, tenantId: string | null, instanceUserId: string | null) {
+  const phone = body.phone;
+  const messageId = body.messageId || body.id;
+  const messageText = extractMessageText(body);
+  const isGroup = body.isGroup || false;
+
+  if (isGroup || !phone || !messageText) return;
+  if (phone.includes('@lid')) return;
+  if (!tenantId) return;
+
+  const assignedTo = await getOrAssignUser(supabase, phone, tenantId, instanceUserId);
+
+  const convData: Record<string, any> = {
+    phone,
+    name: body.chatName || phone,
+    last_message: messageText,
+    last_message_time: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    tenant_id: tenantId,
+  };
+  if (instanceUserId) convData.user_id = instanceUserId;
+  if (assignedTo) convData.assigned_to = assignedTo;
+
+  await supabase
+    .from('whatsapp_conversations')
+    .upsert(convData, { onConflict: 'phone,tenant_id' });
+
+  const msgData: Record<string, any> = {
+    conversation_phone: phone,
+    message_id: messageId,
+    direction: 'sent',
+    body: messageText,
+    status: 'sent',
+    from_me: true,
+    tenant_id: tenantId,
+  };
+  if (assignedTo) msgData.user_id = assignedTo;
+
+  await supabase
+    .from('whatsapp_messages')
+    .insert(msgData);
+
+  console.log('[zapi-webhook] Sent message saved:', { phone, messageId, tenantId });
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -109,132 +255,18 @@ serve(async (req) => {
     const supabase = getSupabase();
     const instanceId = body.instanceId || null;
 
-    // Find the user who owns this instance
-    const instanceUserId = await findUserByInstance(supabase, instanceId);
-    const tenantId = await getTenantForUser(supabase, instanceUserId);
+    // Resolve user and tenant from instance
+    const { userId: instanceUserId, tenantId } = await findUserByInstance(supabase, instanceId);
     console.log(`[zapi-webhook] instanceId=${instanceId}, userId=${instanceUserId}, tenantId=${tenantId}`);
 
     switch (type) {
-      case 'message': {
-        const phone = body.phone;
-        const isGroup = body.isGroup || false;
-        const fromMe = body.fromMe || false;
-        const messageId = body.messageId || body.id;
-        const messageText = extractMessageText(body);
-        const chatName = body.chatName || body.senderName || phone;
-        const senderPhoto = body.photo || body.senderPhoto || null;
-
-        if (isGroup) {
-          console.log('[zapi-webhook] Skipping group message');
-          break;
-        }
-
-        // Auto-assign the conversation to a user
-        const assignedTo = tenantId
-          ? await getOrAssignUser(supabase, phone, tenantId, instanceUserId)
-          : instanceUserId;
-
-        // Upsert conversation
-        const convData: Record<string, any> = {
-          phone,
-          name: chatName || phone,
-          avatar_url: senderPhoto,
-          profile_pic_url: senderPhoto,
-          is_group: isGroup,
-          last_message: messageText || '',
-          last_message_time: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        if (instanceUserId) convData.user_id = instanceUserId;
-        if (tenantId) convData.tenant_id = tenantId;
-        if (assignedTo) convData.assigned_to = assignedTo;
-        if (!fromMe) convData.unread_count = 1;
-
-        const { error: convError } = await supabase
-          .from('whatsapp_conversations')
-          .upsert(convData, { onConflict: 'phone,tenant_id' });
-
-        if (convError) {
-          console.error('[zapi-webhook] Conv upsert error:', convError.message);
-        } else if (!fromMe) {
-          // Increment unread if conversation already existed
-          try {
-            await supabase.rpc('increment_unread', { p_phone: phone });
-          } catch { /* ok */ }
-        }
-
-        // Insert message
-        const msgData: Record<string, any> = {
-          conversation_phone: phone,
-          message_id: messageId,
-          direction: fromMe ? 'sent' : 'received',
-          body: messageText,
-          status: fromMe ? 'sent' : 'received',
-          from_me: fromMe,
-        };
-        if (assignedTo) msgData.user_id = assignedTo;
-        if (tenantId) msgData.tenant_id = tenantId;
-
-        const { error: msgError } = await supabase
-          .from('whatsapp_messages')
-          .insert(msgData);
-
-        if (msgError) {
-          console.error('[zapi-webhook] Message insert error:', msgError.message);
-        }
-
-        console.log('[zapi-webhook] Saved message:', { phone, fromMe, assignedTo, tenantId, messageText: messageText?.substring(0, 50) });
+      case 'message':
+        await handleMessage(supabase, body, tenantId, instanceUserId);
         break;
-      }
 
-      case 'send': {
-        const phone = body.phone;
-        const messageId = body.messageId || body.id;
-        const messageText = extractMessageText(body);
-        const isGroup = body.isGroup || false;
-
-        if (isGroup) break;
-
-        if (phone && messageText) {
-          // Get existing assignment
-          const assignedTo = tenantId
-            ? await getOrAssignUser(supabase, phone, tenantId, instanceUserId)
-            : instanceUserId;
-
-          const convData: Record<string, any> = {
-            phone,
-            name: body.chatName || phone,
-            last_message: messageText,
-            last_message_time: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-          if (instanceUserId) convData.user_id = instanceUserId;
-          if (tenantId) convData.tenant_id = tenantId;
-          if (assignedTo) convData.assigned_to = assignedTo;
-
-          await supabase
-            .from('whatsapp_conversations')
-            .upsert(convData, { onConflict: 'phone,tenant_id' });
-
-          const msgData: Record<string, any> = {
-            conversation_phone: phone,
-            message_id: messageId,
-            direction: 'sent',
-            body: messageText,
-            status: 'sent',
-            from_me: true,
-          };
-          if (assignedTo) msgData.user_id = assignedTo;
-          if (tenantId) msgData.tenant_id = tenantId;
-
-          await supabase
-            .from('whatsapp_messages')
-            .insert(msgData);
-        }
-
-        console.log('[zapi-webhook] Sent message saved:', { phone, messageId, tenantId });
+      case 'send':
+        await handleSend(supabase, body, tenantId, instanceUserId);
         break;
-      }
 
       case 'delivery': {
         const status = body.status;
