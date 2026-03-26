@@ -155,18 +155,26 @@ async function handleMessage(supabase: any, body: any, tenantId: string | null, 
   // Auto-assign the conversation to a user
   const assignedTo = await getOrAssignUser(supabase, phone, tenantId, instanceUserId);
 
+  // If no sender photo, try to fetch from Z-API
+  if (!senderPhoto && !fromMe && instanceId && instanceToken) {
+    senderPhoto = await fetchProfilePic(phone, instanceId, instanceToken, clientToken || null);
+    console.log('[zapi-webhook] Fetched profile pic:', senderPhoto ? 'yes' : 'no');
+  }
+
   // Upsert conversation
   const convData: Record<string, any> = {
     phone,
     name: chatName || phone,
-    avatar_url: senderPhoto,
-    profile_pic_url: senderPhoto,
     is_group: isGroup,
     last_message: messageText || '',
     last_message_time: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     tenant_id: tenantId,
   };
+  if (senderPhoto) {
+    convData.avatar_url = senderPhoto;
+    convData.profile_pic_url = senderPhoto;
+  }
   if (instanceUserId) convData.user_id = instanceUserId;
   if (assignedTo) convData.assigned_to = assignedTo;
   if (!fromMe) convData.unread_count = 1;
