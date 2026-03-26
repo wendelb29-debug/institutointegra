@@ -1,148 +1,105 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, ChevronLeft, ChevronRight, Clock, Filter, MessageCircle, CreditCard, FileSignature, User } from 'lucide-react';
 import {
-  startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths,
-  format, isSameMonth, isSameDay, isToday,
+  Plus, ChevronLeft, ChevronRight, Clock, Filter, MessageCircle,
+  CreditCard, User, CalendarDays, CheckCircle2, XCircle, Ban,
+  AlertTriangle, Eye
+} from 'lucide-react';
+import {
+  startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths,
+  format, isToday, isSameDay, getDay, parseISO, getDate
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+interface RoomBlock {
+  id: string;
+  room_id: string | null;
+  block_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  block_type: string;
+  reason: string | null;
+}
+
 const statusColors: Record<string, string> = {
-  confirmada: 'bg-primary/10 text-primary border-primary/20',
-  pendente: 'bg-accent/10 text-accent border-accent/20',
-  cancelada: 'bg-destructive/10 text-destructive border-destructive/20',
+  confirmada: 'bg-emerald-500/15 text-emerald-700 border-emerald-300',
+  pendente: 'bg-amber-500/15 text-amber-700 border-amber-300',
+  cancelada: 'bg-red-500/15 text-red-700 border-red-300',
 };
 
-const paymentColors: Record<string, string> = {
-  pendente: 'bg-accent/10 text-accent',
-  aprovado: 'bg-primary/10 text-primary',
-  recusado: 'bg-destructive/10 text-destructive',
+const statusBorderLeft: Record<string, string> = {
+  confirmada: 'border-l-emerald-500',
+  pendente: 'border-l-amber-500',
+  cancelada: 'border-l-red-500',
 };
 
-// Determine the dominant type of reservations for a day
-const getDayColor = (dayReservations: any[], rooms: any[]): string => {
-  if (!dayReservations || dayReservations.length === 0) return 'bg-white';
-  
-  // Check room types for the reservations
-  const types = dayReservations.map(r => {
-    const room = rooms.find((rm: any) => rm.id === r.room_id);
-    return room?.type || 'hora';
-  });
-
-  const hasDaily = types.includes('diaria');
-  const hasHourly = types.includes('hora');
-  const hasMonthly = types.includes('mensal');
-
-  // Priority: diaria (green) > mensal (blue) > hora (yellow)
-  if (hasDaily || hasMonthly) return 'bg-emerald-100 border-emerald-300';
-  if (hasHourly) return 'bg-amber-100 border-amber-300';
-  return 'bg-emerald-100 border-emerald-300';
+const statusLabel: Record<string, string> = {
+  confirmada: 'Confirmada',
+  pendente: 'Pendente',
+  cancelada: 'Cancelada',
 };
 
 const Reservas = () => {
   const [reservations, setReservations] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
   const [allRooms, setAllRooms] = useState<any[]>([]);
-  const [open, setOpen] = useState(false);
+  const [roomBlocks, setRoomBlocks] = useState<RoomBlock[]>([]);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [filterRoom, setFilterRoom] = useState<string>('all');
+  const [showNewReservation, setShowNewReservation] = useState(false);
+  const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [detailOpen, setDetailOpen] = useState<any>(null);
   const [form, setForm] = useState<any>({ status: 'pendente' });
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [filterRoom, setFilterRoom] = useState<string>('all');
+  const [blockForm, setBlockForm] = useState<any>({ block_type: 'full_day', room_id: 'all', mode: 'single' });
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const fetch_ = async () => {
-    const [rRes, roomRes, allRoomRes] = await Promise.all([
-      supabase.from('reservations').select('*, rooms(name, type)').order('date', { ascending: true }),
-      supabase.from('rooms').select('id, name, price_hour, type').eq('status', 'disponivel').order('name'),
+  const fetchData = useCallback(async () => {
+    const [rRes, roomRes, allRoomRes, blocksRes] = await Promise.all([
+      supabase.from('reservations').select('*, rooms(name, type), clients(name, phone)').order('date'),
+      supabase.from('rooms').select('id, name, price_hour, price_day, price_month, type').eq('status', 'disponivel').order('name'),
       supabase.from('rooms').select('id, name, type').order('name'),
+      supabase.from('room_blocks').select('*'),
     ]);
     setReservations(rRes.data || []);
     setRooms(roomRes.data || []);
     setAllRooms(allRoomRes.data || []);
-  };
+    setRoomBlocks((blocksRes.data || []) as RoomBlock[]);
+  }, []);
 
-  useEffect(() => { fetch_(); }, []);
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Realtime subscriptions
+  useEffect(() => {
+    const channel = supabase
+      .channel('reservas-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'room_blocks' }, () => fetchData())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchData]);
 
   const filteredReservations = useMemo(() => {
     if (filterRoom === 'all') return reservations;
     return reservations.filter(r => r.room_id === filterRoom);
   }, [reservations, filterRoom]);
 
-  const handleSave = async () => {
-    if (!form.room_id || !form.date || !form.start_time || !form.end_time) return;
-    const paymentLink = `https://paypal.me/integracoworking/${form.total_value || 0}`;
-    const { error } = await supabase.from('reservations').insert({
-      room_id: form.room_id, date: form.date, start_time: form.start_time,
-      end_time: form.end_time, status: 'pendente', user_id: user?.id,
-      total_value: form.total_value || 0, notes: form.notes,
-      payment_status: 'pendente', payment_link: paymentLink,
-    } as any);
-    if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return; }
-    toast({ title: 'Reserva criada!' });
-    setOpen(false); setForm({ status: 'pendente' }); fetch_();
-  };
-
-  const updatePaymentStatus = async (id: string, status: string) => {
-    if (status === 'aprovado') {
-      await supabase.from('reservations').update({ payment_status: 'aprovado' } as any).eq('id', id);
-      toast({ title: 'Pagamento aprovado!', description: 'Agora aguardando assinatura do contrato.' });
-    } else {
-      await supabase.from('reservations').update({ payment_status: status } as any).eq('id', id);
-      toast({ title: `Pagamento ${status}!` });
-    }
-    setDetailOpen(null);
-    fetch_();
-  };
-
-  const confirmReservation = async (id: string) => {
-    const reservation = reservations.find(r => r.id === id);
-    if (reservation?.payment_status !== 'aprovado') {
-      toast({ title: 'Pagamento pendente', description: 'A reserva só pode ser confirmada após pagamento aprovado.', variant: 'destructive' });
-      return;
-    }
-    await supabase.from('reservations').update({ status: 'confirmada' } as any).eq('id', id);
-    toast({ title: 'Reserva confirmada!' });
-    setDetailOpen(null);
-    fetch_();
-  };
-
-  const cancelReservation = async (id: string) => {
-    await supabase.from('reservations').update({ status: 'cancelada' } as any).eq('id', id);
-    toast({ title: 'Reserva cancelada!' });
-    setDetailOpen(null);
-    fetch_();
-  };
-
-  const sendWhatsApp = (reservation: any, type: 'payment' | 'contract') => {
-    const link = type === 'payment'
-      ? reservation.payment_link || `https://paypal.me/integracoworking/${reservation.total_value || 0}`
-      : `${window.location.origin}/assinar?token=${reservation.contract_id || ''}`;
-    const message = type === 'payment'
-      ? `Olá! Segue o link de pagamento da sua reserva na sala "${reservation.rooms?.name}":\n\n💳 Valor: R$ ${Number(reservation.total_value).toFixed(2)}\n🔗 Link: ${link}\n\nInstituto Integra`
-      : `Olá! Segue o link para assinatura do contrato:\n\n🔗 ${link}\n\nInstituto Integra`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-  };
-
-  const calendarDays = useMemo(() => {
-    const monthStart = startOfMonth(currentMonth);
-    const monthEnd = endOfMonth(currentMonth);
-    const start = startOfWeek(monthStart, { locale: ptBR });
-    const end = endOfWeek(monthEnd, { locale: ptBR });
-    const days: Date[] = [];
-    let day = start;
-    while (day <= end) { days.push(day); day = addDays(day, 1); }
-    return days;
-  }, [currentMonth]);
+  const filteredBlocks = useMemo(() => {
+    if (filterRoom === 'all') return roomBlocks;
+    return roomBlocks.filter(b => !b.room_id || b.room_id === filterRoom);
+  }, [roomBlocks, filterRoom]);
 
   const reservationsByDate = useMemo(() => {
     const map: Record<string, any[]> = {};
@@ -153,248 +110,608 @@ const Reservas = () => {
     return map;
   }, [filteredReservations]);
 
-  const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-  const selectedDayReservations = selectedDate ? reservationsByDate[format(selectedDate, 'yyyy-MM-dd')] || [] : [];
+  const blocksByDate = useMemo(() => {
+    const map: Record<string, RoomBlock[]> = {};
+    filteredBlocks.forEach(b => {
+      if (!map[b.block_date]) map[b.block_date] = [];
+      map[b.block_date].push(b);
+    });
+    return map;
+  }, [filteredBlocks]);
+
+  // Calendar data
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
+  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const startDayOfWeek = getDay(monthStart);
+
+  const getDayStatus = (dateStr: string) => {
+    const dayBlocks = blocksByDate[dateStr] || [];
+    const dayRes = reservationsByDate[dateStr] || [];
+    const isFullDayBlocked = dayBlocks.some(b => b.block_type === 'full_day' && !b.room_id);
+    const activeRes = dayRes.filter(r => r.status !== 'cancelada');
+
+    if (isFullDayBlocked) return 'blocked';
+    if (activeRes.length === 0) return 'free';
+    // Consider "full" if there are many reservations (simplified heuristic)
+    const totalRooms = filterRoom === 'all' ? allRooms.length : 1;
+    if (activeRes.length >= totalRooms * 8) return 'full'; // rough: 8h slots per room
+    return 'partial';
+  };
+
+  const dayStatusStyles: Record<string, string> = {
+    blocked: 'bg-red-100 border-red-300 dark:bg-red-950/30',
+    full: 'bg-blue-100 border-blue-300 dark:bg-blue-950/30',
+    partial: 'bg-amber-100 border-amber-300 dark:bg-amber-950/30',
+    free: '',
+  };
+
+  // Save reservation
+  const handleSave = async () => {
+    if (!form.room_id || !form.date || !form.start_time || !form.end_time) {
+      toast({ title: 'Erro', description: 'Preencha todos os campos obrigatórios.', variant: 'destructive' });
+      return;
+    }
+
+    // Conflict check
+    const dateStr = form.date;
+    const dateBlocks = roomBlocks.filter(b => b.block_date === dateStr && (!b.room_id || b.room_id === form.room_id));
+    const isBlocked = dateBlocks.some(b => {
+      if (b.block_type === 'full_day') return true;
+      if (!b.start_time || !b.end_time) return false;
+      return form.start_time < b.end_time && form.end_time > b.start_time;
+    });
+    if (isBlocked) {
+      toast({ title: 'Horário bloqueado', description: 'Este horário está bloqueado.', variant: 'destructive' });
+      return;
+    }
+
+    const conflicting = reservations.filter(r =>
+      r.date === dateStr && r.room_id === form.room_id && r.status !== 'cancelada' &&
+      form.start_time < r.end_time && form.end_time > r.start_time
+    );
+    if (conflicting.length > 0) {
+      toast({ title: 'Conflito', description: 'Já existe reserva neste horário para esta sala.', variant: 'destructive' });
+      return;
+    }
+
+    const { error } = await supabase.from('reservations').insert({
+      room_id: form.room_id,
+      date: form.date,
+      start_time: form.start_time,
+      end_time: form.end_time,
+      status: 'pendente',
+      user_id: user?.id,
+      total_value: form.total_value || 0,
+      notes: form.notes,
+      client_id: form.client_id || null,
+      payment_status: 'pendente',
+    } as any);
+
+    if (error) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Reserva criada!' });
+      setShowNewReservation(false);
+      setForm({ status: 'pendente' });
+      fetchData();
+    }
+  };
+
+  // Block handling
+  const handleSaveBlock = async () => {
+    const dates: string[] = [];
+    if (blockForm.mode === 'single') {
+      if (!blockForm.date) return;
+      dates.push(blockForm.date);
+    } else {
+      if (!blockForm.date || !blockForm.date_end) return;
+      const range = eachDayOfInterval({ start: parseISO(blockForm.date), end: parseISO(blockForm.date_end) });
+      const filtered = range.filter(d => {
+        const dayNum = getDate(d);
+        if (blockForm.dayFilter === 'odd') return dayNum % 2 !== 0;
+        if (blockForm.dayFilter === 'even') return dayNum % 2 === 0;
+        return true;
+      });
+      filtered.forEach(d => dates.push(format(d, 'yyyy-MM-dd')));
+    }
+
+    if (dates.length === 0) return;
+
+    const rows = dates.map(d => ({
+      room_id: blockForm.room_id === 'all' ? null : blockForm.room_id,
+      block_date: d,
+      block_type: blockForm.block_type,
+      start_time: blockForm.block_type === 'partial' ? blockForm.start_time : null,
+      end_time: blockForm.block_type === 'partial' ? blockForm.end_time : null,
+      reason: blockForm.reason || null,
+      created_by: user?.id,
+    }));
+
+    const { error } = await supabase.from('room_blocks').insert(rows as any);
+    if (error) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Bloqueio criado!', description: `${dates.length} dia(s) bloqueado(s).` });
+      setShowBlockDialog(false);
+      setBlockForm({ block_type: 'full_day', room_id: 'all', mode: 'single' });
+      fetchData();
+    }
+  };
+
+  const updateStatus = async (id: string, status: string) => {
+    await supabase.from('reservations').update({ status } as any).eq('id', id);
+    toast({ title: `Reserva ${status}!` });
+    fetchData();
+  };
+
+  const removeBlock = async (id: string) => {
+    await supabase.from('room_blocks').delete().eq('id', id);
+    toast({ title: 'Bloqueio removido!' });
+    fetchData();
+  };
+
+  // Selected day data
+  const selectedDateStr = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '';
+  const selectedDayRes = useMemo(() =>
+    (reservationsByDate[selectedDateStr] || []).sort((a: any, b: any) => (a.start_time || '').localeCompare(b.start_time || '')),
+    [reservationsByDate, selectedDateStr]
+  );
+  const selectedDayBlocks = blocksByDate[selectedDateStr] || [];
+  const isSelectedDayBlocked = selectedDayBlocks.some(b => b.block_type === 'full_day' && !b.room_id);
+  const confirmedCount = selectedDayRes.filter((r: any) => r.status === 'confirmada').length;
+  const cancelledCount = selectedDayRes.filter((r: any) => r.status === 'cancelada').length;
+  const pendingCount = selectedDayRes.filter((r: any) => r.status === 'pendente').length;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-2xl font-display text-foreground">Reservas</h1>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <Select value={filterRoom} onValueChange={setFilterRoom}>
-              <SelectTrigger className="w-[180px] h-9"><SelectValue placeholder="Filtrar por sala" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as salas</SelectItem>
-                {allRooms.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+    <TooltipProvider>
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h1 className="text-2xl font-display text-foreground">Reservas</h1>
+            <p className="text-muted-foreground text-sm mt-0.5">Calendário inteligente de gestão de salas</p>
           </div>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2"><Plus className="h-4 w-4" /> Nova Reserva</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Nova Reserva</DialogTitle></DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Sala</Label>
-                  <Select value={form.room_id || ''} onValueChange={v => setForm({ ...form, room_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                    <SelectContent>{rooms.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Data</Label>
-                  <Input type="date" value={form.date || ''} onChange={e => setForm({ ...form, date: e.target.value })} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2"><Label>Início</Label><Input type="time" value={form.start_time || ''} onChange={e => setForm({ ...form, start_time: e.target.value })} /></div>
-                  <div className="space-y-2"><Label>Fim</Label><Input type="time" value={form.end_time || ''} onChange={e => setForm({ ...form, end_time: e.target.value })} /></div>
-                </div>
-                <div className="space-y-2"><Label>Valor Total (R$)</Label><Input type="number" value={form.total_value || ''} onChange={e => setForm({ ...form, total_value: Number(e.target.value) })} /></div>
-                <div className="space-y-2"><Label>Observações</Label><Input value={form.notes || ''} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
-                <Button onClick={handleSave} className="w-full">Criar Reserva</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select value={filterRoom} onValueChange={setFilterRoom}>
+                <SelectTrigger className="w-[180px] h-9"><SelectValue placeholder="Filtrar por sala" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as salas</SelectItem>
+                  {allRooms.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button variant="outline" className="gap-1.5" onClick={() => {
+              setBlockForm({ block_type: 'full_day', room_id: 'all', mode: 'single', date: selectedDateStr });
+              setShowBlockDialog(true);
+            }}>
+              <Ban className="h-4 w-4" /> Bloquear Agenda
+            </Button>
+            <Button className="gap-1.5" onClick={() => {
+              setForm({ status: 'pendente', date: selectedDateStr });
+              setShowNewReservation(true);
+            }}>
+              <Plus className="h-4 w-4" /> Nova Reserva
+            </Button>
+          </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <div className="rounded-xl border border-border/60 bg-card overflow-hidden shadow-sm">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}><ChevronLeft className="h-4 w-4" /></Button>
-              <h2 className="text-base font-semibold capitalize">{format(currentMonth, 'MMMM yyyy', { locale: ptBR })}</h2>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}><ChevronRight className="h-4 w-4" /></Button>
+        {/* Calendar */}
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <CardTitle className="text-base capitalize">
+                {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
+              </CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
-            <div className="grid grid-cols-7 border-b border-border/40">
-              {dayNames.map(d => <div key={d} className="text-center text-xs font-medium text-muted-foreground py-2.5">{d}</div>)}
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-7 gap-1 mb-1">
+              {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (
+                <div key={d} className="text-center text-xs font-semibold text-muted-foreground py-1">{d}</div>
+              ))}
             </div>
-            <div className="grid grid-cols-7">
-              {calendarDays.map((day, i) => {
-                const dateKey = format(day, 'yyyy-MM-dd');
-                const dayReservations = reservationsByDate[dateKey] || [];
-                const isCurrentMonth = isSameMonth(day, currentMonth);
+            <div className="grid grid-cols-7 gap-1">
+              {Array.from({ length: startDayOfWeek }).map((_, i) => <div key={`e-${i}`} />)}
+              {daysInMonth.map(day => {
+                const dateStr = format(day, 'yyyy-MM-dd');
+                const dayRes = reservationsByDate[dateStr] || [];
                 const isSelected = selectedDate && isSameDay(day, selectedDate);
                 const today = isToday(day);
-                const dayColor = isCurrentMonth ? getDayColor(dayReservations, allRooms) : '';
-                const hasReservations = dayReservations.length > 0;
+                const status = getDayStatus(dateStr);
+                const activeRes = dayRes.filter((r: any) => r.status !== 'cancelada');
+                const cancelledRes = dayRes.filter((r: any) => r.status === 'cancelada');
 
                 return (
-                  <button
-                    key={i}
-                    onClick={() => setSelectedDate(day)}
-                    className={`
-                      relative min-h-[80px] p-2 border-b border-r border-border/20 text-left transition-all duration-200
-                      ${!isCurrentMonth ? 'bg-muted/20 text-muted-foreground/40' : ''}
-                      ${isCurrentMonth && !hasReservations ? 'bg-white hover:bg-muted/20' : ''}
-                      ${isCurrentMonth && hasReservations ? `${dayColor} hover:opacity-80` : ''}
-                      ${isSelected ? 'ring-2 ring-primary/50 z-10' : ''}
-                    `}
-                  >
-                    <span className={`
-                      text-xs font-semibold inline-flex items-center justify-center w-7 h-7 rounded-full
-                      ${today ? 'bg-primary text-primary-foreground' : ''}
-                    `}>
-                      {format(day, 'd')}
-                    </span>
-
-                    {hasReservations && isCurrentMonth && (
-                      <div className="mt-1 space-y-0.5">
-                        <div className="text-[10px] font-semibold text-foreground/80">
-                          {dayReservations.length} reserva{dayReservations.length > 1 ? 's' : ''}
+                  <Tooltip key={dateStr}>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setSelectedDate(day)}
+                        className={`relative rounded-lg text-sm transition-all min-h-[72px] flex flex-col items-start p-1.5 gap-0.5 border
+                          ${isSelected ? 'bg-primary text-primary-foreground ring-2 ring-primary/30 border-primary' : ''}
+                          ${!isSelected && today ? 'bg-accent font-bold border-accent' : ''}
+                          ${!isSelected && !today ? `${dayStatusStyles[status]} hover:opacity-80 border-transparent` : ''}
+                          ${!isSelected && !today && status === 'free' ? 'hover:bg-muted/50 border-border/30' : ''}
+                        `}
+                      >
+                        <div className="flex items-center gap-0.5 w-full">
+                          <span className="text-xs font-semibold">{format(day, 'd')}</span>
+                          {status === 'blocked' && !isSelected && <Ban className="h-2.5 w-2.5 ml-auto text-red-500" />}
                         </div>
-                        {dayReservations.slice(0, 2).map((r: any) => (
-                          <div key={r.id} className="text-[9px] leading-tight truncate text-foreground/60 font-medium">
-                            {r.rooms?.name}
+                        {activeRes.length > 0 && (
+                          <div className={`text-[10px] font-medium ${isSelected ? 'text-primary-foreground/80' : 'text-foreground/70'}`}>
+                            {activeRes.length} reserva{activeRes.length > 1 ? 's' : ''}
+                          </div>
+                        )}
+                        {activeRes.slice(0, 2).map((r: any) => (
+                          <div
+                            key={r.id}
+                            className={`w-full rounded px-1 py-0.5 text-[9px] leading-tight truncate
+                              ${isSelected ? 'bg-primary-foreground/20 text-primary-foreground' :
+                                r.status === 'confirmada' ? 'bg-emerald-500/20 text-emerald-800' :
+                                r.status === 'cancelada' ? 'bg-red-500/20 text-red-800' :
+                                'bg-amber-500/20 text-amber-800'}
+                            `}
+                          >
+                            {r.start_time?.slice(0, 5)} {r.rooms?.name?.split(' ')[0]}
                           </div>
                         ))}
-                        {dayReservations.length > 2 && (
-                          <span className="text-[9px] text-foreground/50 font-medium">+{dayReservations.length - 2} mais</span>
+                        {activeRes.length > 2 && (
+                          <span className={`text-[9px] ${isSelected ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
+                            +{activeRes.length - 2} mais
+                          </span>
                         )}
-                      </div>
-                    )}
-                  </button>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      <p className="font-semibold">{format(day, "dd/MM/yyyy")}</p>
+                      {status === 'blocked' && <p className="text-red-500">🔴 Dia bloqueado</p>}
+                      {activeRes.length > 0 && <p>{activeRes.length} reserva(s) ativa(s)</p>}
+                      {cancelledRes.length > 0 && <p className="text-red-500">{cancelledRes.length} cancelamento(s)</p>}
+                      {activeRes.length === 0 && status !== 'blocked' && <p className="text-emerald-600">🟢 Dia livre</p>}
+                    </TooltipContent>
+                  </Tooltip>
                 );
               })}
             </div>
-          </div>
 
-          {/* Legend */}
-          <div className="flex items-center gap-6 mt-3 px-2">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <div className="h-4 w-4 rounded border border-border bg-white" />
-              <span>Livre</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <div className="h-4 w-4 rounded bg-emerald-100 border border-emerald-300" />
-              <span>Diária / Mensal</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <div className="h-4 w-4 rounded bg-amber-100 border border-amber-300" />
-              <span>Por Hora</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Side panel */}
-        <div className="space-y-4">
-          <div className="rounded-xl border border-border/60 bg-card p-5 shadow-sm">
-            <h3 className="text-sm font-semibold mb-4">
-              {selectedDate ? format(selectedDate, "dd 'de' MMMM, yyyy", { locale: ptBR }) : 'Selecione um dia'}
-            </h3>
-            {selectedDate && selectedDayReservations.length === 0 && (
-              <div className="text-sm text-muted-foreground py-8 text-center">
-                <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
-                  <Clock className="h-5 w-5 text-muted-foreground/50" />
-                </div>
-                <p className="font-medium">Nenhuma reserva neste dia</p>
-                <p className="text-xs mt-1">Este dia está livre para novas reservas.</p>
-                <Button variant="outline" size="sm" className="mt-4 gap-1.5"
-                  onClick={() => { setForm({ ...form, date: format(selectedDate, 'yyyy-MM-dd'), status: 'pendente' }); setOpen(true); }}>
-                  <Plus className="h-3.5 w-3.5" /> Reservar
-                </Button>
+            {/* Legend */}
+            <div className="flex items-center gap-4 mt-3 flex-wrap">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <div className="h-3.5 w-3.5 rounded border border-border bg-background" /> Livre
               </div>
-            )}
-            <div className="space-y-3">
-              {selectedDayReservations.map((r: any) => (
-                <button key={r.id} onClick={() => setDetailOpen(r)} className="w-full text-left rounded-lg border border-border/40 p-4 hover:bg-muted/40 transition-colors space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold">{r.rooms?.name}</span>
-                    <Badge variant="outline" className={`text-[10px] ${statusColors[r.status]}`}>{r.status}</Badge>
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {r.start_time?.slice(0, 5)} - {r.end_time?.slice(0, 5)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <User className="h-3 w-3" />
-                    <span>{r.notes || 'Sem responsável informado'}</span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="outline" className={`text-[9px] ${paymentColors[r.payment_status || 'pendente']}`}>
-                      <CreditCard className="h-2.5 w-2.5 mr-0.5" /> {r.payment_status || 'pendente'}
-                    </Badge>
-                    <Badge variant="outline" className="text-[9px]">
-                      R$ {Number(r.total_value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </Badge>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Reservation Detail Dialog */}
-      <Dialog open={!!detailOpen} onOpenChange={() => setDetailOpen(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Detalhes da Reserva</DialogTitle></DialogHeader>
-          {detailOpen && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><span className="text-muted-foreground">Sala:</span><p className="font-medium">{detailOpen.rooms?.name}</p></div>
-                <div><span className="text-muted-foreground">Data:</span><p className="font-medium">{new Date(detailOpen.date).toLocaleDateString('pt-BR')}</p></div>
-                <div><span className="text-muted-foreground">Horário:</span><p className="font-medium">{detailOpen.start_time?.slice(0, 5)} - {detailOpen.end_time?.slice(0, 5)}</p></div>
-                <div><span className="text-muted-foreground">Valor:</span><p className="font-medium tabular-nums">R$ {Number(detailOpen.total_value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p></div>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <div className="h-3.5 w-3.5 rounded bg-amber-100 border border-amber-300" /> Parcial
               </div>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <div className="h-3.5 w-3.5 rounded bg-blue-100 border border-blue-300" /> Ocupado
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <div className="h-3.5 w-3.5 rounded bg-red-100 border border-red-300" /> Bloqueado
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-              <div className="flex items-center gap-3 flex-wrap">
+        {/* Smart Day Panel */}
+        {selectedDate && (
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
-                  <span className="text-xs text-muted-foreground">Reserva:</span>
-                  <Badge variant="outline" className={`ml-2 ${statusColors[detailOpen.status]}`}>{detailOpen.status}</Badge>
+                  <CardTitle className="text-base capitalize">
+                    {format(selectedDate, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                  </CardTitle>
+                  {isSelectedDayBlocked && (
+                    <div className="flex items-center gap-1.5 mt-1.5 text-destructive text-xs font-medium">
+                      <Ban className="h-3.5 w-3.5" />
+                      Agenda bloqueada neste dia
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <span className="text-xs text-muted-foreground">Pagamento:</span>
-                  <Badge variant="outline" className={`ml-2 ${paymentColors[detailOpen.payment_status || 'pendente']}`}>{detailOpen.payment_status || 'pendente'}</Badge>
-                </div>
-              </div>
-
-              {detailOpen.notes && <div><span className="text-sm text-muted-foreground">Observações:</span><p className="text-sm mt-1">{detailOpen.notes}</p></div>}
-
-              <div className="bg-muted/30 rounded-lg p-3 text-xs text-muted-foreground space-y-1">
-                <p className="font-medium text-foreground text-sm">Fluxo de confirmação:</p>
-                <p className={detailOpen.payment_status === 'aprovado' ? 'text-primary' : ''}>
-                  {detailOpen.payment_status === 'aprovado' ? '✅' : '⬜'} 1. Pagamento aprovado
-                </p>
-                <p className={detailOpen.status === 'confirmada' ? 'text-primary' : ''}>
-                  {detailOpen.status === 'confirmada' ? '✅' : '⬜'} 2. Contrato assinado
-                </p>
-                <p className={detailOpen.status === 'confirmada' ? 'text-primary' : ''}>
-                  {detailOpen.status === 'confirmada' ? '✅' : '⬜'} 3. Reserva confirmada
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-2 pt-2">
-                {detailOpen.payment_status !== 'aprovado' && detailOpen.status !== 'cancelada' && (
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={() => updatePaymentStatus(detailOpen.id, 'aprovado')} className="flex-1 gap-1">
-                      <CreditCard className="h-3.5 w-3.5" /> Aprovar Pagamento
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => sendWhatsApp(detailOpen, 'payment')} className="gap-1">
-                      <MessageCircle className="h-3.5 w-3.5" /> Enviar Link
-                    </Button>
-                  </div>
-                )}
-                {detailOpen.payment_status === 'aprovado' && detailOpen.status === 'pendente' && (
-                  <Button size="sm" onClick={() => confirmReservation(detailOpen.id)} className="gap-1">
-                    <FileSignature className="h-3.5 w-3.5" /> Confirmar Reserva
+                {!isSelectedDayBlocked && (
+                  <Button
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => {
+                      setForm({ status: 'pendente', date: selectedDateStr });
+                      setShowNewReservation(true);
+                    }}
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Nova Reserva
                   </Button>
                 )}
-                {detailOpen.status !== 'cancelada' && (
-                  <Button size="sm" variant="destructive" onClick={() => cancelReservation(detailOpen.id)}>Cancelar Reserva</Button>
+              </div>
+              {/* Summary badges */}
+              <div className="flex gap-2 mt-2 flex-wrap">
+                <Badge variant="outline" className="text-xs gap-1">
+                  <CalendarDays className="h-3 w-3" /> {selectedDayRes.length} reserva(s)
+                </Badge>
+                {confirmedCount > 0 && (
+                  <Badge variant="outline" className="text-xs gap-1 bg-emerald-500/10 text-emerald-700 border-emerald-200">
+                    <CheckCircle2 className="h-3 w-3" /> {confirmedCount} confirmada(s)
+                  </Badge>
+                )}
+                {pendingCount > 0 && (
+                  <Badge variant="outline" className="text-xs gap-1 bg-amber-500/10 text-amber-700 border-amber-200">
+                    <Clock className="h-3 w-3" /> {pendingCount} pendente(s)
+                  </Badge>
+                )}
+                {cancelledCount > 0 && (
+                  <Badge variant="outline" className="text-xs gap-1 bg-red-500/10 text-red-700 border-red-200">
+                    <XCircle className="h-3 w-3" /> {cancelledCount} cancelada(s)
+                  </Badge>
                 )}
               </div>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {/* Blocks info */}
+              {selectedDayBlocks.map(b => (
+                <div key={b.id} className="flex items-center justify-between p-2.5 rounded-lg bg-red-50 dark:bg-red-950/20 text-xs border border-dashed border-red-200">
+                  <div className="flex items-center gap-2 text-red-700">
+                    <Ban className="h-3.5 w-3.5" />
+                    <span>
+                      {b.block_type === 'full_day'
+                        ? `Bloqueio dia inteiro${b.room_id ? ` · ${allRooms.find(r => r.id === b.room_id)?.name || 'Sala'}` : ' · Todas as salas'}`
+                        : `Bloqueio: ${b.start_time?.slice(0, 5)} - ${b.end_time?.slice(0, 5)}${b.room_id ? ` · ${allRooms.find(r => r.id === b.room_id)?.name || 'Sala'}` : ''}`}
+                      {b.reason && ` · ${b.reason}`}
+                    </span>
+                  </div>
+                  <Button size="sm" variant="ghost" className="h-6 text-xs text-red-600 hover:text-red-800" onClick={() => removeBlock(b.id)}>
+                    Remover
+                  </Button>
+                </div>
+              ))}
+
+              {/* Empty state */}
+              {selectedDayRes.length === 0 && selectedDayBlocks.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <CalendarDays className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">Nenhuma reserva neste dia</p>
+                  <p className="text-xs mt-1">Este dia está livre para novas reservas.</p>
+                </div>
+              )}
+
+              {/* Reservations list */}
+              {selectedDayRes.map((r: any) => {
+                const roomType = r.rooms?.type;
+                const typeLabel = roomType === 'hora' ? 'Por hora' : roomType === 'diaria' ? 'Diária' : roomType === 'mensal' ? 'Mensal' : roomType;
+
+                return (
+                  <div
+                    key={r.id}
+                    className={`rounded-lg border border-l-4 p-3 transition-all hover:shadow-sm ${statusBorderLeft[r.status] || 'border-l-muted'}`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {r.start_time?.slice(0, 5)} - {r.end_time?.slice(0, 5)}
+                        </span>
+                        <Badge variant="outline" className="text-[10px]">{r.rooms?.name}</Badge>
+                        {typeLabel && <Badge variant="secondary" className="text-[10px]">{typeLabel}</Badge>}
+                      </div>
+                      <Badge variant="outline" className={`text-[10px] ${statusColors[r.status]}`}>
+                        {statusLabel[r.status]}
+                      </Badge>
+                    </div>
+                    <p className="text-sm font-semibold mb-0.5">
+                      {r.clients?.name || r.notes || 'Sem cliente informado'}
+                    </p>
+                    {r.total_value > 0 && (
+                      <p className="text-xs text-muted-foreground mb-2">
+                        R$ {Number(r.total_value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                    )}
+                    {/* Quick actions */}
+                    <div className="flex gap-1.5 flex-wrap">
+                      {r.status === 'pendente' && (
+                        <Button
+                          size="sm" variant="outline"
+                          className="h-7 text-xs gap-1 bg-emerald-500/10 text-emerald-700 border-emerald-200 hover:bg-emerald-500/20"
+                          onClick={() => updateStatus(r.id, 'confirmada')}
+                        >
+                          <CheckCircle2 className="h-3 w-3" /> Confirmar
+                        </Button>
+                      )}
+                      {r.status !== 'cancelada' && (
+                        <Button
+                          size="sm" variant="outline"
+                          className="h-7 text-xs gap-1 bg-red-500/10 text-red-700 border-red-200 hover:bg-red-500/20"
+                          onClick={() => updateStatus(r.id, 'cancelada')}
+                        >
+                          <XCircle className="h-3 w-3" /> Cancelar
+                        </Button>
+                      )}
+                      <Button
+                        size="sm" variant="outline"
+                        className="h-7 text-xs gap-1"
+                        onClick={() => setDetailOpen(r)}
+                      >
+                        <Eye className="h-3 w-3" /> Detalhes
+                      </Button>
+                      {(r.clients?.phone || r.notes) && (
+                        <Button
+                          size="sm" variant="outline"
+                          className="h-7 text-xs gap-1 bg-emerald-500/5 text-emerald-700 border-emerald-200 hover:bg-emerald-500/15"
+                          onClick={() => {
+                            const phone = (r.clients?.phone || '').replace(/\D/g, '');
+                            if (phone) window.open(`https://wa.me/${phone}`, '_blank');
+                          }}
+                        >
+                          <MessageCircle className="h-3 w-3" /> WhatsApp
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* New Reservation Dialog */}
+        <Dialog open={showNewReservation} onOpenChange={setShowNewReservation}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Nova Reserva</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Sala *</Label>
+                <Select value={form.room_id || ''} onValueChange={v => setForm({ ...form, room_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>{rooms.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Data *</Label>
+                <Input type="date" value={form.date || ''} onChange={e => setForm({ ...form, date: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Início *</Label><Input type="time" value={form.start_time || ''} onChange={e => setForm({ ...form, start_time: e.target.value })} /></div>
+                <div><Label>Fim *</Label><Input type="time" value={form.end_time || ''} onChange={e => setForm({ ...form, end_time: e.target.value })} /></div>
+              </div>
+              <div>
+                <Label>Valor Total (R$)</Label>
+                <Input type="number" value={form.total_value || ''} onChange={e => setForm({ ...form, total_value: Number(e.target.value) })} />
+              </div>
+              <div>
+                <Label>Observações / Cliente</Label>
+                <Textarea value={form.notes || ''} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Nome do cliente ou observações" />
+              </div>
+              <Button onClick={handleSave} className="w-full">Criar Reserva</Button>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
-    </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Block Dialog */}
+        <Dialog open={showBlockDialog} onOpenChange={setShowBlockDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader><DialogTitle>Bloquear Agenda</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Sala</Label>
+                <Select value={blockForm.room_id} onValueChange={v => setBlockForm({ ...blockForm, room_id: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as salas</SelectItem>
+                    {allRooms.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Modo</Label>
+                <Select value={blockForm.mode} onValueChange={v => setBlockForm({ ...blockForm, mode: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="single">Dia único</SelectItem>
+                    <SelectItem value="range">Múltiplos dias</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>{blockForm.mode === 'range' ? 'Data Inicial' : 'Data'} *</Label>
+                <Input type="date" value={blockForm.date || ''} onChange={e => setBlockForm({ ...blockForm, date: e.target.value })} />
+              </div>
+
+              {blockForm.mode === 'range' && (
+                <>
+                  <div>
+                    <Label>Data Final *</Label>
+                    <Input type="date" value={blockForm.date_end || ''} onChange={e => setBlockForm({ ...blockForm, date_end: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Filtro de dias</Label>
+                    <Select value={blockForm.dayFilter || 'all'} onValueChange={v => setBlockForm({ ...blockForm, dayFilter: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos os dias</SelectItem>
+                        <SelectItem value="odd">Apenas dias ímpares</SelectItem>
+                        <SelectItem value="even">Apenas dias pares</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
+
+              <div>
+                <Label>Tipo de bloqueio</Label>
+                <Select value={blockForm.block_type} onValueChange={v => setBlockForm({ ...blockForm, block_type: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="full_day">Dia inteiro</SelectItem>
+                    <SelectItem value="partial">Horário específico</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {blockForm.block_type === 'partial' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Início</Label><Input type="time" value={blockForm.start_time || ''} onChange={e => setBlockForm({ ...blockForm, start_time: e.target.value })} /></div>
+                  <div><Label>Fim</Label><Input type="time" value={blockForm.end_time || ''} onChange={e => setBlockForm({ ...blockForm, end_time: e.target.value })} /></div>
+                </div>
+              )}
+
+              <div>
+                <Label>Motivo (opcional)</Label>
+                <Input value={blockForm.reason || ''} onChange={e => setBlockForm({ ...blockForm, reason: e.target.value })} placeholder="Ex: manutenção, limpeza" />
+              </div>
+
+              <Button onClick={handleSaveBlock} className="w-full">Bloquear</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Reservation Detail Dialog */}
+        <Dialog open={!!detailOpen} onOpenChange={() => setDetailOpen(null)}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Detalhes da Reserva</DialogTitle></DialogHeader>
+            {detailOpen && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div><span className="text-muted-foreground">Sala:</span><p className="font-medium">{detailOpen.rooms?.name}</p></div>
+                  <div><span className="text-muted-foreground">Data:</span><p className="font-medium">{new Date(detailOpen.date + 'T12:00:00').toLocaleDateString('pt-BR')}</p></div>
+                  <div><span className="text-muted-foreground">Horário:</span><p className="font-medium">{detailOpen.start_time?.slice(0, 5)} - {detailOpen.end_time?.slice(0, 5)}</p></div>
+                  <div><span className="text-muted-foreground">Valor:</span><p className="font-medium tabular-nums">R$ {Number(detailOpen.total_value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p></div>
+                </div>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div>
+                    <span className="text-xs text-muted-foreground">Reserva:</span>
+                    <Badge variant="outline" className={`ml-2 ${statusColors[detailOpen.status]}`}>{statusLabel[detailOpen.status]}</Badge>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground">Pagamento:</span>
+                    <Badge variant="outline" className="ml-2">{detailOpen.payment_status || 'pendente'}</Badge>
+                  </div>
+                </div>
+                {detailOpen.notes && <div><span className="text-sm text-muted-foreground">Observações:</span><p className="text-sm mt-1">{detailOpen.notes}</p></div>}
+                <div className="flex flex-col gap-2 pt-2">
+                  {detailOpen.status === 'pendente' && (
+                    <Button size="sm" onClick={() => { updateStatus(detailOpen.id, 'confirmada'); setDetailOpen(null); }} className="gap-1">
+                      <CheckCircle2 className="h-3.5 w-3.5" /> Confirmar Reserva
+                    </Button>
+                  )}
+                  {detailOpen.status !== 'cancelada' && (
+                    <Button size="sm" variant="destructive" onClick={() => { updateStatus(detailOpen.id, 'cancelada'); setDetailOpen(null); }}>
+                      Cancelar Reserva
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+    </TooltipProvider>
   );
 };
 
