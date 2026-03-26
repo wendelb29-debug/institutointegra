@@ -22,29 +22,6 @@ const Auth = () => {
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
 
-  // Auto-logout on tab close for web (non-mobile) when "remember me" is off
-  useEffect(() => {
-    const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    if (isMobile) return;
-
-    const handleBeforeUnload = () => {
-      if (!rememberMe) {
-        sessionStorage.setItem('integra_tab_open', 'true');
-      }
-    };
-
-    const handleLoad = () => {
-      if (!rememberMe && !sessionStorage.getItem('integra_tab_open')) {
-        supabase.auth.signOut();
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    handleLoad();
-
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [rememberMe]);
-
   useEffect(() => {
     localStorage.setItem('rememberMe', String(rememberMe));
   }, [rememberMe]);
