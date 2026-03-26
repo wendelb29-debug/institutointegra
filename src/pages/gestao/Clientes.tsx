@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
 type Client = Database['public']['Tables']['clients']['Row'];
@@ -36,6 +36,14 @@ const Clientes = () => {
     }
     toast({ title: editing ? 'Cliente atualizado!' : 'Cliente adicionado!' });
     setOpen(false); setEditing(null); setForm({}); fetch_();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Deseja realmente excluir este cliente?')) return;
+    const { error } = await supabase.from('clients').delete().eq('id', id);
+    if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return; }
+    toast({ title: 'Cliente excluído!' });
+    fetch_();
   };
 
   return (
@@ -68,7 +76,7 @@ const Clientes = () => {
       <div className="rounded-lg border border-border/60 overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow><TableHead>Nome</TableHead><TableHead>E-mail</TableHead><TableHead>Telefone</TableHead><TableHead>Empresa</TableHead><TableHead className="w-12"></TableHead></TableRow>
+            <TableRow><TableHead>Nome</TableHead><TableHead>E-mail</TableHead><TableHead>Telefone</TableHead><TableHead>Empresa</TableHead><TableHead className="w-20 text-right">Ações</TableHead></TableRow>
           </TableHeader>
           <TableBody>
             {clients.map(c => (
@@ -77,10 +85,15 @@ const Clientes = () => {
                 <TableCell>{c.email || '—'}</TableCell>
                 <TableCell>{c.phone || '—'}</TableCell>
                 <TableCell>{c.company || '—'}</TableCell>
-                <TableCell>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(c); setForm(c); setOpen(true); }}>
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditing(c); setForm(c); setOpen(true); }}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(c.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

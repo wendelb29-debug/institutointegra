@@ -99,6 +99,7 @@ const Contratos = () => {
   const [signatureDialog, setSignatureDialog] = useState<any>(null);
   const [sigContract, setSigContract] = useState<any>(null);
   const { toast } = useToast();
+  const { isAdmin, isLoading: permLoading } = usePermissions();
 
   const fetch_ = async () => {
     const [cRes, clRes, rRes] = await Promise.all([
