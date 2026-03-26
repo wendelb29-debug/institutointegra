@@ -6,6 +6,7 @@ import { EmojiPicker } from './EmojiPicker';
 import { AttachmentMenu } from './AttachmentMenu';
 import { MediaMessage } from './MediaMessage';
 import { SaveContactModal } from './SaveContactModal';
+import { TransferDialog } from './TransferDialog';
 
 interface ChatPanelProps {
   conversation: Conversation;
