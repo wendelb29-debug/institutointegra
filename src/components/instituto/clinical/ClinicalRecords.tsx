@@ -86,6 +86,18 @@ export function ClinicalRecords({ patientId }: { patientId: string }) {
               <div className="space-y-2">
                 <Label>Observações</Label>
                 <Textarea rows={6} value={form.observations} onChange={e => setForm({ ...form, observations: e.target.value })} placeholder="Descrição detalhada da sessão..." />
+                <div className="flex gap-2 flex-wrap">
+                  <AIAssistantButton
+                    text={form.observations}
+                    onApply={(result) => setForm({ ...form, observations: result })}
+                    context="prontuario"
+                    compact
+                  />
+                  <TemplatesPanel
+                    onInsert={(text) => setForm({ ...form, observations: form.observations ? form.observations + '\n\n' + text : text })}
+                    context="prontuario"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>Anexos</Label>
