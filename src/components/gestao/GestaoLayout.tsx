@@ -3,6 +3,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
+import { FloatingChatAssistant } from './FloatingChatAssistant';
 import { Bell, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -67,6 +68,7 @@ const GestaoLayout = () => {
           <main className="flex-1 overflow-auto p-4 md:p-8 min-h-0" style={{ height: 'calc(100dvh - 3.5rem)', maxHeight: 'calc(100dvh - 3.5rem)' }}>
             <Outlet />
           </main>
+          <FloatingChatAssistant />
         </div>
       </div>
     </SidebarProvider>
