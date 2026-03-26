@@ -276,6 +276,8 @@ const Contratos = () => {
                         <Link2 className="h-3.5 w-3.5" /> Gerar link
                       </Button>
                     )}
+                    <Button variant="ghost" size="sm" className="gap-1 text-destructive hover:text-destructive" onClick={() => handleDelete(c.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
                   </div>
                 </TableCell>
               </TableRow>

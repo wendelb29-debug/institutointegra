@@ -346,6 +346,9 @@ const Manutencao = () => {
                 {item.status !== 'concluido' && (
                   <Button size="sm" variant="outline" onClick={() => updateStatus(item.id, 'concluido')}>Concluir</Button>
                 )}
+                <Button size="sm" variant="outline" className="gap-1 text-destructive hover:text-destructive border-destructive/30" onClick={() => handleDeleteMaintenance(item.id)}>
+                  <Trash2 className="h-3.5 w-3.5" /> Excluir
+                </Button>
               </div>
             </CardContent>
           </Card>
