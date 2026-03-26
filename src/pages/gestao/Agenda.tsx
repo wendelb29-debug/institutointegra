@@ -360,90 +360,185 @@ const Agenda = () => {
           </div>
 
           {viewMode === 'month' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-2">
-                <MonthCalendar
-                  currentMonth={currentMonth}
-                  onMonthChange={setCurrentMonth}
-                  selectedDate={selectedDate}
-                  onDateSelect={(d) => { setSelectedDate(d); }}
-                  appointments={appointments}
-                  blocks={blocks}
-                  onAppointmentClick={handleAppointmentClick}
-                />
-              </div>
-              {/* Day Detail Panel */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm">
-                    {selectedDate ? format(selectedDate, "dd 'de' MMMM", { locale: ptBR }) : 'Selecione um dia'}
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    {selectedDate ? `${appointments.filter(a => a.appointment_date === format(selectedDate, 'yyyy-MM-dd')).length} consulta(s)` : ''}
-                  </CardDescription>
-                </CardHeader>
-                <ScrollArea className="h-[400px]">
-                  <CardContent className="space-y-2">
-                    {selectedDate && (() => {
-                      const dateStr = format(selectedDate, 'yyyy-MM-dd');
-                      const dayAppts = appointments.filter(a => a.appointment_date === dateStr);
-                      const dayBlocks = blocks.filter(b => b.block_date === dateStr);
+            <div className="space-y-4">
+              <MonthCalendar
+                currentMonth={currentMonth}
+                onMonthChange={setCurrentMonth}
+                selectedDate={selectedDate}
+                onDateSelect={(d) => { setSelectedDate(d); }}
+                appointments={appointments}
+                blocks={blocks}
+                onAppointmentClick={handleAppointmentClick}
+              />
 
-                      return (
-                        <>
-                          {dayBlocks.map(b => (
-                            <div key={b.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 text-xs text-muted-foreground">
-                              <Clock className="h-3.5 w-3.5" />
-                              <span>
-                                {b.block_type === 'full_day' ? 'Dia bloqueado' : `${b.start_time?.slice(0, 5)} - ${b.end_time?.slice(0, 5)}`}
-                                {b.reason && ` · ${b.reason}`}
-                              </span>
-                            </div>
-                          ))}
-                          {dayAppts.length === 0 && dayBlocks.length === 0 && (
-                            <div className="text-center py-8 text-muted-foreground">
-                              <CalendarDays className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                              <p className="text-xs">Nenhuma consulta neste dia</p>
+              {/* Smart Day Panel below calendar */}
+              {selectedDate && (() => {
+                const dateStr = format(selectedDate, 'yyyy-MM-dd');
+                const dayAppts = appointments.filter(a => a.appointment_date === dateStr).sort((a, b) => a.start_time.localeCompare(b.start_time));
+                const dayBlocks = blocks.filter(b => b.block_date === dateStr);
+                const isFullDayBlocked = dayBlocks.some(b => b.block_type === 'full_day');
+                const confirmed = dayAppts.filter(a => a.status === 'confirmado').length;
+                const cancelled = dayAppts.filter(a => a.status === 'cancelado').length;
+                const pending = dayAppts.filter(a => a.status === 'agendado').length;
+
+                const statusLabel: Record<string, string> = {
+                  agendado: 'Pendente',
+                  confirmado: 'Confirmado',
+                  cancelado: 'Cancelado',
+                  realizado: 'Realizado',
+                };
+                const statusColor: Record<string, string> = {
+                  agendado: 'bg-amber-500/15 text-amber-700 border-amber-300',
+                  confirmado: 'bg-emerald-500/15 text-emerald-700 border-emerald-300',
+                  cancelado: 'bg-red-500/15 text-red-700 border-red-300',
+                  realizado: 'bg-blue-500/15 text-blue-700 border-blue-300',
+                };
+                const statusBorderLeft: Record<string, string> = {
+                  agendado: 'border-l-amber-500',
+                  confirmado: 'border-l-emerald-500',
+                  cancelado: 'border-l-red-500',
+                  realizado: 'border-l-blue-500',
+                };
+
+                return (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div>
+                          <CardTitle className="text-base capitalize">
+                            {format(selectedDate, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                          </CardTitle>
+                          {isFullDayBlocked && (
+                            <div className="flex items-center gap-1.5 mt-1.5 text-destructive text-xs font-medium">
+                              <XCircle className="h-3.5 w-3.5" />
+                              Agenda bloqueada neste dia
                             </div>
                           )}
-                          {dayAppts.map(appt => {
-                            const statusLabel: Record<string, string> = {
-                              agendado: 'Pendente',
-                              confirmado: 'Confirmado',
-                              cancelado: 'Cancelado',
-                              realizado: 'Realizado',
-                            };
-                            const statusColor: Record<string, string> = {
-                              agendado: 'bg-amber-500/15 text-amber-700',
-                              confirmado: 'bg-emerald-500/15 text-emerald-700',
-                              cancelado: 'bg-red-500/15 text-red-700',
-                              realizado: 'bg-blue-500/15 text-blue-700',
-                            };
-                            return (
-                              <button
-                                key={appt.id}
-                                onClick={() => handleAppointmentClick(appt)}
-                                className="w-full text-left p-3 rounded-lg border hover:bg-muted/30 transition-all"
+                        </div>
+                        {!isFullDayBlocked && (
+                          <Button
+                            size="sm"
+                            className="gap-1.5"
+                            onClick={() => {
+                              setNewAppt(p => ({ ...p, date: dateStr }));
+                              setShowNewAppointment(true);
+                            }}
+                          >
+                            <Plus className="h-3.5 w-3.5" /> Nova Consulta
+                          </Button>
+                        )}
+                      </div>
+                      {/* Summary badges */}
+                      <div className="flex gap-2 mt-2 flex-wrap">
+                        <Badge variant="outline" className="text-xs gap-1">
+                          <CalendarDays className="h-3 w-3" /> {dayAppts.length} consulta(s)
+                        </Badge>
+                        {confirmed > 0 && (
+                          <Badge variant="outline" className="text-xs gap-1 bg-emerald-500/10 text-emerald-700 border-emerald-200">
+                            <CheckCircle2 className="h-3 w-3" /> {confirmed} confirmada(s)
+                          </Badge>
+                        )}
+                        {pending > 0 && (
+                          <Badge variant="outline" className="text-xs gap-1 bg-amber-500/10 text-amber-700 border-amber-200">
+                            <Clock className="h-3 w-3" /> {pending} pendente(s)
+                          </Badge>
+                        )}
+                        {cancelled > 0 && (
+                          <Badge variant="outline" className="text-xs gap-1 bg-red-500/10 text-red-700 border-red-200">
+                            <XCircle className="h-3 w-3" /> {cancelled} cancelada(s)
+                          </Badge>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {/* Blocks info */}
+                      {dayBlocks.map(b => (
+                        <div key={b.id} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 text-xs text-muted-foreground border border-dashed">
+                          <Clock className="h-3.5 w-3.5" />
+                          <span>
+                            {b.block_type === 'full_day' ? 'Dia inteiro bloqueado' : `Bloqueio: ${b.start_time?.slice(0, 5)} - ${b.end_time?.slice(0, 5)}`}
+                            {b.reason && ` · ${b.reason}`}
+                          </span>
+                        </div>
+                      ))}
+
+                      {/* Empty state */}
+                      {dayAppts.length === 0 && dayBlocks.length === 0 && (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <CalendarDays className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                          <p className="text-sm">Nenhuma consulta neste dia</p>
+                        </div>
+                      )}
+
+                      {/* Appointments list with quick actions */}
+                      {dayAppts.map(appt => (
+                        <div
+                          key={appt.id}
+                          className={`rounded-lg border border-l-4 p-3 transition-all hover:shadow-sm ${statusBorderLeft[appt.status] || 'border-l-muted'}`}
+                        >
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                              <span className="text-xs font-medium text-muted-foreground">
+                                {appt.start_time?.slice(0, 5)} - {appt.end_time?.slice(0, 5)}
+                              </span>
+                            </div>
+                            <Badge variant="outline" className={`text-[10px] ${statusColor[appt.status]}`}>
+                              {statusLabel[appt.status]}
+                            </Badge>
+                          </div>
+                          <p className="text-sm font-semibold mb-2">{appt.patients?.name || 'Paciente'}</p>
+                          {appt.notes && <p className="text-xs text-muted-foreground mb-2 line-clamp-1">{appt.notes}</p>}
+                          {/* Quick actions */}
+                          <div className="flex gap-1.5 flex-wrap">
+                            {appt.status !== 'confirmado' && appt.status !== 'cancelado' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs gap-1 bg-emerald-500/10 text-emerald-700 border-emerald-200 hover:bg-emerald-500/20"
+                                onClick={() => updateAppointmentStatus(appt.id, 'confirmado')}
                               >
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="text-sm font-medium">{appt.patients?.name || 'Paciente'}</span>
-                                  <Badge variant="outline" className={`text-[10px] ${statusColor[appt.status]}`}>
-                                    {statusLabel[appt.status]}
-                                  </Badge>
-                                </div>
-                                <div className="text-xs text-muted-foreground flex items-center gap-2">
-                                  <Clock className="h-3 w-3" />
-                                  {appt.start_time?.slice(0, 5)} - {appt.end_time?.slice(0, 5)}
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </>
-                      );
-                    })()}
-                  </CardContent>
-                </ScrollArea>
-              </Card>
+                                <CheckCircle2 className="h-3 w-3" /> Confirmar
+                              </Button>
+                            )}
+                            {appt.status !== 'cancelado' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs gap-1 bg-red-500/10 text-red-700 border-red-200 hover:bg-red-500/20"
+                                onClick={() => updateAppointmentStatus(appt.id, 'cancelado')}
+                              >
+                                <XCircle className="h-3 w-3" /> Cancelar
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs gap-1"
+                              onClick={() => handleAppointmentClick(appt)}
+                            >
+                              🔁 Detalhes
+                            </Button>
+                            {appt.patients?.phone && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs gap-1 bg-emerald-500/5 text-emerald-700 border-emerald-200 hover:bg-emerald-500/15"
+                                onClick={() => {
+                                  const phone = appt.patients!.phone.replace(/\D/g, '');
+                                  window.open(`https://wa.me/${phone}`, '_blank');
+                                }}
+                              >
+                                💬 WhatsApp
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                );
+              })()}
             </div>
           )}
 
