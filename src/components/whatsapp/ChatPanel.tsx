@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Check, CheckCheck, MoreVertical, Search, Smile, Paperclip, Mic, CalendarCheck, Bell, ArrowLeft, Sparkles, X, UserPlus, User } from 'lucide-react';
+import { Send, Loader2, Check, CheckCheck, MoreVertical, Search, Smile, Paperclip, Mic, CalendarCheck, Bell, ArrowLeft, Sparkles, X, UserPlus, User, ArrowDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { Conversation, ChatMessage } from './types';
 import { EmojiPicker } from './EmojiPicker';
