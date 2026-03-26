@@ -260,7 +260,7 @@ const WhatsApp = () => {
 
   const handleFinish = useCallback(async (phone: string) => {
     await supabase.from('whatsapp_conversations').update({
-      conversation_status: 'finalizado',
+      conversation_status: 'finalizado', assigned_to: null,
     } as any).eq('phone', phone);
     toast.success('Conversa finalizada!');
     loadConversations();
