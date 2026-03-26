@@ -31,7 +31,7 @@ function getAvatarColor(id: string) {
   return avatarColors[Math.abs(hash) % avatarColors.length];
 }
 
-export const ConversationList = ({ conversations, selectedId, onSelect, onNewConversation, currentUserId, isAdmin }: ConversationListProps) => {
+export const ConversationList = ({ conversations, selectedId, onSelect, onNewConversation, onDeleteConversation, currentUserId, isAdmin }: ConversationListProps) => {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<ConversationFilter>(isAdmin ? 'all' : 'mine');
 
