@@ -29,6 +29,7 @@ const InstitutoGestao = () => {
   const [rooms, setRooms] = useState<any[]>([]);
   const [patients, setPatients] = useState<any[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [selectedInitialTab, setSelectedInitialTab] = useState('dados');
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>({});
   const [searchPatient, setSearchPatient] = useState('');
