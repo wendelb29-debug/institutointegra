@@ -166,9 +166,14 @@ const Socios = () => {
   };
 
   const filteredInvoices = useMemo(() => {
-    if (selectedMonth === 'all') return invoices;
-    return invoices.filter(i => i.reference_month === selectedMonth);
-  }, [invoices, selectedMonth]);
+    let result = invoices;
+    if (filterOverdue) {
+      result = result.filter(i => i.status === 'pendente' && new Date(i.due_date) < now);
+    } else if (selectedMonth !== 'all') {
+      result = result.filter(i => i.reference_month === selectedMonth);
+    }
+    return result;
+  }, [invoices, selectedMonth, filterOverdue]);
 
   const formatMonth = (ref: string) => {
     const [y, m] = ref.split('-');
