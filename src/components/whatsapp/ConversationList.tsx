@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Filter, Plus, User } from 'lucide-react';
+import { Search, Filter, Plus, User, Trash2 } from 'lucide-react';
 import { Conversation, ConversationFilter } from './types';
 import { NewConversationModal } from './NewConversationModal';
 
@@ -8,6 +8,7 @@ interface ConversationListProps {
   selectedId: string | null;
   onSelect: (conversation: Conversation) => void;
   onNewConversation?: (phone: string, name?: string) => void;
+  onDeleteConversation?: (phone: string) => void;
   currentUserId?: string;
   isAdmin?: boolean;
 }
