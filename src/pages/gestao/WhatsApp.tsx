@@ -12,6 +12,7 @@ import { MessageSquare, Wifi, WifiOff, Inbox, Users, Headphones } from 'lucide-r
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 
 const WhatsApp = () => {
   const { user } = useAuth();
