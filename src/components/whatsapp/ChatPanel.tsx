@@ -7,6 +7,7 @@ import { AttachmentMenu } from './AttachmentMenu';
 import { MediaMessage } from './MediaMessage';
 import { SaveContactModal } from './SaveContactModal';
 import { TransferDialog } from './TransferDialog';
+import logoIntegra from '@/assets/logo-integra.png';
 
 interface ChatPanelProps {
   conversation: Conversation;
