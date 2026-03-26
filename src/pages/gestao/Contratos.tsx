@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Link2, Copy, Eye, FileSignature, FileText, Download, MessageCircle } from 'lucide-react';
+import { usePermissions } from '@/hooks/usePermissions';
+import { Plus, Link2, Copy, Eye, FileSignature, FileText, Download, MessageCircle, Trash2, ShieldAlert } from 'lucide-react';
 
 const statusColors: Record<string, string> = {
   ativo: 'bg-primary/10 text-primary',
