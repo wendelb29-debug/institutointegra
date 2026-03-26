@@ -17,6 +17,7 @@ import { PatientAnamnesisForm } from './PatientAnamnesisForm';
 interface PatientProfileProps {
   patient: any;
   onBack: () => void;
+  initialTab?: string;
 }
 
 export function PatientProfile({ patient, onBack }: PatientProfileProps) {
