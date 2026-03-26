@@ -30,7 +30,7 @@ function getColor(id: string) {
   return avatarColors[id];
 }
 
-export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, onBack, onSaveContact, onAssign }: ChatPanelProps) => {
+export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, onBack, onSaveContact, onAssign, onTransfer }: ChatPanelProps) => {
   const [newMessage, setNewMessage] = useState('');
   const [orbitLoading, setOrbitLoading] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
