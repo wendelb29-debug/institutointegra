@@ -19,10 +19,29 @@ export const useAuth = () => {
   return ctx;
 };
 
+const isMobileDevice = () =>
+  /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Auto-logout for desktop when "Lembrar-me" is off
+  useEffect(() => {
+    if (isMobileDevice()) return;
+
+    const rememberMe = localStorage.getItem('rememberMe') === 'true';
+
+    // On page load: if no sessionStorage flag exists, the browser was fully closed
+    // (sessionStorage is cleared when all tabs close). Sign out if not remembering.
+    if (!rememberMe && !sessionStorage.getItem('integra_session_active')) {
+      supabase.auth.signOut();
+    }
+
+    // Mark that a tab is open in this browser session
+    sessionStorage.setItem('integra_session_active', 'true');
+  }, []);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
