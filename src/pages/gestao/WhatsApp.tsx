@@ -389,14 +389,14 @@ const WhatsApp = () => {
             <div className="hidden lg:block h-full overflow-hidden border-r border-border bg-card">
               <ConversationList conversations={conversations} selectedId={selected?.id ?? null} onSelect={handleSelect} onNewConversation={handleNewConversation} onDeleteConversation={!isAdmin ? handleDeleteConversation : undefined} currentUserId={user?.id} isAdmin={isAdmin} />
             </div>
-            <div className="lg:hidden h-full">
+            <div className="lg:hidden h-full min-h-0 overflow-hidden">
               {!selected ? (
                 <ConversationList conversations={conversations} selectedId={null} onSelect={handleSelect} onNewConversation={handleNewConversation} onDeleteConversation={!isAdmin ? handleDeleteConversation : undefined} currentUserId={user?.id} isAdmin={isAdmin} />
               ) : (
                 <ChatPanel conversation={selected} messages={messages} onSendMessage={handleSendMessage} onSendMedia={handleSendMedia} onBack={handleBack} onSaveContact={handleSaveContact} onAssign={handleAssign} onTransfer={handleTransfer} />
               )}
             </div>
-            <div className="hidden lg:flex flex-col h-full">
+            <div className="hidden lg:flex flex-col h-full min-h-0 overflow-hidden">
               {selected ? (
                 <ChatPanel conversation={selected} messages={messages} onSendMessage={handleSendMessage} onSendMedia={handleSendMedia} onSaveContact={handleSaveContact} onAssign={handleAssign} onTransfer={handleTransfer} />
               ) : (
