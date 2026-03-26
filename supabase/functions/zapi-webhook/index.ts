@@ -115,14 +115,26 @@ async function getOrAssignUser(supabase: any, phone: string, tenantId: string, i
   return assignTo;
 }
 
-async function handleMessage(supabase: any, body: any, tenantId: string | null, instanceUserId: string | null) {
+async function fetchProfilePic(phone: string, instanceId: string, token: string, clientToken: string | null): Promise<string | null> {
+  try {
+    const cleanPhone = phone.replace(/\D/g, '');
+    const url = `https://api.z-api.io/instances/${instanceId}/token/${token}/profile-picture/${cleanPhone}`;
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (clientToken) headers['Client-Token'] = clientToken;
+    const res = await fetch(url, { method: 'GET', headers });
+    const data = await res.json();
+    return data?.link || data?.profilePicUrl || data?.url || null;
+  } catch { return null; }
+}
+
+async function handleMessage(supabase: any, body: any, tenantId: string | null, instanceUserId: string | null, instanceId?: string, instanceToken?: string, clientToken?: string | null) {
   const phone = body.phone;
   const isGroup = body.isGroup || false;
   const fromMe = body.fromMe || false;
   const messageId = body.messageId || body.id;
   const messageText = extractMessageText(body);
   const chatName = body.chatName || body.senderName || phone;
-  const senderPhoto = body.photo || body.senderPhoto || null;
+  let senderPhoto = body.photo || body.senderPhoto || null;
 
   if (isGroup) {
     console.log('[zapi-webhook] Skipping group message');
