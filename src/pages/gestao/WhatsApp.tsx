@@ -198,8 +198,7 @@ const WhatsApp = () => {
     const { error } = await supabase.from('whatsapp_conversations').upsert({
       phone, name: name || phone,
       last_message: '', last_message_time: new Date().toISOString(), updated_at: new Date().toISOString(),
-      user_id: user?.id || null,
-    } as any, { onConflict: 'phone' });
+    } as any, { onConflict: 'phone,tenant_id' });
     if (error) { toast.error('Erro ao criar conversa'); return; }
     await loadConversations();
     const { data } = await supabase.from('whatsapp_conversations').select('*').eq('phone', phone).single();
