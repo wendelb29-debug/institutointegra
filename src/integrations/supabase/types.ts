@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_profiles: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_system: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_system?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_system?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       accounts: {
         Row: {
           created_at: string | null
@@ -872,8 +896,47 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_permissions: {
+        Row: {
+          can_create: boolean | null
+          can_delete: boolean | null
+          can_edit: boolean | null
+          can_view: boolean | null
+          id: string
+          module: string
+          profile_id: string
+        }
+        Insert: {
+          can_create?: boolean | null
+          can_delete?: boolean | null
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          id?: string
+          module: string
+          profile_id: string
+        }
+        Update: {
+          can_create?: boolean | null
+          can_delete?: boolean | null
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          id?: string
+          module?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_permissions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "access_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
+          access_profile_id: string | null
           address: string | null
           avatar_url: string | null
           city: string | null
@@ -883,11 +946,13 @@ export type Database = {
           id: string
           phone: string | null
           state: string | null
+          status: string | null
           updated_at: string
           user_id: string
           zip_code: string | null
         }
         Insert: {
+          access_profile_id?: string | null
           address?: string | null
           avatar_url?: string | null
           city?: string | null
@@ -897,11 +962,13 @@ export type Database = {
           id?: string
           phone?: string | null
           state?: string | null
+          status?: string | null
           updated_at?: string
           user_id: string
           zip_code?: string | null
         }
         Update: {
+          access_profile_id?: string | null
           address?: string | null
           avatar_url?: string | null
           city?: string | null
@@ -911,11 +978,20 @@ export type Database = {
           id?: string
           phone?: string | null
           state?: string | null
+          status?: string | null
           updated_at?: string
           user_id?: string
           zip_code?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_access_profile_id_fkey"
+            columns: ["access_profile_id"]
+            isOneToOne: false
+            referencedRelation: "access_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       psychologist_whatsapp_config: {
         Row: {
