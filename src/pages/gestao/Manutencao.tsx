@@ -158,6 +158,14 @@ const Manutencao = () => {
     fetchData();
   };
 
+  const handleDeleteMaintenance = async (id: string) => {
+    if (!confirm('Deseja realmente excluir este chamado?')) return;
+    const { error } = await supabase.from('maintenance_requests').delete().eq('id', id);
+    if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return; }
+    toast({ title: 'Chamado excluído!' });
+    fetchData();
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0] || !uploadTarget) return;
     const file = e.target.files[0];
