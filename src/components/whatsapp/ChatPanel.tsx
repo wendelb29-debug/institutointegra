@@ -130,6 +130,13 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
           {onSaveContact && (
             <SaveContactModal phone={conversation.phone} currentName={conversation.name} onSave={onSaveContact} />
           )}
+          {onTransfer && (
+            <TransferDialog
+              conversationPhone={conversation.phone}
+              currentAssignedTo={conversation.assignedTo}
+              onTransfer={onTransfer}
+            />
+          )}
           {onAssign && (
             <button
               onClick={() => onAssign(conversation.phone)}
