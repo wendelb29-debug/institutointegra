@@ -214,7 +214,7 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
       )}
 
       {/* Input */}
-      <div className="px-4 py-3 flex items-end gap-2 border-t border-border bg-card relative">
+      <div className="px-4 py-3 flex items-end gap-2 border-t border-border bg-card relative shrink-0">
         {showEmojis && <EmojiPicker onSelect={emoji => { setNewMessage(prev => prev + emoji); inputRef.current?.focus(); }} onClose={() => setShowEmojis(false)} />}
         {showAttachments && <AttachmentMenu onFileSelected={handleFileSelected} onClose={() => setShowAttachments(false)} />}
 
