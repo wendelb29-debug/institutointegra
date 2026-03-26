@@ -161,6 +161,28 @@ const Contratos = () => {
     downloadPDF(generateContractHTML(c, sig, 'final'), `Contrato_${c.clients?.name || 'contrato'}.pdf`);
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Deseja realmente excluir este contrato?')) return;
+    const { error } = await supabase.from('contracts').delete().eq('id', id);
+    if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return; }
+    toast({ title: 'Contrato excluído!' });
+    fetch_();
+  };
+
+  if (permLoading) return <div className="flex items-center justify-center py-12 text-muted-foreground">Carregando...</div>;
+
+  if (!isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 space-y-4">
+        <ShieldAlert className="h-16 w-16 text-muted-foreground" />
+        <h2 className="text-xl font-semibold text-foreground">Acesso Restrito</h2>
+        <p className="text-muted-foreground text-center max-w-md">
+          Esta seção é acessível apenas para administradores. Entre em contato com o administrador do sistema para obter acesso.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
