@@ -28,7 +28,7 @@ export type Database = {
           id?: string
           is_system?: boolean | null
           name: string
-          tenant_id: string
+          tenant_id?: string
           updated_at?: string | null
         }
         Update: {
@@ -63,7 +63,7 @@ export type Database = {
           descricao: string
           id?: string
           numero: string
-          tenant_id: string
+          tenant_id?: string
           updated_at?: string | null
         }
         Update: {
@@ -112,7 +112,7 @@ export type Database = {
           reminder_sent?: boolean
           start_time: string
           status?: Database["public"]["Enums"]["appointment_status"]
-          tenant_id: string
+          tenant_id?: string
           updated_at?: string
         }
         Update: {
@@ -170,7 +170,7 @@ export type Database = {
           id?: string
           name: string
           phone?: string | null
-          tenant_id: string
+          tenant_id?: string
           updated_at?: string
           user_id?: string | null
         }
@@ -217,7 +217,7 @@ export type Database = {
           patient_id: string
           psychologist_id: string
           session_date?: string
-          tenant_id: string
+          tenant_id?: string
           updated_at?: string
         }
         Update: {
@@ -276,7 +276,7 @@ export type Database = {
           signer_cpf?: string | null
           signer_email?: string | null
           signer_name: string
-          tenant_id: string
+          tenant_id?: string
           user_agent?: string | null
         }
         Update: {
@@ -343,7 +343,7 @@ export type Database = {
           signing_token?: string | null
           start_date: string
           status?: Database["public"]["Enums"]["contract_status"]
-          tenant_id: string
+          tenant_id?: string
           updated_at?: string
         }
         Update: {
@@ -406,7 +406,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           nome: string
-          tenant_id: string
+          tenant_id?: string
           texto?: string | null
           updated_at?: string | null
         }
@@ -462,7 +462,7 @@ export type Database = {
           paid_at?: string | null
           partner_id?: string | null
           room_id?: string | null
-          tenant_id: string
+          tenant_id?: string
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
         }
@@ -546,7 +546,7 @@ export type Database = {
           role_title?: string | null
           signature_url?: string | null
           specialty?: string
-          tenant_id: string
+          tenant_id?: string
           updated_at?: string
           user_id: string
         }
@@ -603,7 +603,7 @@ export type Database = {
           max_participants?: number | null
           room_id?: string | null
           start_time?: string | null
-          tenant_id: string
+          tenant_id?: string
           title: string
           updated_at?: string
         }
@@ -658,7 +658,7 @@ export type Database = {
           file_url: string
           id?: string
           maintenance_id: string
-          tenant_id: string
+          tenant_id?: string
           uploaded_by?: string | null
         }
         Update: {
@@ -713,7 +713,7 @@ export type Database = {
           resolved_at?: string | null
           room_id?: string | null
           status?: Database["public"]["Enums"]["maintenance_status"]
-          tenant_id: string
+          tenant_id?: string
           title: string
           updated_at?: string
         }
@@ -783,7 +783,7 @@ export type Database = {
           nome: string
           preco_unitario?: number
           supplier_id?: string | null
-          tenant_id: string
+          tenant_id?: string
           unidade_medida?: string | null
           updated_at?: string | null
           validade?: string | null
@@ -840,7 +840,7 @@ export type Database = {
           id?: string
           num_partners?: number
           reference_month: string
-          tenant_id: string
+          tenant_id?: string
           total_value: number
           value_per_partner?: number
         }
@@ -891,7 +891,7 @@ export type Database = {
           payment_link?: string | null
           reference_month: string
           status?: string
-          tenant_id: string
+          tenant_id?: string
           updated_at?: string
         }
         Update: {
@@ -943,7 +943,7 @@ export type Database = {
           id?: string
           partner_id: string
           room_id: string
-          tenant_id: string
+          tenant_id?: string
         }
         Update: {
           id?: string
@@ -998,7 +998,7 @@ export type Database = {
           phone?: string | null
           share_percentage?: number | null
           status?: string
-          tenant_id: string
+          tenant_id?: string
           updated_at?: string
           user_id?: string | null
         }
@@ -1053,7 +1053,7 @@ export type Database = {
           patient_id: string
           psychologist_id: string
           queixa_principal?: string | null
-          tenant_id: string
+          tenant_id?: string
           updated_at?: string
         }
         Update: {
@@ -1109,7 +1109,7 @@ export type Database = {
           patient_id: string
           psychologist_id: string
           status?: string
-          tenant_id: string
+          tenant_id?: string
         }
         Update: {
           appointment_id?: string | null
@@ -1166,7 +1166,7 @@ export type Database = {
           id?: string
           patient_id: string
           psychologist_id: string
-          tenant_id: string
+          tenant_id?: string
           updated_at?: string
         }
         Update: {
@@ -1217,7 +1217,7 @@ export type Database = {
           patient_id: string
           psychologist_id: string
           session_date?: string
-          tenant_id: string
+          tenant_id?: string
           updated_at?: string
         }
         Update: {
@@ -1270,7 +1270,7 @@ export type Database = {
           patient_id: string
           price?: number | null
           psychologist_id: string
-          tenant_id: string
+          tenant_id?: string
           total_sessions?: number
           updated_at?: string
           used_sessions?: number
@@ -1377,7 +1377,7 @@ export type Database = {
           sexo?: string | null
           telefone2?: string | null
           telefone3?: string | null
-          tenant_id: string
+          tenant_id?: string
           updated_at?: string
         }
         Update: {
@@ -1445,7 +1445,7 @@ export type Database = {
           max_parcelas?: number
           nome: string
           taxa?: number
-          tenant_id: string
+          tenant_id?: string
           updated_at?: string | null
         }
         Update: {
@@ -1487,7 +1487,7 @@ export type Database = {
           id?: string
           module: string
           profile_id: string
-          tenant_id: string
+          tenant_id?: string
         }
         Update: {
           can_create?: boolean | null
@@ -1546,7 +1546,7 @@ export type Database = {
           phone?: string | null
           state?: string | null
           status?: string | null
-          tenant_id: string
+          tenant_id?: string
           updated_at?: string
           user_id: string
           zip_code?: string | null
@@ -1604,7 +1604,7 @@ export type Database = {
           instance_id: string
           is_connected?: boolean
           psychologist_id: string
-          tenant_id: string
+          tenant_id?: string
           token: string
           updated_at?: string
         }
@@ -1661,7 +1661,7 @@ export type Database = {
           room_id: string
           start_time: string
           status?: Database["public"]["Enums"]["reservation_status"]
-          tenant_id: string
+          tenant_id?: string
           total_value?: number | null
           updated_at?: string
           user_id?: string | null
@@ -1739,7 +1739,7 @@ export type Database = {
           reason?: string | null
           room_id?: string | null
           start_time?: string | null
-          tenant_id: string
+          tenant_id?: string
           updated_at?: string
         }
         Update: {
@@ -1799,7 +1799,7 @@ export type Database = {
           price_hour?: number | null
           price_month?: number | null
           status?: Database["public"]["Enums"]["room_status"]
-          tenant_id: string
+          tenant_id?: string
           type?: Database["public"]["Enums"]["room_type"]
           updated_at?: string
         }
@@ -1850,7 +1850,7 @@ export type Database = {
           psychologist_id: string
           reason?: string | null
           start_time?: string | null
-          tenant_id: string
+          tenant_id?: string
           updated_at?: string
         }
         Update: {
@@ -1894,7 +1894,7 @@ export type Database = {
           id?: string
           psychologist_id: string
           slot_duration_minutes?: number
-          tenant_id: string
+          tenant_id?: string
           updated_at?: string
           work_end_time?: string
           work_start_time?: string
@@ -1961,7 +1961,7 @@ export type Database = {
           rua?: string | null
           telefone1?: string | null
           telefone2?: string | null
-          tenant_id: string
+          tenant_id?: string
           tipo_pessoa?: string
           updated_at?: string | null
         }
@@ -2074,7 +2074,7 @@ export type Database = {
         Insert: {
           id?: string
           role: Database["public"]["Enums"]["app_role"]
-          tenant_id: string
+          tenant_id?: string
           user_id: string
         }
         Update: {
@@ -2112,7 +2112,7 @@ export type Database = {
           notes?: string | null
           phone: string
           profile_pic_url?: string | null
-          tenant_id: string
+          tenant_id?: string
           updated_at?: string | null
           user_id?: string | null
         }
@@ -2171,7 +2171,7 @@ export type Database = {
           phone: string
           profile_pic_url?: string | null
           status?: string | null
-          tenant_id: string
+          tenant_id?: string
           unread_count?: number | null
           updated_at?: string | null
           user_id?: string | null
@@ -2227,7 +2227,7 @@ export type Database = {
           id?: string
           message_id?: string | null
           status?: string | null
-          tenant_id: string
+          tenant_id?: string
           user_id?: string | null
         }
         Update: {
