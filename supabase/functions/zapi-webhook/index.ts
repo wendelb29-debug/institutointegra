@@ -214,7 +214,7 @@ serve(async (req) => {
 
           await supabase
             .from('whatsapp_conversations')
-            .upsert(convData, { onConflict: 'phone' });
+            .upsert(convData, { onConflict: 'phone,tenant_id' });
 
           const msgData: Record<string, any> = {
             conversation_phone: phone,
