@@ -266,6 +266,14 @@ const WhatsApp = () => {
     loadConversations();
   }, [loadConversations]);
 
+  const handleDeleteConversation = useCallback(async (phone: string) => {
+    await supabase.from('whatsapp_messages').delete().eq('conversation_phone', phone);
+    await supabase.from('whatsapp_conversations').delete().eq('phone', phone);
+    if (selected?.phone === phone) { setSelected(null); setMessages([]); }
+    toast.success('Conversa excluída!');
+    loadConversations();
+  }, [loadConversations, selected]);
+
   const handleReopen = useCallback(async (phone: string) => {
     await supabase.from('whatsapp_conversations').update({
       conversation_status: 'aberto', assigned_to: null,
