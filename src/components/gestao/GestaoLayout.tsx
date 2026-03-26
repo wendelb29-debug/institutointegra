@@ -69,7 +69,6 @@ const GestaoLayout = () => {
             <Outlet />
           </main>
           <FloatingChatAssistant />
-          </main>
         </div>
       </div>
     </SidebarProvider>
