@@ -13,10 +13,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useWhatsAppNotifications } from '@/hooks/useWhatsAppNotifications';
 
 const WhatsApp = () => {
   const { user } = useAuth();
   const { isAdmin } = usePermissions();
+  const { notifyNewMessage, requestPermission } = useWhatsAppNotifications();
   const [activeTab, setActiveTab] = useState<OrbitTab>('inbox');
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -27,6 +29,7 @@ const WhatsApp = () => {
   const selectedRef = useRef<Conversation | null>(null);
 
   useEffect(() => { selectedRef.current = selected; }, [selected]);
+  useEffect(() => { requestPermission(); }, [requestPermission]);
 
   const getProxyUrl = () => {
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'pktpabruwkvpesqqinxx';
@@ -168,6 +171,12 @@ const WhatsApp = () => {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_conversations' }, () => loadConversations())
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'whatsapp_messages' }, (payload) => {
         const msg = payload.new as any;
+
+        // Notify on received messages
+        if (msg.direction === 'received') {
+          notifyNewMessage(msg.conversation_phone || 'Contato', msg.body || '');
+        }
+
         if (selectedRef.current && msg.conversation_phone === selectedRef.current.phone) {
           const newMsg: ChatMessage = {
             id: msg.id,
@@ -190,7 +199,7 @@ const WhatsApp = () => {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [loadConversations, loadMessages, loadContacts]);
+  }, [loadConversations, loadMessages, loadContacts, notifyNewMessage]);
 
   // ===== HANDLERS =====
   const handleSelect = useCallback(async (conv: Conversation) => {
