@@ -199,7 +199,7 @@ const WhatsApp = () => {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [loadConversations, loadMessages, loadContacts]);
+  }, [loadConversations, loadMessages, loadContacts, notifyNewMessage]);
 
   // ===== HANDLERS =====
   const handleSelect = useCallback(async (conv: Conversation) => {
