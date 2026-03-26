@@ -371,17 +371,24 @@ const Socios = () => {
 
         {/* Invoices Tab */}
         <TabsContent value="invoices" className="space-y-3">
-          <div className="flex items-center gap-3">
-            <Label className="text-sm text-muted-foreground">Mês:</Label>
-            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-              <SelectTrigger className="w-[220px] h-9"><SelectValue placeholder="Todos os meses" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os meses</SelectItem>
-                {[...new Set(invoices.map(i => i.reference_month))].sort().reverse().map(m => (
-                  <SelectItem key={m} value={m}>{formatMonth(m)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Label className="text-sm text-muted-foreground">Mês:</Label>
+              <Select value={selectedMonth} onValueChange={v => { setSelectedMonth(v); setFilterOverdue(false); }}>
+                <SelectTrigger className="w-[220px] h-9"><SelectValue placeholder="Todos os meses" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os meses</SelectItem>
+                  {[...new Set(invoices.map(i => i.reference_month))].sort().reverse().map(m => (
+                    <SelectItem key={m} value={m}>{formatMonth(m)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {filterOverdue && (
+              <Badge variant="outline" className="bg-red-500/10 text-red-700 border-red-300 gap-1 cursor-pointer" onClick={() => setFilterOverdue(false)}>
+                🔴 Somente em atraso <XCircle className="h-3 w-3" />
+              </Badge>
+            )}
           </div>
 
           <div className="rounded-lg border overflow-hidden">
