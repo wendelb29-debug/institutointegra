@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -8,17 +7,26 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar } from '@/components/ui/calendar';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  CalendarDays, Plus, Users, Clock, Phone, Mail, FileText,
-  CheckCircle2, XCircle, AlertCircle, Send, Settings, ChevronLeft, ChevronRight
+  CalendarDays, Plus, Users, Clock, Phone, Mail, Settings,
+  CheckCircle2, XCircle, Send
 } from 'lucide-react';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, getDay, isToday } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+// Agenda components
+import { AgendaStats } from '@/components/agenda/AgendaStats';
+import { MonthCalendar } from '@/components/agenda/MonthCalendar';
+import { DayView } from '@/components/agenda/DayView';
+import { WeekView } from '@/components/agenda/WeekView';
+import { AppointmentQuickView } from '@/components/agenda/AppointmentQuickView';
+import { BlockTimeDialog } from '@/components/agenda/BlockTimeDialog';
+import { ScheduleSettingsDialog } from '@/components/agenda/ScheduleSettingsDialog';
 
 interface Patient {
   id: string;
@@ -41,23 +49,46 @@ interface Appointment {
   patients?: { name: string; phone: string };
 }
 
-const statusConfig = {
-  agendado: { label: 'Agendado', color: 'bg-amber-500/15 text-amber-700 border-amber-200', icon: Clock },
-  confirmado: { label: 'Confirmado', color: 'bg-emerald-500/15 text-emerald-700 border-emerald-200', icon: CheckCircle2 },
-  cancelado: { label: 'Cancelado', color: 'bg-red-500/15 text-red-700 border-red-200', icon: XCircle },
-  realizado: { label: 'Realizado', color: 'bg-blue-500/15 text-blue-700 border-blue-200', icon: CheckCircle2 },
-};
+interface ScheduleBlock {
+  id: string;
+  block_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  block_type: string;
+  reason: string | null;
+}
+
+interface ScheduleSettings {
+  work_start_time: string;
+  work_end_time: string;
+  slot_duration_minutes: number;
+  break_duration_minutes: number;
+  working_days: number[];
+}
+
+type ViewMode = 'month' | 'week' | 'day';
 
 const Agenda = () => {
   const { user } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [patients, setPatients] = useState<Patient[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [blocks, setBlocks] = useState<ScheduleBlock[]>([]);
+  const [settings, setSettings] = useState<ScheduleSettings>({
+    work_start_time: '08:00',
+    work_end_time: '18:00',
+    slot_duration_minutes: 50,
+    break_duration_minutes: 10,
+    working_days: [1, 2, 3, 4, 5],
+  });
   const [loading, setLoading] = useState(true);
   const [showNewAppointment, setShowNewAppointment] = useState(false);
   const [showNewPatient, setShowNewPatient] = useState(false);
   const [activeTab, setActiveTab] = useState('agenda');
+  const [viewMode, setViewMode] = useState<ViewMode>('month');
+  const [quickViewAppt, setQuickViewAppt] = useState<Appointment | null>(null);
+  const [showQuickView, setShowQuickView] = useState(false);
 
   // New appointment form
   const [newAppt, setNewAppt] = useState({ patient_id: '', date: '', start_time: '', end_time: '', notes: '' });
@@ -68,12 +99,25 @@ const Agenda = () => {
     if (!user) return;
     setLoading(true);
     try {
-      const [patientsRes, appointmentsRes] = await Promise.all([
+      const [patientsRes, appointmentsRes, blocksRes, settingsRes] = await Promise.all([
         supabase.from('patients').select('*').eq('psychologist_id', user.id).order('name'),
         supabase.from('appointments').select('*, patients(name, phone)').eq('psychologist_id', user.id).order('appointment_date'),
+        supabase.from('schedule_blocks').select('*').eq('psychologist_id', user.id),
+        supabase.from('schedule_settings').select('*').eq('psychologist_id', user.id).single(),
       ]);
       if (patientsRes.data) setPatients(patientsRes.data);
       if (appointmentsRes.data) setAppointments(appointmentsRes.data as unknown as Appointment[]);
+      if (blocksRes.data) setBlocks(blocksRes.data as unknown as ScheduleBlock[]);
+      if (settingsRes.data) {
+        const s = settingsRes.data;
+        setSettings({
+          work_start_time: (s.work_start_time as string)?.slice(0, 5) || '08:00',
+          work_end_time: (s.work_end_time as string)?.slice(0, 5) || '18:00',
+          slot_duration_minutes: s.slot_duration_minutes || 50,
+          break_duration_minutes: s.break_duration_minutes || 10,
+          working_days: s.working_days || [1, 2, 3, 4, 5],
+        });
+      }
     } catch {
       toast({ title: 'Erro', description: 'Erro ao carregar dados.', variant: 'destructive' });
     } finally {
@@ -112,6 +156,22 @@ const Agenda = () => {
       toast({ title: 'Erro', description: 'Preencha todos os campos obrigatórios.', variant: 'destructive' });
       return;
     }
+
+    // Check for blocks
+    const dateBlocks = blocks.filter(b => b.block_date === newAppt.date);
+    const isBlocked = dateBlocks.some(b => {
+      if (b.block_type === 'full_day') return true;
+      if (!b.start_time || !b.end_time) return false;
+      const newStart = newAppt.start_time;
+      const newEnd = newAppt.end_time;
+      return newStart < b.end_time && newEnd > b.start_time;
+    });
+
+    if (isBlocked) {
+      toast({ title: 'Horário bloqueado', description: 'Este horário está bloqueado na agenda.', variant: 'destructive' });
+      return;
+    }
+
     const { error } = await supabase.from('appointments').insert({
       psychologist_id: user.id,
       patient_id: newAppt.patient_id,
@@ -124,11 +184,8 @@ const Agenda = () => {
       toast({ title: 'Erro', description: 'Erro ao agendar consulta.', variant: 'destructive' });
     } else {
       toast({ title: 'Sucesso', description: 'Consulta agendada!' });
-      // Send WhatsApp notification
       const patient = patients.find(p => p.id === newAppt.patient_id);
-      if (patient) {
-        sendWhatsAppNotification(patient, newAppt.date, newAppt.start_time);
-      }
+      if (patient) sendWhatsAppNotification(patient, newAppt.date, newAppt.start_time);
       setNewAppt({ patient_id: '', date: '', start_time: '', end_time: '', notes: '' });
       setShowNewAppointment(false);
       fetchData();
@@ -137,31 +194,18 @@ const Agenda = () => {
 
   const sendWhatsAppNotification = async (patient: Patient, date: string, time: string) => {
     try {
-      // Get psychologist's WhatsApp config
       const { data: config } = await supabase
         .from('psychologist_whatsapp_config')
         .select('*')
         .eq('psychologist_id', user!.id)
         .single();
-
       if (!config) return;
-
       const formattedDate = format(new Date(date + 'T12:00:00'), "dd/MM/yyyy", { locale: ptBR });
       const message = `Olá ${patient.name}, sua consulta foi agendada para ${formattedDate} às ${time}. Instituto Integra.`;
-
       await supabase.functions.invoke('zapi-proxy', {
-        body: {
-          action: 'send',
-          phone: patient.phone,
-          message,
-          instanceId: config.instance_id,
-          token: config.token,
-          clientToken: config.client_token,
-        }
+        body: { action: 'send', phone: patient.phone, message, instanceId: config.instance_id, token: config.token, clientToken: config.client_token }
       });
-    } catch {
-      // Silently fail - notification is not critical
-    }
+    } catch { /* silent */ }
   };
 
   const updateAppointmentStatus = async (id: string, status: string) => {
@@ -173,26 +217,27 @@ const Agenda = () => {
     }
   };
 
-  // Calendar logic
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(currentMonth);
-  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
-  const startDayOfWeek = getDay(monthStart);
-
-  const appointmentsByDate = useMemo(() => {
-    const map: Record<string, Appointment[]> = {};
-    appointments.forEach(a => {
-      if (!map[a.appointment_date]) map[a.appointment_date] = [];
-      map[a.appointment_date].push(a);
-    });
-    return map;
+  const todayAppointments = useMemo(() => {
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    return appointments.filter(a => a.appointment_date === todayStr);
   }, [appointments]);
 
-  const selectedDateAppointments = selectedDate
-    ? appointmentsByDate[format(selectedDate, 'yyyy-MM-dd')] || []
-    : [];
+  // Auto-calculate end time
+  const handleStartTimeChange = (time: string) => {
+    setNewAppt(p => {
+      const [h, m] = time.split(':').map(Number);
+      const totalMin = h * 60 + m + settings.slot_duration_minutes;
+      const endH = Math.floor(totalMin / 60);
+      const endM = totalMin % 60;
+      const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+      return { ...p, start_time: time, end_time: endTime };
+    });
+  };
 
-  const todayAppointments = appointmentsByDate[format(new Date(), 'yyyy-MM-dd')] || [];
+  const handleAppointmentClick = (appt: Appointment) => {
+    setQuickViewAppt(appt);
+    setShowQuickView(true);
+  };
 
   if (loading) {
     return (
@@ -203,14 +248,17 @@ const Agenda = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-display text-foreground">Agenda</h1>
-          <p className="text-muted-foreground text-sm mt-1">Gerencie consultas e pacientes</p>
+          <p className="text-muted-foreground text-sm mt-0.5">Gerencie consultas e pacientes</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {user && <BlockTimeDialog userId={user.id} selectedDate={selectedDate} onBlockCreated={fetchData} />}
+          {user && <ScheduleSettingsDialog userId={user.id} onSettingsChange={fetchData} />}
+
           <Dialog open={showNewPatient} onOpenChange={setShowNewPatient}>
             <DialogTrigger asChild>
               <Button variant="outline" className="gap-1.5">
@@ -250,10 +298,22 @@ const Agenda = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div><Label>Data *</Label><Input type="date" value={newAppt.date} onChange={e => setNewAppt(p => ({ ...p, date: e.target.value }))} /></div>
+                <div>
+                  <Label>Data *</Label>
+                  <Input type="date" value={newAppt.date} onChange={e => setNewAppt(p => ({ ...p, date: e.target.value }))} />
+                </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Início *</Label><Input type="time" value={newAppt.start_time} onChange={e => setNewAppt(p => ({ ...p, start_time: e.target.value }))} /></div>
-                  <div><Label>Fim *</Label><Input type="time" value={newAppt.end_time} onChange={e => setNewAppt(p => ({ ...p, end_time: e.target.value }))} /></div>
+                  <div>
+                    <Label>Início *</Label>
+                    <Input type="time" value={newAppt.start_time} onChange={e => handleStartTimeChange(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label>Fim *</Label>
+                    <Input type="time" value={newAppt.end_time} onChange={e => setNewAppt(p => ({ ...p, end_time: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Duração padrão: {settings.slot_duration_minutes} min
                 </div>
                 <div><Label>Observações</Label><Textarea value={newAppt.notes} onChange={e => setNewAppt(p => ({ ...p, notes: e.target.value }))} /></div>
                 <Button onClick={handleCreateAppointment} className="w-full">Agendar</Button>
@@ -264,24 +324,11 @@ const Agenda = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card><CardContent className="p-4 flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-primary/10"><CalendarDays className="h-5 w-5 text-primary" /></div>
-          <div><p className="text-xs text-muted-foreground">Hoje</p><p className="text-lg font-bold">{todayAppointments.length}</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="p-4 flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-emerald-500/10"><CheckCircle2 className="h-5 w-5 text-emerald-600" /></div>
-          <div><p className="text-xs text-muted-foreground">Confirmadas</p><p className="text-lg font-bold">{appointments.filter(a => a.status === 'confirmado').length}</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="p-4 flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-amber-500/10"><AlertCircle className="h-5 w-5 text-amber-600" /></div>
-          <div><p className="text-xs text-muted-foreground">Pendentes</p><p className="text-lg font-bold">{appointments.filter(a => a.status === 'agendado').length}</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="p-4 flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-blue-500/10"><Users className="h-5 w-5 text-blue-600" /></div>
-          <div><p className="text-xs text-muted-foreground">Pacientes</p><p className="text-lg font-bold">{patients.length}</p></div>
-        </CardContent></Card>
-      </div>
+      <AgendaStats
+        appointments={appointments}
+        todayAppointments={todayAppointments}
+        patientsCount={patients.length}
+      />
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -292,132 +339,136 @@ const Agenda = () => {
         </TabsList>
 
         {/* AGENDA TAB */}
-        <TabsContent value="agenda">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Calendar */}
-            <Card className="lg:col-span-2">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <CardTitle className="text-base capitalize">
-                    {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
-                  </CardTitle>
-                  <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-7 gap-1 mb-1">
-                  {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (
-                    <div key={d} className="text-center text-xs font-semibold text-muted-foreground py-2">{d}</div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-7 gap-1">
-                  {Array.from({ length: startDayOfWeek }).map((_, i) => (
-                    <div key={`empty-${i}`} />
-                  ))}
-                  {daysInMonth.map(day => {
-                    const dateStr = format(day, 'yyyy-MM-dd');
-                    const dayAppts = appointmentsByDate[dateStr] || [];
-                    const hasAppts = dayAppts.length > 0;
-                    const isSelected = selectedDate && isSameDay(day, selectedDate);
-                    const today = isToday(day);
-
-                    return (
-                      <button
-                        key={dateStr}
-                        onClick={() => setSelectedDate(day)}
-                        className={`relative p-2 rounded-lg text-sm transition-all min-h-[48px] flex flex-col items-center gap-0.5
-                          ${isSelected ? 'bg-primary text-primary-foreground ring-2 ring-primary/30' : ''}
-                          ${today && !isSelected ? 'bg-accent font-bold' : ''}
-                          ${!isSelected && !today ? 'hover:bg-muted/50' : ''}
-                        `}
-                      >
-                        <span>{format(day, 'd')}</span>
-                        {hasAppts && (
-                          <div className="flex gap-0.5">
-                            {dayAppts.slice(0, 3).map((a, i) => (
-                              <div
-                                key={i}
-                                className={`h-1.5 w-1.5 rounded-full ${
-                                  a.status === 'confirmado' ? 'bg-emerald-500' :
-                                  a.status === 'cancelado' ? 'bg-red-500' :
-                                  a.status === 'realizado' ? 'bg-blue-500' :
-                                  'bg-amber-500'
-                                }`}
-                              />
-                            ))}
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Day Detail */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">
-                  {selectedDate ? format(selectedDate, "dd 'de' MMMM", { locale: ptBR }) : 'Selecione um dia'}
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  {selectedDateAppointments.length} consulta(s)
-                </CardDescription>
-              </CardHeader>
-              <ScrollArea className="h-[400px]">
-                <CardContent className="space-y-2">
-                  {selectedDateAppointments.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <CalendarDays className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                      <p className="text-xs">Nenhuma consulta neste dia</p>
-                    </div>
-                  ) : (
-                    selectedDateAppointments.map(appt => {
-                      const cfg = statusConfig[appt.status];
-                      const Icon = cfg.icon;
-                      return (
-                        <div key={appt.id} className="p-3 rounded-lg border bg-card space-y-2">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium">{appt.patients?.name}</p>
-                            <Badge className={`${cfg.color} gap-1 text-[10px]`}>
-                              <Icon className="h-2.5 w-2.5" /> {cfg.label}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            {appt.start_time.slice(0, 5)} - {appt.end_time.slice(0, 5)}
-                          </div>
-                          {appt.notes && <p className="text-xs text-muted-foreground">{appt.notes}</p>}
-                          <div className="flex gap-1.5">
-                            {appt.status === 'agendado' && (
-                              <>
-                                <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => updateAppointmentStatus(appt.id, 'confirmado')}>
-                                  <CheckCircle2 className="h-3 w-3" /> Confirmar
-                                </Button>
-                                <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-destructive" onClick={() => updateAppointmentStatus(appt.id, 'cancelado')}>
-                                  <XCircle className="h-3 w-3" /> Cancelar
-                                </Button>
-                              </>
-                            )}
-                            {appt.status === 'confirmado' && (
-                              <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => updateAppointmentStatus(appt.id, 'realizado')}>
-                                <CheckCircle2 className="h-3 w-3" /> Realizado
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </CardContent>
-              </ScrollArea>
-            </Card>
+        <TabsContent value="agenda" className="space-y-4">
+          {/* View mode selector */}
+          <div className="flex gap-1.5">
+            {([
+              { key: 'month' as ViewMode, label: '📅 Mês' },
+              { key: 'week' as ViewMode, label: '📆 Semana' },
+              { key: 'day' as ViewMode, label: '⏰ Dia' },
+            ]).map(v => (
+              <button
+                key={v.key}
+                onClick={() => setViewMode(v.key)}
+                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors
+                  ${viewMode === v.key ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'}
+                `}
+              >
+                {v.label}
+              </button>
+            ))}
           </div>
+
+          {viewMode === 'month' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2">
+                <MonthCalendar
+                  currentMonth={currentMonth}
+                  onMonthChange={setCurrentMonth}
+                  selectedDate={selectedDate}
+                  onDateSelect={(d) => { setSelectedDate(d); }}
+                  appointments={appointments}
+                  blocks={blocks}
+                  onAppointmentClick={handleAppointmentClick}
+                />
+              </div>
+              {/* Day Detail Panel */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">
+                    {selectedDate ? format(selectedDate, "dd 'de' MMMM", { locale: ptBR }) : 'Selecione um dia'}
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    {selectedDate ? `${appointments.filter(a => a.appointment_date === format(selectedDate, 'yyyy-MM-dd')).length} consulta(s)` : ''}
+                  </CardDescription>
+                </CardHeader>
+                <ScrollArea className="h-[400px]">
+                  <CardContent className="space-y-2">
+                    {selectedDate && (() => {
+                      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+                      const dayAppts = appointments.filter(a => a.appointment_date === dateStr);
+                      const dayBlocks = blocks.filter(b => b.block_date === dateStr);
+
+                      return (
+                        <>
+                          {dayBlocks.map(b => (
+                            <div key={b.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 text-xs text-muted-foreground">
+                              <Clock className="h-3.5 w-3.5" />
+                              <span>
+                                {b.block_type === 'full_day' ? 'Dia bloqueado' : `${b.start_time?.slice(0, 5)} - ${b.end_time?.slice(0, 5)}`}
+                                {b.reason && ` · ${b.reason}`}
+                              </span>
+                            </div>
+                          ))}
+                          {dayAppts.length === 0 && dayBlocks.length === 0 && (
+                            <div className="text-center py-8 text-muted-foreground">
+                              <CalendarDays className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                              <p className="text-xs">Nenhuma consulta neste dia</p>
+                            </div>
+                          )}
+                          {dayAppts.map(appt => {
+                            const statusLabel: Record<string, string> = {
+                              agendado: 'Pendente',
+                              confirmado: 'Confirmado',
+                              cancelado: 'Cancelado',
+                              realizado: 'Realizado',
+                            };
+                            const statusColor: Record<string, string> = {
+                              agendado: 'bg-amber-500/15 text-amber-700',
+                              confirmado: 'bg-emerald-500/15 text-emerald-700',
+                              cancelado: 'bg-red-500/15 text-red-700',
+                              realizado: 'bg-blue-500/15 text-blue-700',
+                            };
+                            return (
+                              <button
+                                key={appt.id}
+                                onClick={() => handleAppointmentClick(appt)}
+                                className="w-full text-left p-3 rounded-lg border hover:bg-muted/30 transition-all"
+                              >
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-sm font-medium">{appt.patients?.name || 'Paciente'}</span>
+                                  <Badge variant="outline" className={`text-[10px] ${statusColor[appt.status]}`}>
+                                    {statusLabel[appt.status]}
+                                  </Badge>
+                                </div>
+                                <div className="text-xs text-muted-foreground flex items-center gap-2">
+                                  <Clock className="h-3 w-3" />
+                                  {appt.start_time?.slice(0, 5)} - {appt.end_time?.slice(0, 5)}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </>
+                      );
+                    })()}
+                  </CardContent>
+                </ScrollArea>
+              </Card>
+            </div>
+          )}
+
+          {viewMode === 'week' && selectedDate && (
+            <WeekView
+              date={selectedDate}
+              appointments={appointments}
+              blocks={blocks}
+              workStart={settings.work_start_time}
+              workEnd={settings.work_end_time}
+              onAppointmentClick={handleAppointmentClick}
+              onDayClick={(d) => { setSelectedDate(d); setViewMode('day'); }}
+            />
+          )}
+
+          {viewMode === 'day' && selectedDate && (
+            <DayView
+              date={selectedDate}
+              appointments={appointments}
+              blocks={blocks}
+              workStart={settings.work_start_time}
+              workEnd={settings.work_end_time}
+              onAppointmentClick={handleAppointmentClick}
+            />
+          )}
         </TabsContent>
 
         {/* PATIENTS TAB */}
@@ -467,6 +518,15 @@ const Agenda = () => {
           <WhatsAppConfigTab userId={user?.id} />
         </TabsContent>
       </Tabs>
+
+      {/* Quick View Modal */}
+      <AppointmentQuickView
+        appointment={quickViewAppt}
+        open={showQuickView}
+        onOpenChange={setShowQuickView}
+        onStatusChange={updateAppointmentStatus}
+        userId={user?.id}
+      />
     </div>
   );
 };
@@ -501,18 +561,15 @@ const WhatsAppConfigTab = ({ userId }: { userId?: string }) => {
       toast({ title: 'Erro', description: 'ID e Token são obrigatórios.', variant: 'destructive' });
       return;
     }
-
     const payload = {
       psychologist_id: userId,
       instance_id: config.instance_id,
       token: config.token,
       client_token: config.client_token || null,
     };
-
     const { error } = saved
       ? await supabase.from('psychologist_whatsapp_config').update(payload).eq('psychologist_id', userId)
       : await supabase.from('psychologist_whatsapp_config').insert(payload);
-
     if (error) {
       toast({ title: 'Erro', description: 'Erro ao salvar configuração.', variant: 'destructive' });
     } else {
@@ -524,12 +581,7 @@ const WhatsAppConfigTab = ({ userId }: { userId?: string }) => {
   const testConnection = async () => {
     try {
       const { data, error } = await supabase.functions.invoke('zapi-proxy', {
-        body: {
-          action: 'status',
-          instanceId: config.instance_id,
-          token: config.token,
-          clientToken: config.client_token,
-        }
+        body: { action: 'status', instanceId: config.instance_id, token: config.token, clientToken: config.client_token }
       });
       if (error) throw error;
       if (data?.connected) {
