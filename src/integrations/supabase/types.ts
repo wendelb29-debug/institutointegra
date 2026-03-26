@@ -2265,6 +2265,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_unread: { Args: { p_phone: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "socio" | "cliente"
