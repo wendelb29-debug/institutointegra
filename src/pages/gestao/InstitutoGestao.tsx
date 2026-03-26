@@ -84,7 +84,7 @@ const InstitutoGestao = () => {
   );
 
   if (selectedPatient) {
-    return <PatientProfile patient={selectedPatient} onBack={() => { setSelectedPatient(null); fetchData(); }} />;
+    return <PatientProfile patient={selectedPatient} onBack={() => { setSelectedPatient(null); setSelectedInitialTab('dados'); fetchData(); }} initialTab={selectedInitialTab} />;
   }
 
   return (
