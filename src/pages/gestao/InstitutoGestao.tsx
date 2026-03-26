@@ -245,7 +245,17 @@ const InstitutoGestao = () => {
                 {searchPatient && (
                   <div className="max-w-md mx-auto space-y-1">
                     {filteredPatients.slice(0, 5).map(p => (
-                      <div key={p.id} className="flex items-center justify-between border border-border/60 rounded-lg px-4 py-2 cursor-pointer hover:bg-muted/50" onClick={() => setSelectedPatient(p)}>
+                      <div key={p.id} className="flex items-center justify-between border border-border/60 rounded-lg px-4 py-2 cursor-pointer hover:bg-muted/50" onClick={() => { setSelectedInitialTab(tabKey); setSelectedPatient(p); }}>
+                        <span className="text-sm font-medium">{p.name}</span>
+                        <span className="text-xs text-muted-foreground">{p.phone}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {!searchPatient && filteredPatients.length > 0 && (
+                  <div className="max-w-md mx-auto space-y-1 max-h-60 overflow-y-auto">
+                    {filteredPatients.map(p => (
+                      <div key={p.id} className="flex items-center justify-between border border-border/60 rounded-lg px-4 py-2 cursor-pointer hover:bg-muted/50" onClick={() => { setSelectedInitialTab(tabKey); setSelectedPatient(p); }}>
                         <span className="text-sm font-medium">{p.name}</span>
                         <span className="text-xs text-muted-foreground">{p.phone}</span>
                       </div>
