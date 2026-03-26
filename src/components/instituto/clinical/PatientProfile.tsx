@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, User, FileText, TrendingUp, Stethoscope, AlertTriangle, Package, ClipboardList, DollarSign } from 'lucide-react';
+import { AIAssistantButton } from './AIAssistantButton';
 import { ClinicalRecords } from './ClinicalRecords';
 import { PatientEvolutions } from './PatientEvolutions';
 import { PatientDiagnoses } from './PatientDiagnoses';
