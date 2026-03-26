@@ -1147,6 +1147,78 @@ export type Database = {
         }
         Relationships: []
       }
+      schedule_blocks: {
+        Row: {
+          block_date: string
+          block_type: string
+          created_at: string
+          end_time: string | null
+          id: string
+          psychologist_id: string
+          reason: string | null
+          start_time: string | null
+          updated_at: string
+        }
+        Insert: {
+          block_date: string
+          block_type?: string
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          psychologist_id: string
+          reason?: string | null
+          start_time?: string | null
+          updated_at?: string
+        }
+        Update: {
+          block_date?: string
+          block_type?: string
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          psychologist_id?: string
+          reason?: string | null
+          start_time?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      schedule_settings: {
+        Row: {
+          break_duration_minutes: number
+          created_at: string
+          id: string
+          psychologist_id: string
+          slot_duration_minutes: number
+          updated_at: string
+          work_end_time: string
+          work_start_time: string
+          working_days: number[]
+        }
+        Insert: {
+          break_duration_minutes?: number
+          created_at?: string
+          id?: string
+          psychologist_id: string
+          slot_duration_minutes?: number
+          updated_at?: string
+          work_end_time?: string
+          work_start_time?: string
+          working_days?: number[]
+        }
+        Update: {
+          break_duration_minutes?: number
+          created_at?: string
+          id?: string
+          psychologist_id?: string
+          slot_duration_minutes?: number
+          updated_at?: string
+          work_end_time?: string
+          work_start_time?: string
+          working_days?: number[]
+        }
+        Relationships: []
+      }
       suppliers: {
         Row: {
           bairro: string | null
