@@ -47,7 +47,11 @@ export function PatientEvolutions({ patientId }: { patientId: string }) {
             <DialogHeader><DialogTitle>Registrar Evolução</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2"><Label>Data</Label><Input type="date" value={form.session_date} onChange={e => setForm({ ...form, session_date: e.target.value })} /></div>
-              <div className="space-y-2"><Label>Descrição da Evolução</Label><Textarea rows={5} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Descreva a evolução observada..." /></div>
+              <div className="space-y-2">
+                <Label>Descrição da Evolução</Label>
+                <Textarea rows={5} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Descreva a evolução observada..." />
+                <AIAssistantButton text={form.description} onApply={(r) => setForm({ ...form, description: r })} context="prontuario" compact />
+              </div>
               <div className="space-y-2"><Label>Notas de Comparação (opcional)</Label><Textarea rows={3} value={form.comparison_notes} onChange={e => setForm({ ...form, comparison_notes: e.target.value })} placeholder="Compare com sessões anteriores..." /></div>
               <Button onClick={handleSave} className="w-full" disabled={!form.description}>Salvar</Button>
             </div>
