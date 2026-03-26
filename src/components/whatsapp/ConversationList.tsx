@@ -9,6 +9,7 @@ interface ConversationListProps {
   onSelect: (conversation: Conversation) => void;
   onNewConversation?: (phone: string, name?: string) => void;
   currentUserId?: string;
+  isAdmin?: boolean;
 }
 
 const filterOptions: { key: ConversationFilter; label: string }[] = [
