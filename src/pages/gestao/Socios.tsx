@@ -354,8 +354,8 @@ const Socios = () => {
               <p className="text-sm font-medium text-red-700">{overdueInvoices.length} cobrança(s) em atraso</p>
               <p className="text-xs text-red-600/80">Total: R$ {overdueInvoices.reduce((s, i) => s + Number(i.amount), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
             </div>
-            <Button size="sm" variant="outline" className="ml-auto text-xs border-red-200 text-red-700 hover:bg-red-100" onClick={() => setSelectedMonth('all')}>
-              Ver todas
+            <Button size="sm" variant="outline" className="ml-auto text-xs border-red-200 text-red-700 hover:bg-red-100" onClick={() => { setFilterOverdue(true); setSelectedMonth('all'); }}>
+              Ver todas em atraso
             </Button>
           </CardContent>
         </Card>
