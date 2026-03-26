@@ -11,11 +11,20 @@ import { Plus, Pencil, Trash2, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 
 const MODULES = [
+  { key: 'dashboard', label: 'Dashboard' },
   { key: 'instituto', label: 'Instituto' },
   { key: 'coworking', label: 'Coworking' },
   { key: 'cadastros', label: 'Cadastros' },
   { key: 'financeiro', label: 'Financeiro' },
   { key: 'almoxarifado', label: 'Almoxarifado' },
+  { key: 'agenda', label: 'Agenda' },
+  { key: 'contratos', label: 'Contratos' },
+  { key: 'reservas', label: 'Reservas' },
+  { key: 'manutencao', label: 'Manutenção' },
+  { key: 'whatsapp', label: 'WhatsApp' },
+  { key: 'equipe', label: 'Equipe' },
+  { key: 'socios', label: 'Sócios' },
+  { key: 'clientes', label: 'Clientes' },
 ];
 
 const ACTIONS = [
@@ -195,7 +204,7 @@ export default function ProfilesTab() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingProfile ? 'Editar Perfil' : 'Criar Perfil'}</DialogTitle>
           </DialogHeader>

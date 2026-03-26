@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-export type Module = 'instituto' | 'coworking' | 'cadastros' | 'financeiro' | 'almoxarifado';
+export type Module = 'dashboard' | 'instituto' | 'coworking' | 'cadastros' | 'financeiro' | 'almoxarifado' | 'agenda' | 'contratos' | 'reservas' | 'manutencao' | 'whatsapp' | 'equipe' | 'socios' | 'clientes';
 export type Action = 'can_view' | 'can_create' | 'can_edit' | 'can_delete';
 
 interface Permission {
