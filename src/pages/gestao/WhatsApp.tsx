@@ -175,6 +175,10 @@ const WhatsApp = () => {
             text: msg.body || '',
             time: new Date(msg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
             status: msg.status === 'read' ? 'read' : msg.status === 'delivered' ? 'delivered' : 'sent',
+            mediaType: msg.media_type || undefined,
+            mediaUrl: msg.media_url || undefined,
+            mediaName: msg.media_name || undefined,
+            mediaMimeType: msg.media_mime_type || undefined,
           };
           setMessages(prev => prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]);
         }
