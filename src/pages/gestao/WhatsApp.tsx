@@ -343,7 +343,7 @@ const WhatsApp = () => {
         {activeTab === 'inbox' && (
           <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] h-full min-h-0">
             <div className="hidden lg:block h-full overflow-hidden border-r border-border bg-card">
-              <ConversationList conversations={conversations} selectedId={selected?.id ?? null} onSelect={handleSelect} onNewConversation={handleNewConversation} currentUserId={user?.id} />
+              <ConversationList conversations={conversations} selectedId={selected?.id ?? null} onSelect={handleSelect} onNewConversation={handleNewConversation} currentUserId={user?.id} isAdmin={isAdmin} />
             </div>
             <div className="lg:hidden h-full">
               {!selected ? (
