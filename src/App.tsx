@@ -45,6 +45,7 @@ import AlmoxEstoque from "./pages/gestao/almoxarifado/Estoque";
 import AlmoxPedidos from "./pages/gestao/almoxarifado/Pedidos";
 import AlmoxSaidas from "./pages/gestao/almoxarifado/Saidas";
 import Usuarios from "./pages/gestao/Usuarios";
+import Equipe from "./pages/gestao/Equipe";
 
 const queryClient = new QueryClient();
 
