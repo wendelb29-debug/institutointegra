@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Filter, Plus, User } from 'lucide-react';
+import { Search, Filter, Plus, User, Trash2 } from 'lucide-react';
 import { Conversation, ConversationFilter } from './types';
 import { NewConversationModal } from './NewConversationModal';
 
@@ -8,6 +8,7 @@ interface ConversationListProps {
   selectedId: string | null;
   onSelect: (conversation: Conversation) => void;
   onNewConversation?: (phone: string, name?: string) => void;
+  onDeleteConversation?: (phone: string) => void;
   currentUserId?: string;
   isAdmin?: boolean;
 }
@@ -30,7 +31,7 @@ function getAvatarColor(id: string) {
   return avatarColors[Math.abs(hash) % avatarColors.length];
 }
 
-export const ConversationList = ({ conversations, selectedId, onSelect, onNewConversation, currentUserId, isAdmin }: ConversationListProps) => {
+export const ConversationList = ({ conversations, selectedId, onSelect, onNewConversation, onDeleteConversation, currentUserId, isAdmin }: ConversationListProps) => {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<ConversationFilter>(isAdmin ? 'all' : 'mine');
 
@@ -89,42 +90,52 @@ export const ConversationList = ({ conversations, selectedId, onSelect, onNewCon
       {/* Conversations */}
       <div className="flex-1 overflow-y-auto">
         {filtered.map(conv => (
-          <button
+          <div
             key={conv.id}
-            onClick={() => onSelect(conv)}
-            className={`w-full text-left px-3 py-3 transition-colors flex items-center gap-3 hover:bg-muted/50 ${
+            className={`relative group w-full text-left px-3 py-3 transition-colors flex items-center gap-3 hover:bg-muted/50 ${
               selectedId === conv.id ? 'bg-muted' : ''
             }`}
           >
-            <div className="relative shrink-0">
-              {conv.profilePicUrl ? (
-                <img src={conv.profilePicUrl} alt={conv.name} className="h-11 w-11 rounded-full object-cover" />
-              ) : (
-                <div className={`h-11 w-11 rounded-full flex items-center justify-center text-white font-medium text-sm ${getAvatarColor(conv.id)}`}>
-                  {conv.avatarInitial}
-                </div>
-              )}
-              {conv.isOnline && (
-                <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card bg-emerald-500" />
-              )}
-            </div>
-            <div className="min-w-0 flex-1 border-b border-border pb-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium truncate text-foreground">{conv.name}</p>
-                <span className={`text-[11px] shrink-0 ${conv.unread > 0 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
-                  {conv.lastMessageTime}
-                </span>
-              </div>
-              <div className="flex items-center justify-between mt-0.5">
-                <p className="text-xs truncate pr-2 text-muted-foreground">{conv.lastMessage}</p>
-                {conv.unread > 0 && (
-                  <span className="text-[10px] font-semibold h-5 min-w-[20px] flex items-center justify-center rounded-full px-1.5 bg-primary text-primary-foreground">
-                    {conv.unread}
-                  </span>
+            <button onClick={() => onSelect(conv)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
+              <div className="relative shrink-0">
+                {conv.profilePicUrl ? (
+                  <img src={conv.profilePicUrl} alt={conv.name} className="h-11 w-11 rounded-full object-cover" />
+                ) : (
+                  <div className={`h-11 w-11 rounded-full flex items-center justify-center text-white font-medium text-sm ${getAvatarColor(conv.id)}`}>
+                    {conv.avatarInitial}
+                  </div>
+                )}
+                {conv.isOnline && (
+                  <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card bg-emerald-500" />
                 )}
               </div>
-            </div>
-          </button>
+              <div className="min-w-0 flex-1 border-b border-border pb-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium truncate text-foreground">{conv.name}</p>
+                  <span className={`text-[11px] shrink-0 ${conv.unread > 0 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+                    {conv.lastMessageTime}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between mt-0.5">
+                  <p className="text-xs truncate pr-2 text-muted-foreground">{conv.lastMessage}</p>
+                  {conv.unread > 0 && (
+                    <span className="text-[10px] font-semibold h-5 min-w-[20px] flex items-center justify-center rounded-full px-1.5 bg-primary text-primary-foreground">
+                      {conv.unread}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </button>
+            {!isAdmin && onDeleteConversation && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onDeleteConversation(conv.phone); }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-md hover:bg-destructive/10 text-destructive"
+                title="Excluir conversa"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         ))}
         {filtered.length === 0 && (
           <div className="py-12 text-center text-sm text-muted-foreground">

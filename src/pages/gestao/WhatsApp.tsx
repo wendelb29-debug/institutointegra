@@ -266,6 +266,14 @@ const WhatsApp = () => {
     loadConversations();
   }, [loadConversations]);
 
+  const handleDeleteConversation = useCallback(async (phone: string) => {
+    await supabase.from('whatsapp_messages').delete().eq('conversation_phone', phone);
+    await supabase.from('whatsapp_conversations').delete().eq('phone', phone);
+    if (selected?.phone === phone) { setSelected(null); setMessages([]); }
+    toast.success('Conversa excluída!');
+    loadConversations();
+  }, [loadConversations, selected]);
+
   const handleReopen = useCallback(async (phone: string) => {
     await supabase.from('whatsapp_conversations').update({
       conversation_status: 'aberto', assigned_to: null,
@@ -345,11 +353,11 @@ const WhatsApp = () => {
         {activeTab === 'inbox' && (
           <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] h-full min-h-0">
             <div className="hidden lg:block h-full overflow-hidden border-r border-border bg-card">
-              <ConversationList conversations={conversations} selectedId={selected?.id ?? null} onSelect={handleSelect} onNewConversation={handleNewConversation} currentUserId={user?.id} isAdmin={isAdmin} />
+              <ConversationList conversations={conversations} selectedId={selected?.id ?? null} onSelect={handleSelect} onNewConversation={handleNewConversation} onDeleteConversation={!isAdmin ? handleDeleteConversation : undefined} currentUserId={user?.id} isAdmin={isAdmin} />
             </div>
             <div className="lg:hidden h-full">
               {!selected ? (
-                <ConversationList conversations={conversations} selectedId={null} onSelect={handleSelect} onNewConversation={handleNewConversation} currentUserId={user?.id} isAdmin={isAdmin} />
+                <ConversationList conversations={conversations} selectedId={null} onSelect={handleSelect} onNewConversation={handleNewConversation} onDeleteConversation={!isAdmin ? handleDeleteConversation : undefined} currentUserId={user?.id} isAdmin={isAdmin} />
               ) : (
                 <ChatPanel conversation={selected} messages={messages} onSendMessage={handleSendMessage} onSendMedia={handleSendMedia} onBack={handleBack} onSaveContact={handleSaveContact} onAssign={handleAssign} onTransfer={handleTransfer} />
               )}
