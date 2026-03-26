@@ -91,7 +91,7 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
         </TabsContent>
 
         <TabsContent value="prontuario">
-          <ClinicalRecords patientId={patient.id} />
+          <ClinicalRecords patientId={patient.id} patientName={patient.name} />
         </TabsContent>
         <TabsContent value="evolucao">
           <PatientEvolutions patientId={patient.id} />
