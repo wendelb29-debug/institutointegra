@@ -43,10 +43,18 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
           <p className="text-sm text-muted-foreground">{patient.phone} {patient.email && `• ${patient.email}`}</p>
         </div>
         {absences >= 3 && (
-          <Badge variant="destructive" className="ml-auto gap-1">
+          <Badge variant="destructive" className="gap-1">
             <AlertTriangle className="h-3 w-3" /> {absences} faltas recentes
           </Badge>
         )}
+        <div className="ml-auto">
+          <AIAssistantButton
+            text={JSON.stringify({ name: patient.name, phone: patient.phone, email: patient.email, absences })}
+            onApply={() => {}}
+            patientData={patient}
+            context="paciente"
+          />
+        </div>
       </div>
 
       <Tabs defaultValue="dados" className="w-full">
