@@ -221,6 +221,7 @@ async function handleMessage(supabase: any, body: any, tenantId: string | null, 
   }
 
   // Insert message
+  const media = extractMediaInfo(body);
   const msgData: Record<string, any> = {
     conversation_phone: phone,
     message_id: messageId,
@@ -231,6 +232,12 @@ async function handleMessage(supabase: any, body: any, tenantId: string | null, 
     tenant_id: tenantId,
   };
   if (assignedTo) msgData.user_id = assignedTo;
+  if (media.mediaType) {
+    msgData.media_type = media.mediaType;
+    msgData.media_url = media.mediaUrl;
+    msgData.media_name = media.mediaName;
+    msgData.media_mime_type = media.mediaMimeType;
+  }
 
   const { error: msgError } = await supabase
     .from('whatsapp_messages')
