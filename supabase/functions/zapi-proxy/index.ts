@@ -262,6 +262,29 @@ serve(async (req) => {
       });
     }
 
+    // === PROFILE PICTURE ===
+    if (action === 'profile-picture') {
+      if (!phone) {
+        return new Response(JSON.stringify({ error: 'phone é obrigatório' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const cleanPhone = String(phone).replace(/\D/g, '');
+      try {
+        const res = await fetch(`${baseUrl}/profile-picture/${cleanPhone}`, { method: 'GET', headers });
+        const data = await res.json();
+        const picUrl = data?.link || data?.profilePicUrl || data?.url || null;
+        return new Response(JSON.stringify({ success: true, profilePicUrl: picUrl }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (e) {
+        console.error('Error fetching profile picture:', e);
+        return new Response(JSON.stringify({ success: false, profilePicUrl: null }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     return new Response(JSON.stringify({ error: 'Ação inválida' }), {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
