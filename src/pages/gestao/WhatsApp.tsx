@@ -12,9 +12,11 @@ import { MessageSquare, Wifi, WifiOff, Inbox, Users, Headphones } from 'lucide-r
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 
 const WhatsApp = () => {
   const { user } = useAuth();
+  const { isAdmin } = usePermissions();
   const [activeTab, setActiveTab] = useState<OrbitTab>('inbox');
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -273,6 +275,14 @@ const WhatsApp = () => {
     loadConversations();
   }, [loadConversations]);
 
+  const handleTransfer = useCallback(async (phone: string, newUserId: string) => {
+    await supabase.from('whatsapp_conversations').update({
+      assigned_to: newUserId, conversation_status: 'em_atendimento',
+    } as any).eq('phone', phone);
+    toast.success('Conversa transferida!');
+    loadConversations();
+  }, [loadConversations]);
+
   const handleConnect = useCallback(async () => {
     setStatus('connecting');
     await checkStatus();
@@ -333,18 +343,18 @@ const WhatsApp = () => {
         {activeTab === 'inbox' && (
           <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] h-full min-h-0">
             <div className="hidden lg:block h-full overflow-hidden border-r border-border bg-card">
-              <ConversationList conversations={conversations} selectedId={selected?.id ?? null} onSelect={handleSelect} onNewConversation={handleNewConversation} currentUserId={user?.id} />
+              <ConversationList conversations={conversations} selectedId={selected?.id ?? null} onSelect={handleSelect} onNewConversation={handleNewConversation} currentUserId={user?.id} isAdmin={isAdmin} />
             </div>
             <div className="lg:hidden h-full">
               {!selected ? (
-                <ConversationList conversations={conversations} selectedId={null} onSelect={handleSelect} onNewConversation={handleNewConversation} currentUserId={user?.id} />
+                <ConversationList conversations={conversations} selectedId={null} onSelect={handleSelect} onNewConversation={handleNewConversation} currentUserId={user?.id} isAdmin={isAdmin} />
               ) : (
-                <ChatPanel conversation={selected} messages={messages} onSendMessage={handleSendMessage} onSendMedia={handleSendMedia} onBack={handleBack} onSaveContact={handleSaveContact} onAssign={handleAssign} />
+                <ChatPanel conversation={selected} messages={messages} onSendMessage={handleSendMessage} onSendMedia={handleSendMedia} onBack={handleBack} onSaveContact={handleSaveContact} onAssign={handleAssign} onTransfer={handleTransfer} />
               )}
             </div>
             <div className="hidden lg:flex flex-col h-full">
               {selected ? (
-                <ChatPanel conversation={selected} messages={messages} onSendMessage={handleSendMessage} onSendMedia={handleSendMedia} onSaveContact={handleSaveContact} onAssign={handleAssign} />
+                <ChatPanel conversation={selected} messages={messages} onSendMessage={handleSendMessage} onSendMedia={handleSendMedia} onSaveContact={handleSaveContact} onAssign={handleAssign} onTransfer={handleTransfer} />
               ) : (
                 <EmptyChatState />
               )}
@@ -367,7 +377,7 @@ const WhatsApp = () => {
             conversations={conversations}
             currentUserId={user?.id}
             currentUserName={user?.email}
-            isAdmin={true}
+            isAdmin={isAdmin}
             onAssign={handleAssign}
             onFinish={handleFinish}
             onReopen={handleReopen}

@@ -6,6 +6,7 @@ import { EmojiPicker } from './EmojiPicker';
 import { AttachmentMenu } from './AttachmentMenu';
 import { MediaMessage } from './MediaMessage';
 import { SaveContactModal } from './SaveContactModal';
+import { TransferDialog } from './TransferDialog';
 
 interface ChatPanelProps {
   conversation: Conversation;
@@ -15,6 +16,7 @@ interface ChatPanelProps {
   onBack?: () => void;
   onSaveContact?: (data: { phone: string; name: string; notes?: string }) => void;
   onAssign?: (phone: string) => void;
+  onTransfer?: (phone: string, newUserId: string) => void;
 }
 
 const avatarColors: Record<string, string> = {};
@@ -28,7 +30,7 @@ function getColor(id: string) {
   return avatarColors[id];
 }
 
-export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, onBack, onSaveContact, onAssign }: ChatPanelProps) => {
+export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, onBack, onSaveContact, onAssign, onTransfer }: ChatPanelProps) => {
   const [newMessage, setNewMessage] = useState('');
   const [orbitLoading, setOrbitLoading] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
@@ -127,6 +129,13 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
         <div className="flex items-center gap-1.5">
           {onSaveContact && (
             <SaveContactModal phone={conversation.phone} currentName={conversation.name} onSave={onSaveContact} />
+          )}
+          {onTransfer && (
+            <TransferDialog
+              conversationPhone={conversation.phone}
+              currentAssignedTo={conversation.assignedTo}
+              onTransfer={onTransfer}
+            />
           )}
           {onAssign && (
             <button
