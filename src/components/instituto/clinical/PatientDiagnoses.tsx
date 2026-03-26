@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, FileDown, Calendar, Pencil } from 'lucide-react';
+import { AIAssistantButton } from './AIAssistantButton';
+import { TemplatesPanel } from './TemplatesPanel';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -97,7 +99,23 @@ Instituto Integra
                 <div className="space-y-2"><Label>Data</Label><Input type="date" value={form.diagnosis_date} onChange={e => setForm({ ...form, diagnosis_date: e.target.value })} /></div>
                 <div className="space-y-2"><Label>CID (opcional)</Label><Input value={form.cid_code} onChange={e => setForm({ ...form, cid_code: e.target.value })} placeholder="Ex: F41.1" /></div>
               </div>
-              <div className="space-y-2"><Label>Descrição do Diagnóstico</Label><Textarea rows={6} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
+              <div className="space-y-2">
+                <Label>Descrição do Diagnóstico</Label>
+                <Textarea rows={6} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+                <div className="flex gap-2 flex-wrap">
+                  <AIAssistantButton
+                    text={form.description}
+                    onApply={(result) => setForm({ ...form, description: result })}
+                    patientData={{ name: patientName }}
+                    context="diagnostico"
+                    compact
+                  />
+                  <TemplatesPanel
+                    onInsert={(text) => setForm({ ...form, description: form.description ? form.description + '\n\n' + text : text })}
+                    context="diagnostico"
+                  />
+                </div>
+              </div>
               <Button onClick={handleSave} className="w-full" disabled={!form.description}>Salvar</Button>
             </div>
           </DialogContent>
