@@ -18,6 +18,7 @@ import { useWhatsAppNotifications } from '@/hooks/useWhatsAppNotifications';
 const WhatsApp = () => {
   const { user } = useAuth();
   const { isAdmin } = usePermissions();
+  const { notifyNewMessage, requestPermission } = useWhatsAppNotifications();
   const [activeTab, setActiveTab] = useState<OrbitTab>('inbox');
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
   const [conversations, setConversations] = useState<Conversation[]>([]);
