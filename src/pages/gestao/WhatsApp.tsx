@@ -29,6 +29,7 @@ const WhatsApp = () => {
   const selectedRef = useRef<Conversation | null>(null);
 
   useEffect(() => { selectedRef.current = selected; }, [selected]);
+  useEffect(() => { requestPermission(); }, [requestPermission]);
 
   const getProxyUrl = () => {
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'pktpabruwkvpesqqinxx';
