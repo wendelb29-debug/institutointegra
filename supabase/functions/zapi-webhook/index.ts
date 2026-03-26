@@ -160,7 +160,8 @@ async function handleMessage(supabase: any, body: any, tenantId: string | null, 
   const fromMe = body.fromMe || false;
   const messageId = body.messageId || body.id;
   const messageText = extractMessageText(body);
-  const chatName = body.chatName || body.senderName || phone;
+  const lastMsgPreview = getLastMessagePreview(body);
+  const media = extractMediaInfo(body);
   let senderPhoto = body.photo || body.senderPhoto || null;
 
   if (isGroup) {
