@@ -4,7 +4,7 @@ const NOTIFICATION_SOUND_URL = '/sounds/notification.wav';
 const ORIGINAL_TITLE = 'Instituto Integra';
 
 export function useWhatsAppNotifications() {
-  const audioRef = useRef<HTMLAudio element | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const unreadCountRef = useRef(0);
   const blinkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isPageVisibleRef = useRef(!document.hidden);
