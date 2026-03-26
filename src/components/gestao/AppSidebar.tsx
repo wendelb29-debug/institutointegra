@@ -164,6 +164,14 @@ export function AppSidebar() {
                         </NavLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={isActive('/gestao/equipe')}>
+                        <NavLink to="/gestao/equipe" className="hover:bg-sidebar-accent/60" activeClassName="bg-primary/8 text-primary font-medium">
+                          <Users className="h-4 w-4" />
+                          {!collapsed && <span>Equipe</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarGroupContent>
               </CollapsibleContent>
