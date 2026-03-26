@@ -30,23 +30,24 @@ function extractMessageText(body: any): string {
 }
 
 // Look up which user owns this Z-API instance
-async function findUserByInstance(supabase: any, instanceId: string): Promise<{ userId: string | null; tenantId: string | null }> {
-  if (!instanceId) return { userId: null, tenantId: null };
+async function findUserByInstance(supabase: any, instanceId: string): Promise<{ userId: string | null; tenantId: string | null; instanceToken: string | null; clientToken: string | null }> {
+  if (!instanceId) return { userId: null, tenantId: null, instanceToken: null, clientToken: null };
   
   const { data } = await supabase
     .from('psychologist_whatsapp_config')
-    .select('psychologist_id, tenant_id')
+    .select('psychologist_id, tenant_id, token, client_token')
     .eq('instance_id', instanceId)
     .maybeSingle();
   
   if (data) {
-    return { userId: data.psychologist_id, tenantId: data.tenant_id };
+    return { userId: data.psychologist_id, tenantId: data.tenant_id, instanceToken: data.token, clientToken: data.client_token };
   }
   
   // Fallback: check if instance matches global secret, use first admin tenant
   const globalInstanceId = Deno.env.get('ZAPI_INSTANCE_ID');
+  const globalToken = Deno.env.get('ZAPI_TOKEN');
+  const globalClientToken = Deno.env.get('ZAPI_CLIENT_TOKEN');
   if (globalInstanceId && instanceId === globalInstanceId) {
-    // Find the default tenant (Instituto Integra)
     const { data: defaultTenant } = await supabase
       .from('tenants')
       .select('id')
@@ -55,7 +56,6 @@ async function findUserByInstance(supabase: any, instanceId: string): Promise<{ 
       .maybeSingle();
     
     if (defaultTenant) {
-      // Find admin user for this tenant
       const { data: adminRole } = await supabase
         .from('user_roles')
         .select('user_id')
@@ -65,11 +65,11 @@ async function findUserByInstance(supabase: any, instanceId: string): Promise<{ 
         .maybeSingle();
       
       console.log(`[zapi-webhook] Fallback: resolved to tenant=${defaultTenant.id}, admin=${adminRole?.user_id}`);
-      return { userId: adminRole?.user_id || null, tenantId: defaultTenant.id };
+      return { userId: adminRole?.user_id || null, tenantId: defaultTenant.id, instanceToken: globalToken || null, clientToken: globalClientToken || null };
     }
   }
   
-  return { userId: null, tenantId: null };
+  return { userId: null, tenantId: null, instanceToken: null, clientToken: null };
 }
 
 // Auto-assign: find existing conversation assignment or round-robin among tenant users
