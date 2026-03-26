@@ -327,13 +327,16 @@ const WhatsApp = () => {
           })}
         </div>
         <div className="flex items-center gap-2">
-          <InstanceSettingsModal onConfigSaved={checkStatus} />
-          <ZApiSettingsModal />
+          {isAdmin && (
+            <>
+              <InstanceSettingsModal onConfigSaved={checkStatus} />
+              <ZApiSettingsModal />
+            </>
+          )}
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             {status === 'connected' ? <Wifi className="h-3.5 w-3.5 text-emerald-500" /> : <WifiOff className="h-3.5 w-3.5" />}
             <span className="hidden sm:inline">{status === 'connected' ? 'Conectado' : 'Desconectado'}</span>
           </div>
-          <QrCodeModal status={status} onConnect={handleConnect} onDisconnect={handleDisconnect} />
         </div>
       </div>
 
