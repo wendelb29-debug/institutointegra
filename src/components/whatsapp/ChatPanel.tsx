@@ -100,7 +100,7 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
   return (
     <div className="flex flex-col h-full min-h-0 bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card shrink-0">
         <div className="flex items-center gap-3">
           {onBack && (
             <button onClick={onBack} className="p-1 mr-1 lg:hidden text-muted-foreground hover:text-foreground">
@@ -196,7 +196,7 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
 
       {/* File Preview */}
       {previewFile && (
-        <div className="px-4 py-3 border-t border-border bg-card">
+        <div className="px-4 py-3 border-t border-border bg-card shrink-0">
           <div className="flex items-center gap-3">
             <div className="relative">
               {previewFile.type === 'image' && <img src={previewFile.url} alt="Preview" className="h-16 w-16 rounded-lg object-cover" />}
@@ -214,7 +214,7 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
       )}
 
       {/* Input */}
-      <div className="px-4 py-3 flex items-end gap-2 border-t border-border bg-card relative">
+      <div className="px-4 py-3 flex items-end gap-2 border-t border-border bg-card relative shrink-0">
         {showEmojis && <EmojiPicker onSelect={emoji => { setNewMessage(prev => prev + emoji); inputRef.current?.focus(); }} onClose={() => setShowEmojis(false)} />}
         {showAttachments && <AttachmentMenu onFileSelected={handleFileSelected} onClose={() => setShowAttachments(false)} />}
 
