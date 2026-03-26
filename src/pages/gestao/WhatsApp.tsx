@@ -16,6 +16,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 
 const WhatsApp = () => {
   const { user } = useAuth();
+  const { isAdmin } = usePermissions();
   const [activeTab, setActiveTab] = useState<OrbitTab>('inbox');
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
   const [conversations, setConversations] = useState<Conversation[]>([]);
