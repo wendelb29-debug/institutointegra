@@ -213,7 +213,7 @@ const WhatsApp = () => {
       setMessages([]);
     }
     toast.success('Conversa criada!');
-  }, [loadConversations, user]);
+  }, [loadConversations]);
 
   // ===== CONTACTS HANDLERS =====
   const handleSaveContact = useCallback(async (data: { phone: string; name: string; notes?: string }) => {
