@@ -225,6 +225,7 @@ const Socios = () => {
                   </Select>
                 </div>
                 <div><Label>Descrição (opcional)</Label><Input placeholder="Aluguel + manutenção" value={costForm.description || ''} onChange={e => setCostForm({ ...costForm, description: e.target.value })} /></div>
+                <div><Label>Prazo para pagamento</Label><Input type="date" value={costForm.due_date || ''} onChange={e => setCostForm({ ...costForm, due_date: e.target.value })} /></div>
                 {costForm.total_value && activePartners.length > 0 && (
                   <div className="rounded-lg bg-muted/50 border p-4 space-y-2">
                     <p className="text-sm font-medium">Prévia do rateio:</p>
