@@ -352,7 +352,7 @@ const WhatsApp = () => {
             </div>
             <div className="hidden lg:flex flex-col h-full">
               {selected ? (
-                <ChatPanel conversation={selected} messages={messages} onSendMessage={handleSendMessage} onSendMedia={handleSendMedia} onSaveContact={handleSaveContact} onAssign={handleAssign} />
+                <ChatPanel conversation={selected} messages={messages} onSendMessage={handleSendMessage} onSendMedia={handleSendMedia} onSaveContact={handleSaveContact} onAssign={handleAssign} onTransfer={handleTransfer} />
               ) : (
                 <EmptyChatState />
               )}
