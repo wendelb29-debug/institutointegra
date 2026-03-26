@@ -196,7 +196,7 @@ export const ChatPanel = ({ conversation, messages, onSendMessage, onSendMedia, 
 
       {/* File Preview */}
       {previewFile && (
-        <div className="px-4 py-3 border-t border-border bg-card">
+        <div className="px-4 py-3 border-t border-border bg-card shrink-0">
           <div className="flex items-center gap-3">
             <div className="relative">
               {previewFile.type === 'image' && <img src={previewFile.url} alt="Preview" className="h-16 w-16 rounded-lg object-cover" />}
