@@ -71,11 +71,11 @@ interface SectionConfig {
 }
 
 const sections: SectionConfig[] = [
-  { id: 'coworking', label: 'Coworking', icon: Building2, items: mainItems, module: 'coworking', activeClassName: 'bg-primary/8 text-primary font-medium' },
-  { id: 'instituto', label: 'Instituto', icon: GraduationCap, items: institutoItems, module: 'instituto', activeClassName: 'bg-gold/8 text-gold font-medium' },
-  { id: 'cadastros', label: 'Cadastros', icon: ClipboardList, items: cadastroItems, module: 'cadastros', activeClassName: 'bg-primary/8 text-primary font-medium' },
-  { id: 'financeiro', label: 'Financeiro', icon: DollarSign, items: financeiroItems, module: 'financeiro', activeClassName: 'bg-primary/8 text-primary font-medium' },
-  { id: 'almoxarifado', label: 'Almoxarifado', icon: Warehouse, items: almoxarifadoItems, module: 'almoxarifado', activeClassName: 'bg-primary/8 text-primary font-medium' },
+  { id: 'coworking', label: 'Coworking', icon: Building2, items: mainItems, module: 'coworking', activeClassName: 'sidebar-active' },
+  { id: 'instituto', label: 'Instituto', icon: GraduationCap, items: institutoItems, module: 'instituto', activeClassName: 'sidebar-active' },
+  { id: 'cadastros', label: 'Cadastros', icon: ClipboardList, items: cadastroItems, module: 'cadastros', activeClassName: 'sidebar-active' },
+  { id: 'financeiro', label: 'Financeiro', icon: DollarSign, items: financeiroItems, module: 'financeiro', activeClassName: 'sidebar-active' },
+  { id: 'almoxarifado', label: 'Almoxarifado', icon: Warehouse, items: almoxarifadoItems, module: 'almoxarifado', activeClassName: 'sidebar-active' },
 ];
 
 export function AppSidebar() {
@@ -92,11 +92,14 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border px-3 py-4">
+      <SidebarHeader className="border-b border-sidebar-border px-4 py-5">
         <div className="flex items-center gap-2.5">
           <img src={logoIntegra} alt="Integra" className="h-8 w-auto shrink-0" />
           {!collapsed && (
-            <span className="text-lg font-display text-charcoal tracking-tight">Integra</span>
+            <div className="flex flex-col leading-none">
+              <span className="text-base font-display text-foreground tracking-wide">Integra</span>
+              <span className="text-[9px] uppercase tracking-[0.22em] text-primary/80 mt-1">Gestão Premium</span>
+            </div>
           )}
         </div>
       </SidebarHeader>
@@ -126,7 +129,7 @@ export function AppSidebar() {
                               to={item.url}
                               end={item.url === '/gestao'}
                               className="hover:bg-sidebar-accent/60"
-                              activeClassName={section.activeClassName || 'bg-primary/8 text-primary font-medium'}
+                              activeClassName={section.activeClassName || 'sidebar-active'}
                             >
                               <item.icon className="h-4 w-4" />
                               {!collapsed && <span>{item.title}</span>}
@@ -158,7 +161,7 @@ export function AppSidebar() {
                   <SidebarMenu>
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild isActive={isActive('/gestao/usuarios')}>
-                        <NavLink to="/gestao/usuarios" className="hover:bg-sidebar-accent/60" activeClassName="bg-primary/8 text-primary font-medium">
+                        <NavLink to="/gestao/usuarios" className="hover:bg-sidebar-accent/60" activeClassName="sidebar-active">
                           <UserCog className="h-4 w-4" />
                           {!collapsed && <span>Usuários</span>}
                         </NavLink>
@@ -166,7 +169,7 @@ export function AppSidebar() {
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild isActive={isActive('/gestao/equipe')}>
-                        <NavLink to="/gestao/equipe" className="hover:bg-sidebar-accent/60" activeClassName="bg-primary/8 text-primary font-medium">
+                        <NavLink to="/gestao/equipe" className="hover:bg-sidebar-accent/60" activeClassName="sidebar-active">
                           <Users className="h-4 w-4" />
                           {!collapsed && <span>Equipe</span>}
                         </NavLink>

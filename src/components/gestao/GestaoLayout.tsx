@@ -38,15 +38,15 @@ const GestaoLayout = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="gestao-theme min-h-screen flex w-full bg-background text-foreground">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center justify-between border-b border-border/60 bg-card/80 backdrop-blur-sm px-4 md:px-6 shrink-0 sticky top-0 z-10">
+          <header className="h-14 flex items-center justify-between border-b border-border/60 bg-card/40 backdrop-blur-md px-4 md:px-6 shrink-0 sticky top-0 z-10">
             <div className="flex items-center gap-3">
               <SidebarTrigger />
-              <div className="hidden sm:block">
-                <span className="text-sm font-medium text-foreground">Integra</span>
-                <span className="text-sm text-muted-foreground ml-1.5">Gestão</span>
+              <div className="hidden sm:flex items-center gap-2">
+                <span className="text-sm font-display tracking-wide text-foreground">Integra</span>
+                <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-l border-border/50 pl-2 ml-1">Gestão</span>
               </div>
             </div>
             <div className="flex items-center gap-2">
