@@ -92,11 +92,14 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border px-3 py-4">
+      <SidebarHeader className="border-b border-sidebar-border px-4 py-5">
         <div className="flex items-center gap-2.5">
           <img src={logoIntegra} alt="Integra" className="h-8 w-auto shrink-0" />
           {!collapsed && (
-            <span className="text-lg font-display text-charcoal tracking-tight">Integra</span>
+            <div className="flex flex-col leading-none">
+              <span className="text-base font-display text-foreground tracking-wide">Integra</span>
+              <span className="text-[9px] uppercase tracking-[0.22em] text-primary/80 mt-1">Gestão Premium</span>
+            </div>
           )}
         </div>
       </SidebarHeader>
