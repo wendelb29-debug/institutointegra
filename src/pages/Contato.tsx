@@ -23,6 +23,11 @@ const Contato = () => {
 
   return (
     <Layout>
+      <Seo
+        title="Contato — Instituto Integra"
+        description="Fale com o Instituto Integra em Uberlândia-MG. Telefone, WhatsApp e endereço para agendar avaliação neuropsicológica e consultas."
+        path="/contato"
+      />
       <section className="section-padding py-24">
         <div className="max-w-7xl mx-auto">
           <ScrollReveal>

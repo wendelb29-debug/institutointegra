@@ -40,6 +40,11 @@ const benefits = [
 const Coworking = () => {
   return (
     <Layout>
+      <Seo
+        title="Integra Coworking — Locação de Salas em Uberlândia"
+        description="Salas para psicólogos e profissionais de saúde em Uberlândia-MG. Planos por hora, diária ou mensal, com Wi-Fi, recepção e sala de reunião."
+        path="/coworking"
+      />
       {/* Hero */}
       <section className="relative min-h-[60vh] flex items-end">
         <img
