@@ -1,4 +1,5 @@
 import { Layout } from "@/components/Layout";
+import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { Wifi, Coffee, Monitor, Users, Clock, MapPin } from "lucide-react";

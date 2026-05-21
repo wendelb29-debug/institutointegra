@@ -1,4 +1,5 @@
 import { Layout } from "@/components/Layout";
+import { Seo } from "@/components/Seo";
 import { HeroSection } from "@/components/instituto/HeroSection";
 import { PainPointsSection } from "@/components/instituto/PainPointsSection";
 import { AboutSection } from "@/components/instituto/AboutSection";
@@ -13,6 +14,11 @@ import { WhatsAppFloat } from "@/components/instituto/WhatsAppFloat";
 const Instituto = () => {
   return (
     <Layout>
+      <Seo
+        title="Instituto Integra — Clínica de Neuropsicologia"
+        description="Conheça o Instituto Integra: equipe especializada em neuropsicologia, abordagem clínica acolhedora e serviços de avaliação e diagnóstico em Uberlândia-MG."
+        path="/instituto"
+      />
       <HeroSection />
       <PainPointsSection />
       <AboutSection />
