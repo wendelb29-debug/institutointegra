@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/Layout';
+import { Seo } from '@/components/Seo';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -65,6 +66,11 @@ const ReservasPublicas = () => {
 
   return (
     <Layout>
+      <Seo
+        title="Reservas de Salas — Integra Coworking"
+        description="Consulte a disponibilidade e reserve salas do Integra Coworking em Uberlândia-MG. Espaços para atendimento clínico e reuniões."
+        path="/reservas"
+      />
       <section className="pt-32 pb-16 md:pt-40 md:pb-24 section-padding bg-gradient-to-b from-primary/4 to-background">
         <div className="max-w-7xl mx-auto">
           <ScrollReveal>

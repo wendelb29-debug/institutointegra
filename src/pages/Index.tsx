@@ -1,4 +1,5 @@
 import { Layout } from "@/components/Layout";
+import { Seo } from "@/components/Seo";
 import { HeroSection } from "@/components/instituto/HeroSection";
 import { PainPointsSection } from "@/components/instituto/PainPointsSection";
 import { AboutSection } from "@/components/instituto/AboutSection";
@@ -14,6 +15,11 @@ import { HelenaChat } from "@/components/instituto/HelenaChat";
 const Index = () => {
   return (
     <Layout>
+      <Seo
+        title="Instituto Integra — Neuropsicologia em Uberlândia"
+        description="Avaliação neuropsicológica, diagnóstico e atendimento clínico em Uberlândia-MG. Acolhimento, ética e profissionalismo. Agende sua consulta."
+        path="/"
+      />
       <HeroSection />
       <PainPointsSection />
       <AboutSection />
