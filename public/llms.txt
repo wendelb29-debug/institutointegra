@@ -1,0 +1,11 @@
+# Instituto Integra
+
+> Clínica de neuropsicologia em Uberlândia-MG, com avaliação, diagnóstico e atendimento clínico especializado, além de locação de salas para profissionais de saúde (Integra Coworking).
+
+## Pages
+
+- [Início](/): Visão geral do Instituto Integra, serviços de neuropsicologia e contato.
+- [Instituto](/instituto): Sobre o Instituto, equipe, abordagem clínica e serviços de neuropsicologia.
+- [Coworking](/coworking): Locação de salas para psicólogos e profissionais de saúde em Uberlândia.
+- [Reservas](/reservas): Consulta de disponibilidade e reserva de salas do coworking.
+- [Contato](/contato): Endereço, telefone e WhatsApp para agendamento de consultas.
