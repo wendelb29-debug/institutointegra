@@ -106,8 +106,20 @@ export function AppSidebar() {
 
       <SidebarContent>
         {sections.map(section => {
-          const visible = isAdmin || canViewModule(section.module);
+          // Special case: Coworking section is partially visible to everyone
+          const isCoworking = section.id === 'coworking';
+          const visible = isAdmin || canViewModule(section.module) || isCoworking;
           if (!visible) return null;
+
+          const filteredItems = isAdmin ? section.items : section.items.filter(item => {
+            if (isCoworking) {
+              // Only show basic items to non-admins in Coworking section
+              return ['Dashboard', 'Salas', 'Reservas'].includes(item.title);
+            }
+            return canViewModule(section.module);
+          });
+
+          if (filteredItems.length === 0) return null;
 
           return (
             <Collapsible key={section.id} defaultOpen={section.items.some(i => isActive(i.url))}>
