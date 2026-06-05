@@ -122,7 +122,7 @@ export function AppSidebar() {
           if (filteredItems.length === 0) return null;
 
           return (
-            <Collapsible key={section.id} defaultOpen={section.items.some(i => isActive(i.url))}>
+            <Collapsible key={section.id} defaultOpen={filteredItems.some(i => isActive(i.url))}>
               <SidebarGroup>
                 <CollapsibleTrigger className="flex w-full items-center justify-between px-2 py-1.5 text-xs uppercase tracking-wider text-muted-foreground/60 font-semibold hover:text-muted-foreground transition-colors cursor-pointer">
                   <span className="flex items-center gap-2">
@@ -134,7 +134,7 @@ export function AppSidebar() {
                 <CollapsibleContent>
                   <SidebarGroupContent>
                     <SidebarMenu>
-                      {section.items.map(item => (
+                      {filteredItems.map(item => (
                         <SidebarMenuItem key={item.title}>
                           <SidebarMenuButton asChild isActive={isActive(item.url)}>
                             <NavLink
