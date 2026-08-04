@@ -2269,6 +2269,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_contract_by_token: { Args: { _token: string }; Returns: Json }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -2278,6 +2279,20 @@ export type Database = {
         Returns: boolean
       }
       increment_unread: { Args: { p_phone: string }; Returns: undefined }
+      sign_contract: {
+        Args: {
+          _geolocation?: string
+          _ip_address?: string
+          _photo_url?: string
+          _signature_data?: string
+          _signer_cpf?: string
+          _signer_email?: string
+          _signer_name: string
+          _token: string
+          _user_agent?: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "socio" | "cliente"
