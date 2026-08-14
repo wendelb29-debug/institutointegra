@@ -67,11 +67,7 @@ const Salas = () => {
       return;
     }
 
-    const { data: urlData } = supabase.storage
-      .from('contract-assets')
-      .getPublicUrl(`rooms/${fileName}`);
-
-    setForm({ ...form, image_url: urlData.publicUrl });
+    setForm({ ...form, image_url: `rooms/${fileName}` });
     setUploading(false);
     toast({ title: 'Imagem enviada!' });
   };

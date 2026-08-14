@@ -132,11 +132,8 @@ const AssinarContrato = () => {
       if (photoData) {
         const blob = await fetch(photoData).then(r => r.blob());
         const path = `photos/${contract.id}_${Date.now()}.jpg`;
-        const { error } = await supabase.storage.from('contract-assets').upload(path, blob);
-        if (!error) {
-          const { data: urlData } = supabase.storage.from('contract-assets').getPublicUrl(path);
-          photoUrl = urlData.publicUrl;
-        }
+        const { error } = await supabase.storage.from('contract-signatures').upload(path, blob);
+        if (!error) photoUrl = path;
       }
 
       // Get signature data
