@@ -104,13 +104,14 @@ serve(async (req) => {
           throw new Error("Erro ao salvar imagem");
         }
 
-        const { data: { publicUrl } } = supabase.storage
+        const { data: signed } = await supabase.storage
           .from("helena-chat-files")
-          .getPublicUrl(fileName);
+          .createSignedUrl(fileName, 60 * 60 * 24 * 7);
 
         return new Response(JSON.stringify({
           result: textContent,
-          generatedImageUrl: publicUrl,
+          generatedImageUrl: signed?.signedUrl ?? null,
+
         }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
