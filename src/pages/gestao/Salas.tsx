@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Pencil, Upload, Image as ImageIcon, Users } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
+import { RoomImage } from '@/components/RoomImage';
 
 type Room = Database['public']['Tables']['rooms']['Row'];
 type RoomInsert = Database['public']['Tables']['rooms']['Insert'];
@@ -66,11 +67,7 @@ const Salas = () => {
       return;
     }
 
-    const { data: urlData } = supabase.storage
-      .from('contract-assets')
-      .getPublicUrl(`rooms/${fileName}`);
-
-    setForm({ ...form, image_url: urlData.publicUrl });
+    setForm({ ...form, image_url: `rooms/${fileName}` });
     setUploading(false);
     toast({ title: 'Imagem enviada!' });
   };
@@ -136,7 +133,7 @@ const Salas = () => {
                 <Label>Foto da Sala</Label>
                 <div className="flex items-center gap-3">
                   {form.image_url ? (
-                    <img src={form.image_url} alt="Preview" className="h-20 w-28 object-cover rounded-lg border border-border/40" />
+                    <RoomImage src={form.image_url} alt="Preview" className="h-20 w-28 object-cover rounded-lg border border-border/40" />
                   ) : (
                     <div className="h-20 w-28 rounded-lg border border-dashed border-border/60 flex items-center justify-center bg-muted/30">
                       <ImageIcon className="h-6 w-6 text-muted-foreground/50" />
@@ -207,7 +204,7 @@ const Salas = () => {
             {/* Room image */}
             {room.image_url ? (
               <div className="h-40 overflow-hidden">
-                <img src={room.image_url} alt={room.name} className="w-full h-full object-cover" />
+                <RoomImage src={room.image_url} alt={room.name} className="w-full h-full object-cover" />
               </div>
             ) : (
               <div className="h-40 bg-gradient-to-br from-primary/8 via-primary/4 to-accent/6 flex items-center justify-center">

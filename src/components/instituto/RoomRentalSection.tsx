@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Building2, Clock, CheckCircle2, ArrowRight, Users } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { RoomImage } from '@/components/RoomImage';
 
 type Room = Database["public"]["Tables"]["rooms"]["Row"];
 
@@ -68,7 +69,7 @@ export function RoomRentalSection() {
                         <Card className="group border-border/40 hover:shadow-lg transition-all duration-300 overflow-hidden">
                           {room.image_url ? (
                             <div className="h-36 overflow-hidden">
-                              <img src={room.image_url} alt={room.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                              <RoomImage src={room.image_url} alt={room.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                             </div>
                           ) : (
                             <div className="h-36 bg-gradient-to-br from-primary/8 to-gold/6 flex items-center justify-center">
