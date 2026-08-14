@@ -14,6 +14,10 @@ const GestaoLayout = () => {
 
   useEffect(() => {
     if (!user) return;
+    
+    // Aplicar dark mode ao entrar na gestão
+    document.documentElement.classList.add('dark');
+    
     supabase
       .from('profiles')
       .select('full_name')
@@ -22,6 +26,11 @@ const GestaoLayout = () => {
       .then(({ data }) => {
         if (data?.full_name) setProfileName(data.full_name);
       });
+
+    return () => {
+      // Opcional: remover ao sair da gestão
+      // document.documentElement.classList.remove('dark');
+    };
   }, [user]);
 
   if (loading) {
