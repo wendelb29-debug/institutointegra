@@ -1,15 +1,22 @@
 import { Image, FileText, Play, Download } from 'lucide-react';
 import { ChatMessage } from './types';
+import { useSignedUrl } from '@/lib/storage';
 
 interface MediaMessageProps {
   message: ChatMessage;
 }
 
 export const MediaMessage = ({ message }: MediaMessageProps) => {
+  const resolvedUrl = useSignedUrl('whatsapp-media', message.mediaUrl);
+
   if (!message.mediaType || !message.mediaUrl) return null;
+  if (!resolvedUrl) return null;
+
+  const mediaUrl = resolvedUrl;
 
   switch (message.mediaType) {
     case 'image':
+
       return (
         <div className="rounded-lg overflow-hidden mb-1">
           <img
