@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Pencil, Upload, FileText, Trash2, ExternalLink } from 'lucide-react';
+import { getSignedUrl } from '@/lib/storage';
+
 
 const statusColors: Record<string, string> = {
   pendente: 'bg-accent/10 text-accent border-accent/20',
