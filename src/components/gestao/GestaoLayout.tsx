@@ -4,12 +4,24 @@ import { useAuth } from '@/contexts/AuthContext';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import { FloatingChatAssistant } from './FloatingChatAssistant';
-import { Bell, User } from 'lucide-react';
+import { Bell, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 
 const GestaoLayout = () => {
   const { user, loading } = useAuth();
+  const [profileName, setProfileName] = useState<string>('');
+  const [isDarkMode, setIsDarkMode] = useState(true);
+
+  const toggleDarkMode = () => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    if (newMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
   const [profileName, setProfileName] = useState<string>('');
 
   useEffect(() => {
@@ -59,6 +71,18 @@ const GestaoLayout = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={toggleDarkMode}
+                className="h-9 w-9 rounded-lg"
+              >
+                {isDarkMode ? (
+                  <Sun className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <Moon className="h-4 w-4 text-muted-foreground" />
+                )}
+              </Button>
               <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg">
                 <Bell className="h-4 w-4 text-muted-foreground" />
               </Button>
