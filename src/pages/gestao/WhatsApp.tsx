@@ -277,8 +277,15 @@ const WhatsApp = () => {
       const { error: uploadErr } = await supabase.storage.from('whatsapp-media').upload(path, file);
       if (uploadErr) throw uploadErr;
 
-      const { data: urlData } = supabase.storage.from('whatsapp-media').getPublicUrl(path);
-      const publicUrl = urlData.publicUrl;
+      // Private bucket: temporary signed URL so Z-API can fetch the file
+      const { data: signed } = await supabase.storage
+        .from('whatsapp-media')
+        .createSignedUrl(path, 60 * 60 * 24 * 7);
+      const fetchUrl = signed?.signedUrl;
+      if (!fetchUrl) throw new Error('Não foi possível gerar o link do arquivo');
+
+      // Stored reference (resolved to a signed URL on display)
+      const storedUrl = supabase.storage.from('whatsapp-media').getPublicUrl(path).data.publicUrl;
 
       // 2. Send via Z-API proxy
       const cleanPhone = selected.phone.replace(/\D/g, '');
@@ -286,7 +293,7 @@ const WhatsApp = () => {
       const res = await fetch(getProxyUrl(), {
         method: 'POST', headers,
         body: JSON.stringify({
-          action: 'send-media', phone: cleanPhone, fileUrl: publicUrl, mimeType: file.type, message: file.name,
+          action: 'send-media', phone: cleanPhone, fileUrl: fetchUrl, mimeType: file.type, message: file.name,
         }),
       });
       const data = await res.json();
@@ -295,12 +302,13 @@ const WhatsApp = () => {
       // 3. Save to DB
       await supabase.from('whatsapp_messages').insert({
         conversation_phone: selected.phone, direction: 'sent', body: file.name, status: 'sent', from_me: true,
-        user_id: user?.id || null, media_type: type, media_url: publicUrl, media_name: file.name, media_mime_type: file.type,
+        user_id: user?.id || null, media_type: type, media_url: storedUrl, media_name: file.name, media_mime_type: file.type,
       } as any);
 
       // Replace temp message with final
-      setMessages(prev => prev.map(m => m.id === tempId ? { ...m, mediaUrl: publicUrl } : m));
+      setMessages(prev => prev.map(m => m.id === tempId ? { ...m, mediaUrl: storedUrl } : m));
       URL.revokeObjectURL(localUrl);
+
 
       await supabase.from('whatsapp_conversations').upsert({
         phone: selected.phone, name: selected.name,
