@@ -54,12 +54,25 @@ const Salas = () => {
     if (!file) return;
 
     setUploading(true);
+    const { data: auth } = await supabase.auth.getUser();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('tenant_id')
+      .eq('user_id', auth.user?.id ?? '')
+      .maybeSingle();
+
+    if (!profile?.tenant_id) {
+      toast({ title: 'Erro ao enviar imagem', description: 'Unidade não identificada.', variant: 'destructive' });
+      setUploading(false);
+      return;
+    }
+
     const ext = file.name.split('.').pop();
-    const fileName = `room-${Date.now()}.${ext}`;
+    const path = `rooms/${profile.tenant_id}/room-${Date.now()}.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from('contract-assets')
-      .upload(`rooms/${fileName}`, file, { upsert: true });
+      .upload(path, file, { upsert: true });
 
     if (uploadError) {
       toast({ title: 'Erro ao enviar imagem', description: uploadError.message, variant: 'destructive' });
@@ -67,10 +80,11 @@ const Salas = () => {
       return;
     }
 
-    setForm({ ...form, image_url: `rooms/${fileName}` });
+    setForm({ ...form, image_url: path });
     setUploading(false);
     toast({ title: 'Imagem enviada!' });
   };
+
 
   const handleSave = async () => {
     if (!form.name) return;
