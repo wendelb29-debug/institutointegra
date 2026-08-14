@@ -22,7 +22,6 @@ const GestaoLayout = () => {
       document.documentElement.classList.remove('dark');
     }
   };
-  const [profileName, setProfileName] = useState<string>('');
 
   useEffect(() => {
     if (!user) return;
