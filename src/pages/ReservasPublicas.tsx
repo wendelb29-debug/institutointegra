@@ -12,6 +12,7 @@ import { ScrollReveal } from '@/components/ScrollReveal';
 import { Users, Clock, Calendar, MapPin, ChevronRight, Search, Image as ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
+import { RoomImage } from '@/components/RoomImage';
 
 type Room = Database['public']['Tables']['rooms']['Row'];
 
@@ -120,7 +121,7 @@ const ReservasPublicas = () => {
                     {/* Room image */}
                     {room.image_url ? (
                       <div className="h-48 overflow-hidden">
-                        <img src={room.image_url} alt={room.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <RoomImage src={room.image_url} alt={room.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     ) : (
                       <div className="h-48 bg-gradient-to-br from-primary/8 via-primary/4 to-accent/6 flex items-center justify-center relative overflow-hidden">
