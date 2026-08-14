@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Pencil, Upload, FileText, Trash2, ExternalLink } from 'lucide-react';
+import { getSignedUrl } from '@/lib/storage';
+
 
 const statusColors: Record<string, string> = {
   pendente: 'bg-accent/10 text-accent border-accent/20',
@@ -311,16 +313,20 @@ const Manutencao = () => {
                   <p className="text-xs font-medium text-muted-foreground">Anexos:</p>
                   {attachments[item.id].map((att: any) => (
                     <div key={att.id} className="flex items-center justify-between gap-2 text-xs bg-muted/30 rounded px-2 py-1.5">
-                      <a
-                        href={att.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 text-primary hover:underline truncate flex-1 min-w-0"
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const url = await getSignedUrl('maintenance-files', att.file_url);
+                          if (url) window.open(url, '_blank', 'noopener,noreferrer');
+                          else toast({ title: 'Não foi possível abrir o arquivo', variant: 'destructive' });
+                        }}
+                        className="flex items-center gap-1.5 text-primary hover:underline truncate flex-1 min-w-0 text-left"
                       >
                         <FileText className="h-3 w-3 flex-shrink-0" />
                         <span className="truncate">{att.file_name}</span>
                         <ExternalLink className="h-2.5 w-2.5 flex-shrink-0" />
-                      </a>
+                      </button>
+
                       <Button
                         variant="ghost"
                         size="icon"

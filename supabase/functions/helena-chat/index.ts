@@ -58,8 +58,9 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
 
     const { messages, currentPage, action, generateImage } = await req.json();
 
@@ -103,13 +104,14 @@ serve(async (req) => {
           throw new Error("Erro ao salvar imagem");
         }
 
-        const { data: { publicUrl } } = supabase.storage
+        const { data: signed } = await supabase.storage
           .from("helena-chat-files")
-          .getPublicUrl(fileName);
+          .createSignedUrl(fileName, 60 * 60 * 24 * 7);
 
         return new Response(JSON.stringify({
           result: textContent,
-          generatedImageUrl: publicUrl,
+          generatedImageUrl: signed?.signedUrl ?? null,
+
         }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });

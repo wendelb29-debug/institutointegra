@@ -90,19 +90,15 @@ export function HelenaChat() {
   }, [location]);
 
   const uploadFile = async (file: File): Promise<string | null> => {
-    const fileName = `uploads/${crypto.randomUUID()}-${file.name}`;
-    const { error } = await supabase.storage
-      .from('helena-chat-files')
-      .upload(fileName, file);
-    if (error) {
-      console.error('Upload error:', error);
+    // Files stay in the browser: no anonymous uploads to storage.
+    try {
+      return URL.createObjectURL(file);
+    } catch (error) {
+      console.error('File preview error:', error);
       return null;
     }
-    const { data: { publicUrl } } = supabase.storage
-      .from('helena-chat-files')
-      .getPublicUrl(fileName);
-    return publicUrl;
   };
+
 
   const sendMessage = async (text: string, action?: string, imageDataUrl?: string, fileUrl?: string, fileName?: string, audioUrl?: string) => {
     if ((!text.trim() && !imageDataUrl && !fileUrl && !audioUrl) || loading) return;
