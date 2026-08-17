@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   DollarSign, TrendingDown, AlertTriangle, CalendarDays,
   TrendingUp, Percent, ArrowUpRight, Plus,
@@ -78,7 +79,12 @@ const MetricCard = ({ label, value, icon: Icon, color = GOLD, hint, delay = 0 }:
 );
 
 const SkeletonCard = () => (
-  <div className="premium-card rounded-xl p-5 h-[120px] shimmer" />
+  <div className="premium-card rounded-xl p-5 h-[120px] overflow-hidden">
+    <div className="space-y-3">
+      <Skeleton className="h-3 w-20 bg-gold/10" />
+      <Skeleton className="h-8 w-32 bg-gold/10" />
+    </div>
+  </div>
 );
 
 const Dashboard = () => {
@@ -94,84 +100,90 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchStats = async () => {
-      const [roomsRes, transRes, reservRes, partnersRes, contractsRes] = await Promise.all([
-        supabase.from('rooms').select('id, name, status'),
-        supabase.from('financial_transactions').select('amount, type, is_paid, due_date, room_id, partner_id, created_at'),
-        supabase.from('reservations').select('id, date, status').gte('date', new Date().toISOString().split('T')[0]),
-        supabase.from('partners').select('id, name'),
-        supabase.from('contracts').select('id, monthly_value, contract_type, status').eq('status', 'ativo'),
-      ]);
+      setLoading(true);
+      try {
+        const [roomsRes, transRes, reservRes, partnersRes, contractsRes] = await Promise.all([
+          supabase.from('rooms').select('id, name, status'),
+          supabase.from('financial_transactions').select('amount, type, is_paid, due_date, room_id, partner_id, created_at'),
+          supabase.from('reservations').select('id, date, status').gte('date', new Date().toISOString().split('T')[0]),
+          supabase.from('partners').select('id, name'),
+          supabase.from('contracts').select('id, monthly_value, contract_type, status').eq('status', 'ativo'),
+        ]);
 
-      const rooms = roomsRes.data || [];
-      const trans = transRes.data || [];
-      const reserv = reservRes.data || [];
-      const partners = partnersRes.data || [];
-      const contracts = contractsRes.data || [];
-      const now = new Date();
-      const mStart = startOfMonth(now);
-      const mEnd = endOfMonth(now);
+        const rooms = roomsRes.data || [];
+        const trans = transRes.data || [];
+        const reserv = reservRes.data || [];
+        const partners = partnersRes.data || [];
+        const contracts = contractsRes.data || [];
+        const now = new Date();
+        const mStart = startOfMonth(now);
+        const mEnd = endOfMonth(now);
 
-      const monthTrans = trans.filter(t => {
-        const d = new Date(t.created_at);
-        return d >= mStart && d <= mEnd;
-      });
-      const monthRevenue = monthTrans.filter(t => t.type === 'entrada').reduce((s, t) => s + Number(t.amount), 0);
-      const monthCosts = monthTrans.filter(t => t.type === 'saida').reduce((s, t) => s + Number(t.amount), 0);
-      const overdue = trans.filter(t => !t.is_paid && t.due_date && new Date(t.due_date) < now);
-
-      setStats({
-        monthRevenue, monthCosts,
-        roomsOccupied: rooms.filter(r => r.status === 'ocupada').length,
-        roomsTotal: rooms.length,
-        overdueCount: overdue.length,
-        overdueValue: overdue.reduce((s, t) => s + Number(t.amount), 0),
-        upcomingReservations: reserv.filter(r => r.status !== 'cancelada').length,
-      });
-
-      const roomMap: Record<string, number> = {};
-      trans.filter(t => t.type === 'entrada' && t.room_id).forEach(t => {
-        roomMap[t.room_id!] = (roomMap[t.room_id!] || 0) + Number(t.amount);
-      });
-      const nameMap = Object.fromEntries(rooms.map(r => [r.id, r.name]));
-      setRevenueByRoom(
-        Object.entries(roomMap).map(([id, val]) => ({ name: nameMap[id] || 'Sala', receita: val }))
-          .sort((a, b) => b.receita - a.receita).slice(0, 6)
-      );
-
-      const partnerMap: Record<string, number> = {};
-      trans.filter(t => t.type === 'entrada' && t.partner_id).forEach(t => {
-        partnerMap[t.partner_id!] = (partnerMap[t.partner_id!] || 0) + Number(t.amount);
-      });
-      const partnerNameMap = Object.fromEntries(partners.map(p => [p.id, p.name]));
-      setRevenueByPartner(
-        Object.entries(partnerMap).map(([id, val]) => ({ name: partnerNameMap[id] || 'Sócio', value: val }))
-          .sort((a, b) => b.value - a.value)
-      );
-
-      const typeMap: Record<string, number> = { mensalista: 0, diarista: 0, hora: 0 };
-      contracts.forEach(c => {
-        const type = c.contract_type || 'mensalista';
-        typeMap[type] = (typeMap[type] || 0) + Number(c.monthly_value || 0);
-      });
-      const typeLabels: Record<string, string> = { mensalista: 'Mensalista', diarista: 'Diária', hora: 'Por Hora' };
-      setRevenueByType(
-        Object.entries(typeMap).filter(([, v]) => v > 0).map(([k, v]) => ({ name: typeLabels[k] || k, value: v }))
-      );
-
-      const months = [];
-      for (let i = 5; i >= 0; i--) {
-        const d = subMonths(now, i);
-        const ms = startOfMonth(d), me = endOfMonth(d);
-        const label = format(d, 'MMM', { locale: ptBR });
-        const mt = trans.filter(t => { const cd = new Date(t.created_at); return cd >= ms && cd <= me; });
-        months.push({
-          label: label.charAt(0).toUpperCase() + label.slice(1),
-          entradas: mt.filter(t => t.type === 'entrada').reduce((s, t) => s + Number(t.amount), 0),
-          saidas: mt.filter(t => t.type === 'saida').reduce((s, t) => s + Number(t.amount), 0),
+        const monthTrans = trans.filter(t => {
+          const d = new Date(t.created_at);
+          return d >= mStart && d <= mEnd;
         });
+        const monthRevenue = monthTrans.filter(t => t.type === 'entrada').reduce((s, t) => s + Number(t.amount), 0);
+        const monthCosts = monthTrans.filter(t => t.type === 'saida').reduce((s, t) => s + Number(t.amount), 0);
+        const overdue = trans.filter(t => !t.is_paid && t.due_date && new Date(t.due_date) < now);
+
+        setStats({
+          monthRevenue, monthCosts,
+          roomsOccupied: rooms.filter(r => r.status === 'ocupada').length,
+          roomsTotal: rooms.length,
+          overdueCount: overdue.length,
+          overdueValue: overdue.reduce((s, t) => s + Number(t.amount), 0),
+          upcomingReservations: reserv.filter(r => r.status !== 'cancelada').length,
+        });
+
+        const roomMap: Record<string, number> = {};
+        trans.filter(t => t.type === 'entrada' && t.room_id).forEach(t => {
+          roomMap[t.room_id!] = (roomMap[t.room_id!] || 0) + Number(t.amount);
+        });
+        const nameMap = Object.fromEntries(rooms.map(r => [r.id, r.name]));
+        setRevenueByRoom(
+          Object.entries(roomMap).map(([id, val]) => ({ name: nameMap[id] || 'Sala', receita: val }))
+            .sort((a, b) => b.receita - a.receita).slice(0, 6)
+        );
+
+        const partnerMap: Record<string, number> = {};
+        trans.filter(t => t.type === 'entrada' && t.partner_id).forEach(t => {
+          partnerMap[t.partner_id!] = (partnerMap[t.partner_id!] || 0) + Number(t.amount);
+        });
+        const partnerNameMap = Object.fromEntries(partners.map(p => [p.id, p.name]));
+        setRevenueByPartner(
+          Object.entries(partnerMap).map(([id, val]) => ({ name: partnerNameMap[id] || 'Sócio', value: val }))
+            .sort((a, b) => b.value - a.value)
+        );
+
+        const typeMap: Record<string, number> = { mensalista: 0, diarista: 0, hora: 0 };
+        contracts.forEach(c => {
+          const type = c.contract_type || 'mensalista';
+          typeMap[type] = (typeMap[type] || 0) + Number(c.monthly_value || 0);
+        });
+        const typeLabels: Record<string, string> = { mensalista: 'Mensalista', diarista: 'Diária', hora: 'Por Hora' };
+        setRevenueByType(
+          Object.entries(typeMap).filter(([, v]) => v > 0).map(([k, v]) => ({ name: typeLabels[k] || k, value: v }))
+        );
+
+        const months = [];
+        for (let i = 5; i >= 0; i--) {
+          const d = subMonths(now, i);
+          const ms = startOfMonth(d), me = endOfMonth(d);
+          const label = format(d, 'MMM', { locale: ptBR });
+          const mt = trans.filter(t => { const cd = new Date(t.created_at); return cd >= ms && cd <= me; });
+          months.push({
+            label: label.charAt(0).toUpperCase() + label.slice(1),
+            entradas: mt.filter(t => t.type === 'entrada').reduce((s, t) => s + Number(t.amount), 0),
+            saidas: mt.filter(t => t.type === 'saida').reduce((s, t) => s + Number(t.amount), 0),
+          });
+        }
+        setMonthlyChart(months);
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+      } finally {
+        setLoading(false);
       }
-      setMonthlyChart(months);
-      setLoading(false);
     };
     fetchStats();
   }, []);
@@ -195,10 +207,12 @@ const Dashboard = () => {
             Visão executiva do Integra Coworking
           </p>
         </div>
-        <button className="hidden md:inline-flex items-center gap-2 text-xs font-medium text-foreground/80 hover:text-primary transition-colors px-3 py-2 rounded-lg border border-border/60 hover:border-primary/40">
-          Este mês
-          <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button className="hidden md:inline-flex items-center gap-2 text-xs font-medium text-foreground/80 hover:text-primary transition-colors px-3 py-2 rounded-lg border border-border/60 hover:border-primary/40">
+            Este mês
+            <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
+          </button>
+        </div>
       </div>
 
       {/* Top metrics */}

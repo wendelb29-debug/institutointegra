@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -24,9 +25,16 @@ const Financeiro = () => {
   const [periodFilter, setPeriodFilter] = useState('month');
   const { toast } = useToast();
 
+  const [loading, setLoading] = useState(true);
+
   const fetch_ = async () => {
-    const { data } = await supabase.from('financial_transactions').select('*').order('created_at', { ascending: false });
-    setTransactions(data || []);
+    setLoading(true);
+    try {
+      const { data } = await supabase.from('financial_transactions').select('*').order('created_at', { ascending: false });
+      setTransactions(data || []);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetch_(); }, []);
@@ -89,6 +97,20 @@ const Financeiro = () => {
 
   const fmtCurrency = (v: number) => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
+  const SummaryCard = ({ label, value, icon: Icon, color, isCount }: { label: string; value: number; icon: any; color: string; isCount?: boolean }) => (
+    <Card className="border-border/60 shadow-sm overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
+        <Icon className={`h-4 w-4 ${color}`} />
+      </CardHeader>
+      <CardContent>
+        <p className={`text-xl font-semibold tabular-nums ${color}`}>
+          {isCount ? value : fmtCurrency(value)}
+        </p>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -148,38 +170,21 @@ const Financeiro = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-border/60 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Entradas</CardTitle>
-            <TrendingUp className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent><p className="text-xl font-semibold text-primary tabular-nums">{fmtCurrency(totalIn)}</p></CardContent>
-        </Card>
-        <Card className="border-border/60 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Saídas</CardTitle>
-            <TrendingDown className="h-4 w-4 text-destructive" />
-          </CardHeader>
-          <CardContent><p className="text-xl font-semibold text-destructive tabular-nums">{fmtCurrency(totalOut)}</p></CardContent>
-        </Card>
-        <Card className="border-border/60 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Lucro Líquido</CardTitle>
-            <DollarSign className="h-4 w-4 text-foreground" />
-          </CardHeader>
-          <CardContent>
-            <p className={`text-xl font-semibold tabular-nums ${profit >= 0 ? 'text-primary' : 'text-destructive'}`}>
-              {fmtCurrency(profit)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Atrasos</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-accent" />
-          </CardHeader>
-          <CardContent><p className="text-xl font-semibold tabular-nums">{overdue}</p></CardContent>
-        </Card>
+        {loading ? (
+          Array(4).fill(0).map((_, i) => (
+            <Card key={i} className="premium-card p-5 h-[100px] flex flex-col justify-between">
+              <Skeleton className="h-3 w-20 bg-gold/10" />
+              <Skeleton className="h-6 w-32 bg-gold/10" />
+            </Card>
+          ))
+        ) : (
+          <>
+            <SummaryCard label="Entradas" value={totalIn} icon={TrendingUp} color="text-primary" />
+            <SummaryCard label="Saídas" value={totalOut} icon={TrendingDown} color="text-destructive" />
+            <SummaryCard label="Lucro Líquido" value={profit} icon={DollarSign} color={profit >= 0 ? 'text-primary' : 'text-destructive'} />
+            <SummaryCard label="Atrasos" value={overdue} isCount icon={AlertTriangle} color="text-accent" />
+          </>
+        )}
       </div>
 
       {/* Revenue vs Costs Chart */}
@@ -212,29 +217,36 @@ const Financeiro = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredTransactions.map(t => (
-              <TableRow key={t.id}>
-                <TableCell className="font-medium">{t.description}</TableCell>
-                <TableCell><Badge variant="outline" className={t.type === 'entrada' ? 'text-primary' : 'text-destructive'}>{t.type === 'entrada' ? 'Entrada' : 'Saída'}</Badge></TableCell>
-                <TableCell className="tabular-nums">{fmtCurrency(Number(t.amount))}</TableCell>
-                <TableCell className="text-muted-foreground">{t.category || '—'}</TableCell>
-                <TableCell>{t.due_date ? new Date(t.due_date).toLocaleDateString('pt-BR') : '—'}</TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={t.is_paid ? 'text-primary' : (!t.is_paid && t.due_date && new Date(t.due_date) < new Date()) ? 'text-destructive' : 'text-accent'}>
-                    {t.is_paid ? 'Pago' : (!t.is_paid && t.due_date && new Date(t.due_date) < new Date()) ? 'Atrasado' : 'Pendente'}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {!t.is_paid && (
-                    <Button variant="ghost" size="sm" onClick={() => markPaid(t.id)} className="text-xs">
-                      Marcar Pago
-                    </Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-            {filteredTransactions.length === 0 && (
+            {loading ? (
+              Array(5).fill(0).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell colSpan={7}><Skeleton className="h-6 w-full bg-gold/5" /></TableCell>
+                </TableRow>
+              ))
+            ) : filteredTransactions.length === 0 ? (
               <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhuma transação no período.</TableCell></TableRow>
+            ) : (
+              filteredTransactions.map(t => (
+                <TableRow key={t.id}>
+                  <TableCell className="font-medium">{t.description}</TableCell>
+                  <TableCell><Badge variant="outline" className={t.type === 'entrada' ? 'text-primary' : 'text-destructive'}>{t.type === 'entrada' ? 'Entrada' : 'Saída'}</Badge></TableCell>
+                  <TableCell className="tabular-nums">{fmtCurrency(Number(t.amount))}</TableCell>
+                  <TableCell className="text-muted-foreground">{t.category || '—'}</TableCell>
+                  <TableCell>{t.due_date ? new Date(t.due_date).toLocaleDateString('pt-BR') : '—'}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={t.is_paid ? 'text-primary' : (!t.is_paid && t.due_date && new Date(t.due_date) < new Date()) ? 'text-destructive' : 'text-accent'}>
+                      {t.is_paid ? 'Pago' : (!t.is_paid && t.due_date && new Date(t.due_date) < new Date()) ? 'Atrasado' : 'Pendente'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {!t.is_paid && (
+                      <Button variant="ghost" size="sm" onClick={() => markPaid(t.id)} className="text-xs">
+                        Marcar Pago
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>

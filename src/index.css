@@ -191,13 +191,16 @@
 }
 
 .gestao-theme .premium-card {
-  background: hsl(var(--card));
-  border: 1px solid hsl(0 0% 100% / 0.06);
-  transition: all 0.2s ease;
+  background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card) / 0.9) 100%);
+  border: 1px solid hsl(0 0% 100% / 0.05);
+  box-shadow: 0 4px 12px hsl(0 0% 0% / 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(8px);
 }
 .gestao-theme .premium-card:hover {
-  border-color: hsl(38 43% 61% / 0.25);
-  box-shadow: 0 0 24px hsl(38 43% 61% / 0.08);
+  border-color: hsl(38 43% 61% / 0.3);
+  box-shadow: 0 8px 32px hsl(38 43% 61% / 0.12);
+  transform: translateY(-2px);
 }
 
 .gestao-theme .sidebar-active {
