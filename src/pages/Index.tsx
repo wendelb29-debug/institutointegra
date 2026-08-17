@@ -10,7 +10,7 @@ import { TestimonialsSection } from "@/components/instituto/TestimonialsSection"
 import { CtaSection } from "@/components/instituto/CtaSection";
 import { RoomRentalSection } from "@/components/instituto/RoomRentalSection";
 import { LeadCaptureSection } from "@/components/instituto/LeadCaptureSection";
-import { HelenaChat } from "@/components/instituto/HelenaChat";
+
 
 const Index = () => {
   return (
@@ -30,7 +30,7 @@ const Index = () => {
       <CtaSection />
       <RoomRentalSection />
       <LeadCaptureSection />
-      <HelenaChat />
+      
     </Layout>
   );
 };
