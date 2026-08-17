@@ -58,7 +58,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <TenantProvider>
+          <ThemeProvider>
+            <TenantProvider>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/coworking" element={<Coworking />} />
@@ -103,7 +104,8 @@ const App = () => (
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
-          </TenantProvider>
+            </TenantProvider>
+          </ThemeProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

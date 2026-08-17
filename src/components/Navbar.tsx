@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, LogIn } from "lucide-react";
+import { Menu, X, LogIn, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/contexts/ThemeContext";
 import logoIntegra from "@/assets/logo-integra.png";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
 
   const links = [
     { to: "/", label: "Home" },
@@ -41,6 +43,20 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={toggleTheme}
+            className="h-9 w-9 rounded-lg"
+          >
+            {theme === 'dark' ? (
+              <Sun className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <Moon className="h-4 w-4 text-muted-foreground" />
+            )}
+          </Button>
+
           <Link to="/auth">
             <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90">
               <LogIn className="h-3.5 w-3.5" />
