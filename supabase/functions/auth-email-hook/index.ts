@@ -16,9 +16,9 @@ const corsHeaders = {
 
 // Configuration
 const SITE_NAME = "institutointegra"
-const SENDER_DOMAIN = "notify.zevvatickets.com"
-const ROOT_DOMAIN = "zevvatickets.com"
-const FROM_DOMAIN = "zevvatickets.com"
+const SENDER_DOMAIN = "notify.institutointegra.site"
+const ROOT_DOMAIN = "institutointegra.site"
+const FROM_DOMAIN = "institutointegra.site"
 const SITE_URL = `https://${ROOT_DOMAIN}`
 
 // Template mapping for preview mode
