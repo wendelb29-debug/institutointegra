@@ -79,7 +79,12 @@ const MetricCard = ({ label, value, icon: Icon, color = GOLD, hint, delay = 0 }:
 );
 
 const SkeletonCard = () => (
-  <div className="premium-card rounded-xl p-5 h-[120px] shimmer" />
+  <div className="premium-card rounded-xl p-5 h-[120px] overflow-hidden">
+    <div className="space-y-3">
+      <Skeleton className="h-3 w-20 bg-gold/10" />
+      <Skeleton className="h-8 w-32 bg-gold/10" />
+    </div>
+  </div>
 );
 
 const Dashboard = () => {
