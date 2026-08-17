@@ -9,7 +9,7 @@ import { ProfessionalsSection } from "@/components/instituto/ProfessionalsSectio
 import { TestimonialsSection } from "@/components/instituto/TestimonialsSection";
 import { CtaSection } from "@/components/instituto/CtaSection";
 import { LeadCaptureSection } from "@/components/instituto/LeadCaptureSection";
-import { WhatsAppFloat } from "@/components/instituto/WhatsAppFloat";
+
 
 const Instituto = () => {
   return (
@@ -28,7 +28,7 @@ const Instituto = () => {
       <TestimonialsSection />
       <CtaSection />
       <LeadCaptureSection />
-      <WhatsAppFloat />
+      
     </Layout>
   );
 };
