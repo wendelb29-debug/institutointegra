@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useLocation } from 'react-router-dom';
-import { X, Send, Loader2, Paperclip, Mic, MicOff, ImagePlus, Download, StopCircle } from 'lucide-react';
+import { X, Send, Loader2, Paperclip, Mic, MicOff, ImagePlus, Download, StopCircle, MessageSquare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import helenaAvatar from '@/assets/helena-avatar.png';
 import { toast } from 'sonner';
@@ -352,18 +352,14 @@ export function HelenaChat() {
       {!isOpen && (
         <button onClick={() => setIsOpen(true)}
           className="fixed bottom-6 right-6 z-50 group animate-in fade-in slide-in-from-bottom-4 duration-500"
-          aria-label="Falar com Helena">
+          aria-label="Falar com suporte">
           <div className="relative">
-            <div className="h-16 w-16 rounded-full overflow-hidden border-[3px] border-primary shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-110">
-              <img src={helenaAvatar} alt="Helena - Assistente Virtual" className="w-full h-full object-cover" width={64} height={64} />
+            <div className="h-16 w-16 rounded-full overflow-hidden border border-border shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-110 bg-card flex items-center justify-center">
+              <MessageSquare className="h-7 w-7 text-primary" />
             </div>
-            <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-              <span className="relative inline-flex rounded-full h-4 w-4 bg-primary" />
-            </span>
           </div>
           <div className="absolute bottom-full right-0 mb-2 whitespace-nowrap bg-card text-foreground text-xs font-medium px-3 py-1.5 rounded-full shadow-lg border border-border opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            Fale com a Helena 💬
+            Suporte Integra 💬
           </div>
         </button>
       )}
