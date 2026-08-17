@@ -170,38 +170,21 @@ const Financeiro = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-border/60 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Entradas</CardTitle>
-            <TrendingUp className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent><p className="text-xl font-semibold text-primary tabular-nums">{fmtCurrency(totalIn)}</p></CardContent>
-        </Card>
-        <Card className="border-border/60 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Saídas</CardTitle>
-            <TrendingDown className="h-4 w-4 text-destructive" />
-          </CardHeader>
-          <CardContent><p className="text-xl font-semibold text-destructive tabular-nums">{fmtCurrency(totalOut)}</p></CardContent>
-        </Card>
-        <Card className="border-border/60 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Lucro Líquido</CardTitle>
-            <DollarSign className="h-4 w-4 text-foreground" />
-          </CardHeader>
-          <CardContent>
-            <p className={`text-xl font-semibold tabular-nums ${profit >= 0 ? 'text-primary' : 'text-destructive'}`}>
-              {fmtCurrency(profit)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Atrasos</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-accent" />
-          </CardHeader>
-          <CardContent><p className="text-xl font-semibold tabular-nums">{overdue}</p></CardContent>
-        </Card>
+        {loading ? (
+          Array(4).fill(0).map((_, i) => (
+            <Card key={i} className="premium-card p-5 h-[100px] flex flex-col justify-between">
+              <Skeleton className="h-3 w-20 bg-gold/10" />
+              <Skeleton className="h-6 w-32 bg-gold/10" />
+            </Card>
+          ))
+        ) : (
+          <>
+            <SummaryCard label="Entradas" value={totalIn} icon={TrendingUp} color="text-primary" />
+            <SummaryCard label="Saídas" value={totalOut} icon={TrendingDown} color="text-destructive" />
+            <SummaryCard label="Lucro Líquido" value={profit} icon={DollarSign} color={profit >= 0 ? 'text-primary' : 'text-destructive'} />
+            <SummaryCard label="Atrasos" value={overdue} isCount icon={AlertTriangle} color="text-accent" />
+          </>
+        )}
       </div>
 
       {/* Revenue vs Costs Chart */}
