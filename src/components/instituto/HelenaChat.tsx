@@ -24,7 +24,7 @@ type Message = {
 
 const INITIAL_MESSAGE: Message = {
   role: 'assistant',
-  content: 'Olá 😊 eu sou a **Helena**, assistente do Instituto Integra.\nPosso te ajudar?\nVocê gostaria de **agendar uma consulta** ou **reservar uma sala**?',
+  content: 'Olá 😊 Como podemos ajudar hoje?\nVocê gostaria de **agendar uma consulta** ou **reservar uma sala**?',
 };
 
 const quickOptions = [
@@ -483,7 +483,7 @@ export function HelenaChat() {
               </Button>
             </div>
             <p className="text-[10px] text-muted-foreground text-center mt-2">
-              Helena • Assistente Virtual do Instituto Integra
+              Suporte ao Cliente • Instituto Integra
             </p>
           </div>
         </div>
