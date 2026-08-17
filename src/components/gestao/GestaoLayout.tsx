@@ -92,9 +92,9 @@ const GestaoLayout = () => {
                 className="h-9 w-9 rounded-lg"
               >
                 {isDarkMode ? (
-                  <Sun className="h-4 w-4 text-muted-foreground" />
-                ) : (
                   <Moon className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <Sun className="h-4 w-4 text-muted-foreground" />
                 )}
               </Button>
               <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg">
