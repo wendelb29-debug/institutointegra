@@ -1,0 +1,21 @@
+{
+  "name": "Integra Gestão",
+  "short_name": "Integra",
+  "description": "Sistema de gestão premium para Integra Coworking & Instituto",
+  "start_url": "/gestao",
+  "display": "standalone",
+  "background_color": "#0A0A0F",
+  "theme_color": "#C2A66D",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
