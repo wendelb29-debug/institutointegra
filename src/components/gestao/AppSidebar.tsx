@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
-import logoIntegra from '@/assets/logo_integra.png';
+import logoIntegra from '@/assets/logo-integra.png';
 
 const mainItems = [
   { title: 'Dashboard', url: '/gestao', icon: LayoutDashboard },

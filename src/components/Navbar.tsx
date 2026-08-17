@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import logoIntegra from "@/assets/logo_integra.png";
+import logoIntegra from "@/assets/logo-integra.png";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
