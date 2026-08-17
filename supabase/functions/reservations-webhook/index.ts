@@ -85,11 +85,19 @@ serve(async (req) => {
     // Email Notification logic
     if (type === 'INSERT') {
       try {
-        console.log('Fetching all users for email notification...');
+        console.log('Fetching all users for email notification from auth.users...');
         const { data: users, error: usersError } = await supabase
           .from('profiles')
-          .select('email')
-          .not('email', 'is', null);
+          .select('full_name, user_id')
+          .not('user_id', 'is', null);
+
+        if (usersError) throw usersError;
+
+        // Since email is not in profiles, we fetch from auth.users (via service role client)
+        const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+        if (authError) throw authError;
+
+        const recipientEmails = authUsers.users.map(u => u.email).filter(Boolean);
 
         if (usersError) throw usersError;
 
