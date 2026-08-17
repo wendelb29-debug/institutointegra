@@ -370,8 +370,8 @@ export function HelenaChat() {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-primary-foreground/30">
-                <img src={helenaAvatar} alt="Helena" className="w-full h-full object-cover" width={40} height={40} />
+              <div className="h-10 w-10 rounded-full overflow-hidden border border-primary-foreground/30 bg-primary-foreground/10 flex items-center justify-center">
+                <MessageSquare className="h-5 w-5 text-primary-foreground" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold">Helena</h3>
