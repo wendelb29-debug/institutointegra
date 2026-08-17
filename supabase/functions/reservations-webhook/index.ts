@@ -14,7 +14,7 @@ const GLOBAL_INSTANCE_ID = '3F0A839B3D4A131C158AA248D27FDCD6';
 const GLOBAL_TOKEN = 'A714392518FBCFACC066D258';
 const GLOBAL_CLIENT_TOKEN = 'F2bd5df5779e047e489ca72f794289888S';
 
-const SITE_NAME = "Integra Spaces & Minds"
+const SITE_NAME = "Instituto Integra"
 const FROM_DOMAIN = "institutointegra.site"
 
 serve(async (req) => {

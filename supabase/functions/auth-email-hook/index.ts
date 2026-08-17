@@ -15,7 +15,7 @@ const corsHeaders = {
 }
 
 // Configuration
-const SITE_NAME = "Integra Spaces & Minds"
+const SITE_NAME = "Instituto Integra"
 const SENDER_DOMAIN = "notify.institutointegra.site"
 const ROOT_DOMAIN = "institutointegra.site"
 const FROM_DOMAIN = "institutointegra.site"
