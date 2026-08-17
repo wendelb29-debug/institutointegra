@@ -374,7 +374,7 @@ export function HelenaChat() {
                 <MessageSquare className="h-5 w-5 text-primary-foreground" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold">Helena</h3>
+                <h3 className="text-sm font-semibold">Suporte Integra</h3>
                 <p className="text-xs text-primary-foreground/80 flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-green-400 inline-block" />
                   Online agora
@@ -393,8 +393,8 @@ export function HelenaChat() {
             {messages.map((msg, i) => (
               <div key={i} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                 {msg.role === 'assistant' && (
-                  <div className="h-7 w-7 rounded-full overflow-hidden shrink-0 mt-0.5">
-                    <img src={helenaAvatar} alt="" className="w-full h-full object-cover" width={28} height={28} />
+                  <div className="h-7 w-7 rounded-full overflow-hidden shrink-0 mt-0.5 bg-muted flex items-center justify-center">
+                    <MessageSquare className="h-4 w-4 text-primary" />
                   </div>
                 )}
                 <div className={`rounded-2xl px-4 py-2.5 max-w-[80%] text-sm ${
@@ -422,8 +422,8 @@ export function HelenaChat() {
             {/* Typing indicator */}
             {isTyping && (
               <div className="flex gap-2">
-                <div className="h-7 w-7 rounded-full overflow-hidden shrink-0">
-                  <img src={helenaAvatar} alt="" className="w-full h-full object-cover" width={28} height={28} />
+                <div className="h-7 w-7 rounded-full overflow-hidden shrink-0 bg-muted flex items-center justify-center">
+                  <MessageSquare className="h-4 w-4 text-primary" />
                 </div>
                 <div className="bg-card border border-border shadow-sm rounded-2xl rounded-bl-sm px-4 py-3">
                   <div className="flex gap-1.5">
