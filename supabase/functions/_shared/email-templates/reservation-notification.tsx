@@ -68,7 +68,7 @@ export const ReservationNotificationEmail = ({
         <Hr style={hr} />
         
         <Text style={footer}>
-          Este é um e-mail importante do sistema de gestão Integra Spaces & Minds.
+          Este é um e-mail importante do sistema de gestão Instituto Integra.
         </Text>
       </Container>
     </Body>
