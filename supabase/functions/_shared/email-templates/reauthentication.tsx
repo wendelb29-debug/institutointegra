@@ -8,7 +8,9 @@ import {
   Head,
   Heading,
   Html,
+  Img,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
@@ -16,18 +18,24 @@ interface ReauthenticationEmailProps {
   token: string
 }
 
+const LOGO_URL = "https://institutointegra.lovable.app/__l5e/assets-v1/afafc8be-e750-4075-b440-3674a754d2bb/logo-integra.png";
+
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Your verification code</Preview>
+    <Preview>Seu código de verificação</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm reauthentication</Heading>
-        <Text style={text}>Use the code below to confirm your identity:</Text>
-        <Text style={codeStyle}>{token}</Text>
+        <Section style={logoContainer}>
+          <Img src={LOGO_URL} width="150" height="auto" alt="Integra" style={logo} />
+        </Section>
+        <Heading style={h1}>Confirme sua Identidade</Heading>
+        <Text style={text}>Use o código abaixo para confirmar sua identidade:</Text>
+        <Section style={codeContainer}>
+          <Text style={codeStyle}>{token}</Text>
+        </Section>
         <Text style={footer}>
-          This code will expire shortly. If you didn't request this, you can
-          safely ignore this email.
+          Este código expira em breve. Se você não solicitou isso, pode ignorar este e-mail com segurança.
         </Text>
       </Container>
     </Body>
@@ -36,25 +44,31 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
 
 export default ReauthenticationEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
+const main = { backgroundColor: '#0A0A0F', fontFamily: 'Arial, sans-serif', color: '#F5F5F7' }
+const container = { padding: '40px 25px', backgroundColor: '#1A1A2E', borderRadius: '12px', border: '1px solid #C9A96E' }
+const logoContainer = { textAlign: 'center' as const, marginBottom: '30px' }
+const logo = { margin: '0 auto' }
 const h1 = {
-  fontSize: '22px',
+  fontSize: '24px',
   fontWeight: 'bold' as const,
-  color: '#000000',
+  color: '#C9A96E',
   margin: '0 0 20px',
+  textAlign: 'center' as const,
 }
 const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
+  fontSize: '16px',
+  color: '#F5F5F7',
+  lineHeight: '1.6',
   margin: '0 0 25px',
+  textAlign: 'center' as const,
 }
+const codeContainer = { textAlign: 'center' as const, margin: '30px 0' }
 const codeStyle = {
   fontFamily: 'Courier, monospace',
-  fontSize: '22px',
+  fontSize: '32px',
   fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 30px',
+  color: '#C9A96E',
+  letterSpacing: '5px',
+  margin: '0',
 }
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0', textAlign: 'center' as const }
