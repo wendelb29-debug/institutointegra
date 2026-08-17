@@ -94,6 +94,21 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
+          <div className="flex items-center gap-4 py-2 border-t border-border/40 mt-2">
+            <span className="text-sm font-medium text-muted-foreground">Tema:</span>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleTheme}
+              className="h-9 w-9 rounded-lg"
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <Moon className="h-4 w-4 text-muted-foreground" />
+              )}
+            </Button>
+          </div>
           <Link to="/auth" onClick={() => setOpen(false)}>
             <Button size="sm" className="w-full gap-1.5 mt-2 bg-primary hover:bg-primary/90">
               <LogIn className="h-3.5 w-3.5" />
