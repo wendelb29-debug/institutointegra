@@ -1,5 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import * as React from 'npm:react@18.3.1'
+import { renderAsync } from 'npm:@react-email/components@0.0.22'
+import { ReservationNotificationEmail } from '../_shared/email-templates/reservation-notification.tsx'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,6 +13,9 @@ const corsHeaders = {
 const GLOBAL_INSTANCE_ID = '3F0A839B3D4A131C158AA248D27FDCD6';
 const GLOBAL_TOKEN = 'A714392518FBCFACC066D258';
 const GLOBAL_CLIENT_TOKEN = 'F2bd5df5779e047e489ca72f794289888S';
+
+const SITE_NAME = "Integra Spaces & Minds"
+const FROM_DOMAIN = "institutointegra.site"
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -74,6 +80,59 @@ serve(async (req) => {
       
       const zapiData = await zapiRes.json();
       console.log('Z-API Response:', zapiData);
+    }
+
+    // Email Notification logic
+    if (type === 'INSERT') {
+      try {
+        console.log('Fetching all users for email notification...');
+        const { data: users, error: usersError } = await supabase
+          .from('profiles')
+          .select('email')
+          .not('email', 'is', null);
+
+        if (usersError) throw usersError;
+
+        const recipientEmails = users.map(u => u.email).filter(Boolean);
+        console.log(`Sending notification to ${recipientEmails.length} users`);
+
+        const emailHtml = await renderAsync(
+          React.createElement(ReservationNotificationEmail, {
+            siteName: SITE_NAME,
+            clientName: reservation.clients.name,
+            roomName: reservation.rooms.name,
+            date: dateStr,
+            time: timeStr,
+            status: reservation.status
+          })
+        );
+
+        // Call the transactional email sender via Lovable API
+        const sendRes = await fetch(Deno.env.get('LOVABLE_SEND_URL')!, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`
+          },
+          body: JSON.stringify({
+            from: `${SITE_NAME} <notifications@${FROM_DOMAIN}>`,
+            to: recipientEmails,
+            subject: `⚠️ IMPORTANTE: Nova Reserva - ${reservation.rooms.name}`,
+            html: emailHtml,
+            // Header hint for "Important" (Some clients honor this)
+            headers: {
+              'X-Priority': '1 (Highest)',
+              'X-MSMail-Priority': 'High',
+              'Importance': 'High'
+            }
+          })
+        });
+
+        const sendData = await sendRes.json();
+        console.log('Email Send Response:', sendData);
+      } catch (emailErr) {
+        console.error('Failed to send emails:', emailErr);
+      }
     }
 
     return new Response(JSON.stringify({ success: true }), {
