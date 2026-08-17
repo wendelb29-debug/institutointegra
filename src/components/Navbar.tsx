@@ -36,8 +36,8 @@ export function Navbar() {
               to={link.to}
               className={`text-sm font-medium transition-colors duration-200 ${
                 isActive(link.to)
-                  ? "text-charcoal"
-                  : "text-muted-foreground hover:text-charcoal"
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-primary"
               }`}
             >
               {link.label}
@@ -67,7 +67,7 @@ export function Navbar() {
 
         {/* Mobile toggle */}
         <button
-          className="md:hidden p-2 text-charcoal active:scale-95 transition-transform"
+          className="md:hidden p-2 text-foreground active:scale-95 transition-transform"
           onClick={() => setOpen(!open)}
           aria-label="Menu"
         >
@@ -87,7 +87,7 @@ export function Navbar() {
               onClick={() => setOpen(false)}
               className={`block text-base font-medium py-2 transition-colors ${
                 isActive(link.to)
-                  ? "text-charcoal"
+                  ? "text-primary"
                   : "text-muted-foreground"
               }`}
             >
