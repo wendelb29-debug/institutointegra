@@ -64,20 +64,26 @@ const Reservas = () => {
   const [detailOpen, setDetailOpen] = useState<any>(null);
   const [form, setForm] = useState<any>({ status: 'pendente' });
   const [blockForm, setBlockForm] = useState<any>({ block_type: 'full_day', room_id: 'all', mode: 'single' });
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
 
   const fetchData = useCallback(async () => {
-    const [rRes, roomRes, allRoomRes, blocksRes] = await Promise.all([
-      supabase.from('reservations').select('*, rooms(name, type), clients(name, phone)').order('date'),
-      supabase.from('rooms').select('id, name, price_hour, price_day, price_month, type').eq('status', 'disponivel').order('name'),
-      supabase.from('rooms').select('id, name, type').order('name'),
-      supabase.from('room_blocks').select('*'),
-    ]);
-    setReservations(rRes.data || []);
-    setRooms(roomRes.data || []);
-    setAllRooms(allRoomRes.data || []);
-    setRoomBlocks((blocksRes.data || []) as RoomBlock[]);
+    setLoading(true);
+    try {
+      const [rRes, roomRes, allRoomRes, blocksRes] = await Promise.all([
+        supabase.from('reservations').select('*, rooms(name, type), clients(name, phone)').order('date'),
+        supabase.from('rooms').select('id, name, price_hour, price_day, price_month, type').eq('status', 'disponivel').order('name'),
+        supabase.from('rooms').select('id, name, type').order('name'),
+        supabase.from('room_blocks').select('*'),
+      ]);
+      setReservations(rRes.data || []);
+      setRooms(roomRes.data || []);
+      setAllRooms(allRoomRes.data || []);
+      setRoomBlocks((blocksRes.data || []) as RoomBlock[]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
