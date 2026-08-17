@@ -98,7 +98,7 @@ export function AppSidebar() {
           {!collapsed && (
             <div className="flex flex-col leading-none">
               <span className="text-base font-display text-foreground tracking-wide">Integra</span>
-              <span className="text-[9px] uppercase tracking-[0.22em] text-primary/80 mt-1">Gestão Premium</span>
+              <span className="text-[9px] uppercase tracking-[0.22em] text-muted-foreground/60 mt-1">Management Console</span>
             </div>
           )}
         </div>
