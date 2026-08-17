@@ -321,90 +321,100 @@ const Reservas = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-7 gap-1 mb-1">
-              {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (
-                <div key={d} className="text-center text-xs font-semibold text-muted-foreground py-1">{d}</div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7 gap-1">
-              {Array.from({ length: startDayOfWeek }).map((_, i) => <div key={`e-${i}`} />)}
-              {daysInMonth.map(day => {
-                const dateStr = format(day, 'yyyy-MM-dd');
-                const dayRes = reservationsByDate[dateStr] || [];
-                const isSelected = selectedDate && isSameDay(day, selectedDate);
-                const today = isToday(day);
-                const status = getDayStatus(dateStr);
-                const activeRes = dayRes.filter((r: any) => r.status !== 'cancelada');
-                const cancelledRes = dayRes.filter((r: any) => r.status === 'cancelada');
+            {loading ? (
+              <div className="grid grid-cols-7 gap-1">
+                {Array(35).fill(0).map((_, i) => (
+                  <Skeleton key={i} className="min-h-[72px] rounded-lg bg-gold/5" />
+                ))}
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-7 gap-1 mb-1">
+                  {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (
+                    <div key={d} className="text-center text-xs font-semibold text-muted-foreground py-1">{d}</div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                  {Array.from({ length: startDayOfWeek }).map((_, i) => <div key={`e-${i}`} />)}
+                  {daysInMonth.map(day => {
+                    const dateStr = format(day, 'yyyy-MM-dd');
+                    const dayRes = reservationsByDate[dateStr] || [];
+                    const isSelected = selectedDate && isSameDay(day, selectedDate);
+                    const today = isToday(day);
+                    const status = getDayStatus(dateStr);
+                    const activeRes = dayRes.filter((r: any) => r.status !== 'cancelada');
+                    const cancelledRes = dayRes.filter((r: any) => r.status === 'cancelada');
 
-                return (
-                  <Tooltip key={dateStr}>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={() => setSelectedDate(day)}
-                        className={`relative rounded-lg text-sm transition-all min-h-[72px] flex flex-col items-start p-1.5 gap-0.5 border
-                          ${isSelected ? 'bg-primary text-primary-foreground ring-2 ring-primary/30 border-primary' : ''}
-                          ${!isSelected && today ? 'bg-accent font-bold border-accent' : ''}
-                          ${!isSelected && !today ? `${dayStatusStyles[status]} hover:opacity-80 border-transparent` : ''}
-                          ${!isSelected && !today && status === 'free' ? 'hover:bg-muted/50 border-border/30' : ''}
-                        `}
-                      >
-                        <div className="flex items-center gap-0.5 w-full">
-                          <span className="text-xs font-semibold">{format(day, 'd')}</span>
-                          {status === 'blocked' && !isSelected && <Ban className="h-2.5 w-2.5 ml-auto text-red-500" />}
-                        </div>
-                        {activeRes.length > 0 && (
-                          <div className={`text-[10px] font-medium ${isSelected ? 'text-primary-foreground/80' : 'text-foreground/70'}`}>
-                            {activeRes.length} reserva{activeRes.length > 1 ? 's' : ''}
-                          </div>
-                        )}
-                        {activeRes.slice(0, 2).map((r: any) => (
-                          <div
-                            key={r.id}
-                            className={`w-full rounded px-1 py-0.5 text-[9px] leading-tight truncate
-                              ${isSelected ? 'bg-primary-foreground/20 text-primary-foreground' :
-                                r.status === 'confirmada' ? 'bg-emerald-500/20 text-emerald-800' :
-                                r.status === 'cancelada' ? 'bg-red-500/20 text-red-800' :
-                                'bg-amber-500/20 text-amber-800'}
+                    return (
+                      <Tooltip key={dateStr}>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => setSelectedDate(day)}
+                            className={`relative rounded-lg text-sm transition-all min-h-[72px] flex flex-col items-start p-1.5 gap-0.5 border
+                              ${isSelected ? 'bg-primary text-primary-foreground ring-2 ring-primary/30 border-primary' : ''}
+                              ${!isSelected && today ? 'bg-accent font-bold border-accent' : ''}
+                              ${!isSelected && !today ? `${dayStatusStyles[status]} hover:opacity-80 border-transparent` : ''}
+                              ${!isSelected && !today && status === 'free' ? 'hover:bg-muted/50 border-border/30' : ''}
                             `}
                           >
-                            {r.start_time?.slice(0, 5)} {r.rooms?.name?.split(' ')[0]}
-                          </div>
-                        ))}
-                        {activeRes.length > 2 && (
-                          <span className={`text-[9px] ${isSelected ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
-                            +{activeRes.length - 2} mais
-                          </span>
-                        )}
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs">
-                      <p className="font-semibold">{format(day, "dd/MM/yyyy")}</p>
-                      {status === 'blocked' && <p className="text-red-500">🔴 Dia bloqueado</p>}
-                      {activeRes.length > 0 && <p>{activeRes.length} reserva(s) ativa(s)</p>}
-                      {cancelledRes.length > 0 && <p className="text-red-500">{cancelledRes.length} cancelamento(s)</p>}
-                      {activeRes.length === 0 && status !== 'blocked' && <p className="text-emerald-600">🟢 Dia livre</p>}
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })}
-            </div>
+                            <div className="flex items-center gap-0.5 w-full">
+                              <span className="text-xs font-semibold">{format(day, 'd')}</span>
+                              {status === 'blocked' && !isSelected && <Ban className="h-2.5 w-2.5 ml-auto text-red-500" />}
+                            </div>
+                            {activeRes.length > 0 && (
+                              <div className={`text-[10px] font-medium ${isSelected ? 'text-primary-foreground/80' : 'text-foreground/70'}`}>
+                                {activeRes.length} reserva{activeRes.length > 1 ? 's' : ''}
+                              </div>
+                            )}
+                            {activeRes.slice(0, 2).map((r: any) => (
+                              <div
+                                key={r.id}
+                                className={`w-full rounded px-1 py-0.5 text-[9px] leading-tight truncate
+                                  ${isSelected ? 'bg-primary-foreground/20 text-primary-foreground' :
+                                    r.status === 'confirmada' ? 'bg-emerald-500/20 text-emerald-800' :
+                                    r.status === 'cancelada' ? 'bg-red-500/20 text-red-800' :
+                                    'bg-amber-500/20 text-amber-800'}
+                                `}
+                              >
+                                {r.start_time?.slice(0, 5)} {r.rooms?.name?.split(' ')[0]}
+                              </div>
+                            ))}
+                            {activeRes.length > 2 && (
+                              <span className={`text-[9px] ${isSelected ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
+                                +{activeRes.length - 2} mais
+                              </span>
+                            )}
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="text-xs">
+                          <p className="font-semibold">{format(day, "dd/MM/yyyy")}</p>
+                          {status === 'blocked' && <p className="text-red-500">🔴 Dia bloqueado</p>}
+                          {activeRes.length > 0 && <p>{activeRes.length} reserva(s) ativa(s)</p>}
+                          {cancelledRes.length > 0 && <p className="text-red-500">{cancelledRes.length} cancelamento(s)</p>}
+                          {activeRes.length === 0 && status !== 'blocked' && <p className="text-emerald-600">🟢 Dia livre</p>}
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })}
+                </div>
 
-            {/* Legend */}
-            <div className="flex items-center gap-4 mt-3 flex-wrap">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <div className="h-3.5 w-3.5 rounded border border-border bg-background" /> Livre
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <div className="h-3.5 w-3.5 rounded bg-amber-100 border border-amber-300" /> Parcial
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <div className="h-3.5 w-3.5 rounded bg-blue-100 border border-blue-300" /> Ocupado
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <div className="h-3.5 w-3.5 rounded bg-red-100 border border-red-300" /> Bloqueado
-              </div>
-            </div>
+                {/* Legend */}
+                <div className="flex items-center gap-4 mt-3 flex-wrap">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <div className="h-3.5 w-3.5 rounded border border-border bg-background" /> Livre
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <div className="h-3.5 w-3.5 rounded bg-amber-100 border border-amber-300" /> Parcial
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <div className="h-3.5 w-3.5 rounded bg-blue-100 border border-blue-300" /> Ocupado
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <div className="h-3.5 w-3.5 rounded bg-red-100 border border-red-300" /> Bloqueado
+                  </div>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
