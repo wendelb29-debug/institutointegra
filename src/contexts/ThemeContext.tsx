@@ -22,10 +22,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (localTheme) {
       setThemeState(localTheme);
       applyTheme(localTheme);
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      // Default to dark if OS prefers it and no choice made
-      setThemeState('dark');
-      applyTheme('dark');
+    } else {
+      // Default to light for non-logged users
+      setThemeState('light');
+      applyTheme('light');
     }
 
     // Load from DB if user is logged in

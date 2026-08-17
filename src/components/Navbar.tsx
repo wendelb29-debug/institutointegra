@@ -3,12 +3,14 @@ import { Link, useLocation } from "react-router-dom";
 import { Menu, X, LogIn, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
 import logoIntegra from "@/assets/logo-integra.png";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const { user } = useAuth();
 
   const links = [
     { to: "/", label: "Home" },
@@ -44,18 +46,20 @@ export function Navbar() {
             </Link>
           ))}
           
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={toggleTheme}
-            className="h-9 w-9 rounded-lg"
-          >
-            {theme === 'dark' ? (
-              <Sun className="h-4 w-4 text-muted-foreground" />
-            ) : (
-              <Moon className="h-4 w-4 text-muted-foreground" />
-            )}
-          </Button>
+          {user && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleTheme}
+              className="h-9 w-9 rounded-lg"
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <Moon className="h-4 w-4 text-muted-foreground" />
+              )}
+            </Button>
+          )}
 
           <Link to="/auth">
             <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90">
@@ -94,21 +98,23 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
-          <div className="flex items-center gap-4 py-2 border-t border-border/40 mt-2">
-            <span className="text-sm font-medium text-muted-foreground">Tema:</span>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={toggleTheme}
-              className="h-9 w-9 rounded-lg"
-            >
-              {theme === 'dark' ? (
-                <Sun className="h-4 w-4 text-muted-foreground" />
-              ) : (
-                <Moon className="h-4 w-4 text-muted-foreground" />
-              )}
-            </Button>
-          </div>
+          {user && (
+            <div className="flex items-center gap-4 py-2 border-t border-border/40 mt-2">
+              <span className="text-sm font-medium text-muted-foreground">Tema:</span>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={toggleTheme}
+                className="h-9 w-9 rounded-lg"
+              >
+                {theme === 'dark' ? (
+                  <Sun className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <Moon className="h-4 w-4 text-muted-foreground" />
+                )}
+              </Button>
+            </div>
+          )}
           <Link to="/auth" onClick={() => setOpen(false)}>
             <Button size="sm" className="w-full gap-1.5 mt-2 bg-primary hover:bg-primary/90">
               <LogIn className="h-3.5 w-3.5" />
