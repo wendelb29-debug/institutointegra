@@ -13,36 +13,51 @@ const GestaoLayout = () => {
   const [profileName, setProfileName] = useState<string>('');
   const [isDarkMode, setIsDarkMode] = useState(true);
 
-  const toggleDarkMode = () => {
+  useEffect(() => {
+    if (!user) return;
+    
+    // Carregar preferência do perfil
+    supabase
+      .from('profiles')
+      .select('full_name, theme_preference')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          if (data.full_name) setProfileName(data.full_name);
+          
+          const theme = data.theme_preference || 'dark';
+          setIsDarkMode(theme === 'dark');
+          
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        }
+      });
+  }, [user]);
+
+  const toggleDarkMode = async () => {
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
+    
+    const themeStr = newMode ? 'dark' : 'light';
+    
     if (newMode) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
+
+    // Salvar preferência no banco
+    if (user) {
+      await supabase
+        .from('profiles')
+        .update({ theme_preference: themeStr })
+        .eq('user_id', user.id);
+    }
   };
-
-  useEffect(() => {
-    if (!user) return;
-    
-    // Aplicar dark mode ao entrar na gestão
-    document.documentElement.classList.add('dark');
-    
-    supabase
-      .from('profiles')
-      .select('full_name')
-      .eq('user_id', user.id)
-      .single()
-      .then(({ data }) => {
-        if (data?.full_name) setProfileName(data.full_name);
-      });
-
-    return () => {
-      // Opcional: remover ao sair da gestão
-      // document.documentElement.classList.remove('dark');
-    };
-  }, [user]);
 
   if (loading) {
     return (
