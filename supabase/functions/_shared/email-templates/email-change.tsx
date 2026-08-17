@@ -9,22 +9,22 @@ import {
   Head,
   Heading,
   Html,
+  Img,
   Link,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
 interface EmailChangeEmailProps {
   siteName: string
-  // oldEmail is the user's current address (HookData.OldEmail). For the
-  // NEW-recipient half of a secure email_change fanout, `email` equals the
-  // recipient (NEW), so the "from" line must render oldEmail to read
-  // "from OLD to NEW" instead of "from NEW to NEW".
   oldEmail: string
   email: string
   newEmail: string
   confirmationUrl: string
 }
+
+const LOGO_URL = "https://institutointegra.lovable.app/__l5e/assets-v1/afafc8be-e750-4075-b440-3674a754d2bb/logo-integra.png";
 
 export const EmailChangeEmail = ({
   siteName,
@@ -32,32 +32,36 @@ export const EmailChangeEmail = ({
   newEmail,
   confirmationUrl,
 }: EmailChangeEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Confirm your email change for {siteName}</Preview>
+    <Preview>Confirme a alteração de seu e-mail para {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm your email change</Heading>
+        <Section style={logoContainer}>
+          <Img src={LOGO_URL} width="150" height="auto" alt={siteName} style={logo} />
+        </Section>
+        <Heading style={h1}>Alteração de E-mail</Heading>
         <Text style={text}>
-          You requested to change your email address for {siteName} from{' '}
+          Você solicitou a alteração do seu e-mail no {siteName} de{' '}
           <Link href={`mailto:${oldEmail}`} style={link}>
             {oldEmail}
           </Link>{' '}
-          to{' '}
+          para{' '}
           <Link href={`mailto:${newEmail}`} style={link}>
             {newEmail}
           </Link>
           .
         </Text>
         <Text style={text}>
-          Click the button below to confirm this change:
+          Clique no botão abaixo para confirmar esta alteração:
         </Text>
-        <Button style={button} href={confirmationUrl}>
-          Confirm Email Change
-        </Button>
+        <Section style={buttonContainer}>
+          <Button style={button} href={confirmationUrl}>
+            Confirmar Alteração
+          </Button>
+        </Section>
         <Text style={footer}>
-          If you didn't request this change, please secure your account
-          immediately.
+          Se você não solicitou esta alteração, proteja sua conta imediatamente.
         </Text>
       </Container>
     </Body>
@@ -66,27 +70,32 @@ export const EmailChangeEmail = ({
 
 export default EmailChangeEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
+const main = { backgroundColor: '#0A0A0F', fontFamily: 'Arial, sans-serif', color: '#F5F5F7' }
+const container = { padding: '40px 25px', backgroundColor: '#1A1A2E', borderRadius: '12px', border: '1px solid #C9A96E' }
+const logoContainer = { textAlign: 'center' as const, marginBottom: '30px' }
+const logo = { margin: '0 auto' }
 const h1 = {
-  fontSize: '22px',
+  fontSize: '24px',
   fontWeight: 'bold' as const,
-  color: '#000000',
+  color: '#C9A96E',
   margin: '0 0 20px',
+  textAlign: 'center' as const,
 }
 const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
+  fontSize: '16px',
+  color: '#F5F5F7',
+  lineHeight: '1.6',
   margin: '0 0 25px',
 }
-const link = { color: 'inherit', textDecoration: 'underline' }
+const link = { color: '#C9A96E', textDecoration: 'none' }
+const buttonContainer = { textAlign: 'center' as const, margin: '30px 0' }
 const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '14px',
+  backgroundColor: '#C9A96E',
+  color: '#0A0A0F',
+  fontSize: '16px',
+  fontWeight: 'bold' as const,
   borderRadius: '8px',
-  padding: '12px 20px',
+  padding: '12px 24px',
   textDecoration: 'none',
 }
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0', textAlign: 'center' as const }
