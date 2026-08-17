@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useLocation } from 'react-router-dom';
-import { X, Send, Loader2, Paperclip, Mic, MicOff, ImagePlus, Download, StopCircle } from 'lucide-react';
+import { X, Send, Loader2, Paperclip, Mic, MicOff, ImagePlus, Download, StopCircle, MessageSquare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import helenaAvatar from '@/assets/helena-avatar.png';
 import { toast } from 'sonner';
@@ -24,7 +24,7 @@ type Message = {
 
 const INITIAL_MESSAGE: Message = {
   role: 'assistant',
-  content: 'Olá 😊 eu sou a **Helena**, assistente do Instituto Integra.\nPosso te ajudar?\nVocê gostaria de **agendar uma consulta** ou **reservar uma sala**?',
+  content: 'Olá 😊 Como podemos ajudar hoje?\nVocê gostaria de **agendar uma consulta** ou **reservar uma sala**?',
 };
 
 const quickOptions = [
@@ -352,18 +352,14 @@ export function HelenaChat() {
       {!isOpen && (
         <button onClick={() => setIsOpen(true)}
           className="fixed bottom-6 right-6 z-50 group animate-in fade-in slide-in-from-bottom-4 duration-500"
-          aria-label="Falar com Helena">
+          aria-label="Falar com suporte">
           <div className="relative">
-            <div className="h-16 w-16 rounded-full overflow-hidden border-[3px] border-primary shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-110">
-              <img src={helenaAvatar} alt="Helena - Assistente Virtual" className="w-full h-full object-cover" width={64} height={64} />
+            <div className="h-16 w-16 rounded-full overflow-hidden border border-border shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-110 bg-card flex items-center justify-center">
+              <MessageSquare className="h-7 w-7 text-primary" />
             </div>
-            <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-              <span className="relative inline-flex rounded-full h-4 w-4 bg-primary" />
-            </span>
           </div>
           <div className="absolute bottom-full right-0 mb-2 whitespace-nowrap bg-card text-foreground text-xs font-medium px-3 py-1.5 rounded-full shadow-lg border border-border opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            Fale com a Helena 💬
+            Suporte Integra 💬
           </div>
         </button>
       )}
@@ -374,11 +370,11 @@ export function HelenaChat() {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-primary-foreground/30">
-                <img src={helenaAvatar} alt="Helena" className="w-full h-full object-cover" width={40} height={40} />
+              <div className="h-10 w-10 rounded-full overflow-hidden border border-primary-foreground/30 bg-primary-foreground/10 flex items-center justify-center">
+                <MessageSquare className="h-5 w-5 text-primary-foreground" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold">Helena</h3>
+                <h3 className="text-sm font-semibold">Suporte Integra</h3>
                 <p className="text-xs text-primary-foreground/80 flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-green-400 inline-block" />
                   Online agora
@@ -397,8 +393,8 @@ export function HelenaChat() {
             {messages.map((msg, i) => (
               <div key={i} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                 {msg.role === 'assistant' && (
-                  <div className="h-7 w-7 rounded-full overflow-hidden shrink-0 mt-0.5">
-                    <img src={helenaAvatar} alt="" className="w-full h-full object-cover" width={28} height={28} />
+                  <div className="h-7 w-7 rounded-full overflow-hidden shrink-0 mt-0.5 bg-muted flex items-center justify-center">
+                    <MessageSquare className="h-4 w-4 text-primary" />
                   </div>
                 )}
                 <div className={`rounded-2xl px-4 py-2.5 max-w-[80%] text-sm ${
@@ -426,8 +422,8 @@ export function HelenaChat() {
             {/* Typing indicator */}
             {isTyping && (
               <div className="flex gap-2">
-                <div className="h-7 w-7 rounded-full overflow-hidden shrink-0">
-                  <img src={helenaAvatar} alt="" className="w-full h-full object-cover" width={28} height={28} />
+                <div className="h-7 w-7 rounded-full overflow-hidden shrink-0 bg-muted flex items-center justify-center">
+                  <MessageSquare className="h-4 w-4 text-primary" />
                 </div>
                 <div className="bg-card border border-border shadow-sm rounded-2xl rounded-bl-sm px-4 py-3">
                   <div className="flex gap-1.5">
@@ -487,7 +483,7 @@ export function HelenaChat() {
               </Button>
             </div>
             <p className="text-[10px] text-muted-foreground text-center mt-2">
-              Helena • Assistente Virtual do Instituto Integra
+              Suporte ao Cliente • Instituto Integra
             </p>
           </div>
         </div>
