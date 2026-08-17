@@ -97,6 +97,20 @@ const Financeiro = () => {
 
   const fmtCurrency = (v: number) => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
+  const SummaryCard = ({ label, value, icon: Icon, color, isCount }: { label: string; value: number; icon: any; color: string; isCount?: boolean }) => (
+    <Card className="border-border/60 shadow-sm overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
+        <Icon className={`h-4 w-4 ${color}`} />
+      </CardHeader>
+      <CardContent>
+        <p className={`text-xl font-semibold tabular-nums ${color}`}>
+          {isCount ? value : fmtCurrency(value)}
+        </p>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
