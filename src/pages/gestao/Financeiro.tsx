@@ -25,9 +25,16 @@ const Financeiro = () => {
   const [periodFilter, setPeriodFilter] = useState('month');
   const { toast } = useToast();
 
+  const [loading, setLoading] = useState(true);
+
   const fetch_ = async () => {
-    const { data } = await supabase.from('financial_transactions').select('*').order('created_at', { ascending: false });
-    setTransactions(data || []);
+    setLoading(true);
+    try {
+      const { data } = await supabase.from('financial_transactions').select('*').order('created_at', { ascending: false });
+      setTransactions(data || []);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetch_(); }, []);
