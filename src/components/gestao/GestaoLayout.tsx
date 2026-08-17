@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -74,8 +74,11 @@ const GestaoLayout = () => {
               <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg">
                 <Bell className="h-4 w-4 text-muted-foreground" />
               </Button>
-              <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-muted/40 border border-border/40">
-                <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
+              <Link 
+                to="/gestao/perfil"
+                className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-muted/40 border border-border/40 hover:border-primary/40 transition-colors group"
+              >
+                <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                   <span className="text-xs font-semibold text-primary">
                     {displayName.charAt(0).toUpperCase()}
                   </span>
@@ -83,7 +86,7 @@ const GestaoLayout = () => {
                 <span className="text-sm font-medium hidden sm:inline truncate max-w-36">
                   {displayName}
                 </span>
-              </div>
+              </Link>
             </div>
           </header>
           <main className="flex-1 overflow-auto p-4 md:p-8 min-h-0" style={{ height: 'calc(100dvh - 3.5rem)', maxHeight: 'calc(100dvh - 3.5rem)' }}>

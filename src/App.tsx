@@ -48,6 +48,7 @@ import AlmoxPedidos from "./pages/gestao/almoxarifado/Pedidos";
 import AlmoxSaidas from "./pages/gestao/almoxarifado/Saidas";
 import Usuarios from "./pages/gestao/Usuarios";
 import Equipe from "./pages/gestao/Equipe";
+import Perfil from "./pages/gestao/Perfil";
 
 const queryClient = new QueryClient();
 
@@ -101,6 +102,7 @@ const App = () => (
               <Route path="almoxarifado/saidas" element={<AlmoxSaidas />} />
               <Route path="usuarios" element={<Usuarios />} />
               <Route path="equipe" element={<Equipe />} />
+              <Route path="perfil" element={<Perfil />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
