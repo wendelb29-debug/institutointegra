@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import { FloatingChatAssistant } from './FloatingChatAssistant';
@@ -11,52 +12,25 @@ import { supabase } from '@/integrations/supabase/client';
 const GestaoLayout = () => {
   const { user, loading } = useAuth();
   const [profileName, setProfileName] = useState<string>('');
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const { theme, toggleTheme } = useTheme();
+  const isDarkMode = theme === 'dark';
 
   useEffect(() => {
     if (!user) return;
     
-    // Carregar preferência do perfil
+    // Carregar nome do perfil
     supabase
       .from('profiles')
-      .select('full_name, theme_preference')
+      .select('full_name')
       .eq('user_id', user.id)
       .single()
       .then(({ data }) => {
-        if (data) {
-          if (data.full_name) setProfileName(data.full_name);
-          
-          const theme = data.theme_preference || 'dark';
-          setIsDarkMode(theme === 'dark');
-          
-          if (theme === 'dark') {
-            document.documentElement.classList.add('dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-          }
-        }
+        if (data?.full_name) setProfileName(data.full_name);
       });
   }, [user]);
 
-  const toggleDarkMode = async () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    
-    const themeStr = newMode ? 'dark' : 'light';
-    
-    if (newMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-
-    // Salvar preferência no banco
-    if (user) {
-      await supabase
-        .from('profiles')
-        .update({ theme_preference: themeStr })
-        .eq('user_id', user.id);
-    }
+  const toggleDarkMode = () => {
+    toggleTheme();
   };
 
   if (loading) {

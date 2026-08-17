@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { TenantProvider } from "@/contexts/TenantContext";
 import Index from "./pages/Index";
 import Coworking from "./pages/Coworking";
@@ -57,7 +58,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <TenantProvider>
+          <ThemeProvider>
+            <TenantProvider>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/coworking" element={<Coworking />} />
@@ -102,7 +104,8 @@ const App = () => (
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
-          </TenantProvider>
+            </TenantProvider>
+          </ThemeProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
