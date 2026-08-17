@@ -17,8 +17,10 @@ const Perfil = () => {
     email: '',
     phone: '',
     cpf: '',
-    company: '',
-    address: ''
+    address: '',
+    city: '',
+    state: '',
+    zip_code: ''
   });
 
   useEffect(() => {
@@ -38,8 +40,10 @@ const Perfil = () => {
           email: user.email || '',
           phone: data.phone || '',
           cpf: data.cpf || '',
-          company: data.company || '',
-          address: data.address || ''
+          address: data.address || '',
+          city: data.city || '',
+          state: data.state || '',
+          zip_code: data.zip_code || ''
         });
       }
       setLoading(false);
@@ -58,8 +62,10 @@ const Perfil = () => {
         full_name: profile.full_name,
         phone: profile.phone,
         cpf: profile.cpf,
-        company: profile.company,
-        address: profile.address
+        address: profile.address,
+        city: profile.city,
+        state: profile.state,
+        zip_code: profile.zip_code
       })
       .eq('user_id', user.id);
 
@@ -146,27 +152,53 @@ const Perfil = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Empresa</Label>
-              <div className="relative">
-                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  className="pl-9" 
-                  value={profile.company} 
-                  onChange={e => setProfile({ ...profile, company: e.target.value })} 
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Cidade</Label>
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    className="pl-9" 
+                    value={profile.city} 
+                    onChange={e => setProfile({ ...profile, city: e.target.value })} 
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Estado</Label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    className="pl-9" 
+                    value={profile.state} 
+                    onChange={e => setProfile({ ...profile, state: e.target.value })} 
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Endereço Completo</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  className="pl-9" 
-                  value={profile.address} 
-                  onChange={e => setProfile({ ...profile, address: e.target.value })} 
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">CEP</Label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    className="pl-9" 
+                    value={profile.zip_code} 
+                    onChange={e => setProfile({ ...profile, zip_code: e.target.value })} 
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Endereço Completo</Label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    className="pl-9" 
+                    value={profile.address} 
+                    onChange={e => setProfile({ ...profile, address: e.target.value })} 
+                  />
+                </div>
               </div>
             </div>
 
