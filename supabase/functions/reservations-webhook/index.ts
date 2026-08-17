@@ -48,10 +48,7 @@ serve(async (req) => {
     }
 
     const clientPhone = reservation.clients?.phone?.replace(/\D/g, '');
-    if (!clientPhone) {
-      return new Response(JSON.stringify({ message: 'No client phone' }), { headers: corsHeaders });
-    }
-
+    
     let message = '';
     const dateStr = new Date(reservation.date + 'T12:00:00').toLocaleDateString('pt-BR');
     const timeStr = `${reservation.start_time.slice(0, 5)} às ${reservation.end_time.slice(0, 5)}`;
@@ -64,80 +61,78 @@ serve(async (req) => {
       message = `⏳ *Reserva Recebida*\n\nOlá ${reservation.clients.name}, recebemos sua solicitação de reserva para a sala *${reservation.rooms.name}*.\n\n📅 Data: ${dateStr}\n🕐 Horário: ${timeStr}\n\nAguarde a confirmação em breve!`;
     }
 
-    if (message) {
+    if (message && clientPhone) {
       console.log(`Sending WhatsApp to ${clientPhone}`);
-      const zapiRes = await fetch(`https://api.z-api.io/instances/${GLOBAL_INSTANCE_ID}/token/${GLOBAL_TOKEN}/send-text`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Client-Token': GLOBAL_CLIENT_TOKEN
-        },
-        body: JSON.stringify({
-          phone: clientPhone,
-          message: message
-        }),
-      });
-      
-      const zapiData = await zapiRes.json();
-      console.log('Z-API Response:', zapiData);
-    }
-
-    // Email Notification logic
-    if (type === 'INSERT') {
       try {
-        console.log('Fetching all users for email notification from auth.users...');
-        const { data: users, error: usersError } = await supabase
-          .from('profiles')
-          .select('full_name, user_id')
-          .not('user_id', 'is', null);
-
-        if (usersError) throw usersError;
-
-        // Since email is not in profiles, we fetch from auth.users (via service role client)
-        const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-        if (authError) throw authError;
-
-        const recipientEmails = authUsers.users.map(u => u.email).filter(Boolean);
-
-        if (usersError) throw usersError;
-
-        const recipientEmails = users.map(u => u.email).filter(Boolean);
-        console.log(`Sending notification to ${recipientEmails.length} users`);
-
-        const emailHtml = await renderAsync(
-          React.createElement(ReservationNotificationEmail, {
-            siteName: SITE_NAME,
-            clientName: reservation.clients.name,
-            roomName: reservation.rooms.name,
-            date: dateStr,
-            time: timeStr,
-            status: reservation.status
-          })
-        );
-
-        // Call the transactional email sender via Lovable API
-        const sendRes = await fetch(Deno.env.get('LOVABLE_SEND_URL')!, {
+        const zapiRes = await fetch(`https://api.z-api.io/instances/${GLOBAL_INSTANCE_ID}/token/${GLOBAL_TOKEN}/send-text`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`
+            'Client-Token': GLOBAL_CLIENT_TOKEN
           },
           body: JSON.stringify({
-            from: `${SITE_NAME} <notifications@${FROM_DOMAIN}>`,
-            to: recipientEmails,
-            subject: `⚠️ IMPORTANTE: Nova Reserva - ${reservation.rooms.name}`,
-            html: emailHtml,
-            // Header hint for "Important" (Some clients honor this)
-            headers: {
-              'X-Priority': '1 (Highest)',
-              'X-MSMail-Priority': 'High',
-              'Importance': 'High'
-            }
-          })
+            phone: clientPhone,
+            message: message
+          }),
         });
+        
+        const zapiData = await zapiRes.json();
+        console.log('Z-API Response:', zapiData);
+      } catch (zapiErr) {
+        console.error('WhatsApp failed:', zapiErr);
+      }
+    }
 
-        const sendData = await sendRes.json();
-        console.log('Email Send Response:', sendData);
+    // Email Notification logic (Triggered for all INSERTs, ensuring collaborative visibility)
+    if (type === 'INSERT') {
+      try {
+        console.log('Fetching all users for email notification from auth.users...');
+        
+        // Fetch all auth users via service role to get their emails
+        const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+        if (authError) throw authError;
+
+        const recipientEmails = authUsers.users.map(u => u.email).filter(Boolean) as string[];
+        
+        if (recipientEmails.length === 0) {
+          console.log('No recipients found for reservation notification.');
+        } else {
+          console.log(`Sending notification to ${recipientEmails.length} users`);
+
+          const emailHtml = await renderAsync(
+            React.createElement(ReservationNotificationEmail, {
+              siteName: SITE_NAME,
+              clientName: reservation.clients.name,
+              roomName: reservation.rooms.name,
+              date: dateStr,
+              time: timeStr,
+              status: reservation.status
+            })
+          );
+
+          // Call the transactional email sender via Lovable API
+          const sendRes = await fetch(Deno.env.get('LOVABLE_SEND_URL')!, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`
+            },
+            body: JSON.stringify({
+              from: `${SITE_NAME} <notifications@${FROM_DOMAIN}>`,
+              to: recipientEmails,
+              subject: `⚠️ IMPORTANTE: Nova Reserva - ${reservation.rooms.name}`,
+              html: emailHtml,
+              headers: {
+                'X-Priority': '1 (Highest)',
+                'X-MSMail-Priority': 'High',
+                'Importance': 'High'
+              }
+            })
+          });
+
+          const sendData = await sendRes.json();
+          console.log('Email Send Response:', sendData);
+        }
       } catch (emailErr) {
         console.error('Failed to send emails:', emailErr);
       }
