@@ -217,29 +217,36 @@ const Financeiro = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredTransactions.map(t => (
-              <TableRow key={t.id}>
-                <TableCell className="font-medium">{t.description}</TableCell>
-                <TableCell><Badge variant="outline" className={t.type === 'entrada' ? 'text-primary' : 'text-destructive'}>{t.type === 'entrada' ? 'Entrada' : 'Saída'}</Badge></TableCell>
-                <TableCell className="tabular-nums">{fmtCurrency(Number(t.amount))}</TableCell>
-                <TableCell className="text-muted-foreground">{t.category || '—'}</TableCell>
-                <TableCell>{t.due_date ? new Date(t.due_date).toLocaleDateString('pt-BR') : '—'}</TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={t.is_paid ? 'text-primary' : (!t.is_paid && t.due_date && new Date(t.due_date) < new Date()) ? 'text-destructive' : 'text-accent'}>
-                    {t.is_paid ? 'Pago' : (!t.is_paid && t.due_date && new Date(t.due_date) < new Date()) ? 'Atrasado' : 'Pendente'}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {!t.is_paid && (
-                    <Button variant="ghost" size="sm" onClick={() => markPaid(t.id)} className="text-xs">
-                      Marcar Pago
-                    </Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-            {filteredTransactions.length === 0 && (
+            {loading ? (
+              Array(5).fill(0).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell colSpan={7}><Skeleton className="h-6 w-full bg-gold/5" /></TableCell>
+                </TableRow>
+              ))
+            ) : filteredTransactions.length === 0 ? (
               <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhuma transação no período.</TableCell></TableRow>
+            ) : (
+              filteredTransactions.map(t => (
+                <TableRow key={t.id}>
+                  <TableCell className="font-medium">{t.description}</TableCell>
+                  <TableCell><Badge variant="outline" className={t.type === 'entrada' ? 'text-primary' : 'text-destructive'}>{t.type === 'entrada' ? 'Entrada' : 'Saída'}</Badge></TableCell>
+                  <TableCell className="tabular-nums">{fmtCurrency(Number(t.amount))}</TableCell>
+                  <TableCell className="text-muted-foreground">{t.category || '—'}</TableCell>
+                  <TableCell>{t.due_date ? new Date(t.due_date).toLocaleDateString('pt-BR') : '—'}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={t.is_paid ? 'text-primary' : (!t.is_paid && t.due_date && new Date(t.due_date) < new Date()) ? 'text-destructive' : 'text-accent'}>
+                      {t.is_paid ? 'Pago' : (!t.is_paid && t.due_date && new Date(t.due_date) < new Date()) ? 'Atrasado' : 'Pendente'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {!t.is_paid && (
+                      <Button variant="ghost" size="sm" onClick={() => markPaid(t.id)} className="text-xs">
+                        Marcar Pago
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>
