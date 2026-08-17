@@ -1530,6 +1530,7 @@ export type Database = {
           state: string | null
           status: string | null
           tenant_id: string
+          theme_preference: string | null
           updated_at: string
           user_id: string
           zip_code: string | null
@@ -1547,6 +1548,7 @@ export type Database = {
           state?: string | null
           status?: string | null
           tenant_id?: string
+          theme_preference?: string | null
           updated_at?: string
           user_id: string
           zip_code?: string | null
@@ -1564,6 +1566,7 @@ export type Database = {
           state?: string | null
           status?: string | null
           tenant_id?: string
+          theme_preference?: string | null
           updated_at?: string
           user_id?: string
           zip_code?: string | null
