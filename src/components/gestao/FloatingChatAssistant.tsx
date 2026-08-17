@@ -115,29 +115,29 @@ export function FloatingChatAssistant() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-20 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center animate-in fade-in slide-in-from-bottom-4"
-          aria-label="Abrir assistente"
+          className="fixed bottom-8 right-8 z-50 h-12 w-12 rounded-lg bg-card border border-border text-muted-foreground shadow-lg hover:text-primary transition-all duration-300 hover:scale-105 flex items-center justify-center animate-in fade-in slide-in-from-bottom-4"
+          aria-label="Abrir suporte"
         >
-          <Sparkles className="h-6 w-6" />
+          <MessageCircle className="h-5 w-5" />
         </button>
       )}
 
       {/* Chat window */}
       {isOpen && (
-        <div className="fixed bottom-20 right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100dvh-7rem)] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed bottom-8 right-8 z-50 w-[360px] max-w-[calc(100vw-2rem)] h-[500px] max-h-[calc(100dvh-7rem)] bg-card border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-primary/5">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center">
-                <Bot className="h-5 w-5 text-primary" />
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/20">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-lg border border-primary/20 bg-primary/5 flex items-center justify-center">
+                <Bot className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-foreground">Assistente Integra</h3>
-                <p className="text-xs text-muted-foreground">Sempre disponível para ajudar</p>
+                <h3 className="text-sm font-medium text-foreground">Suporte Integra</h3>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-mono">Status: Online</p>
               </div>
             </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsOpen(false)}>
-              <X className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => setIsOpen(false)}>
+              <X className="h-3.5 w-3.5" />
             </Button>
           </div>
 
@@ -150,8 +150,8 @@ export function FloatingChatAssistant() {
                   <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                     <Bot className="h-4 w-4 text-primary" />
                   </div>
-                  <div className="bg-muted/50 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%]">
-                    <p className="text-sm">Olá! 👋 Sou o assistente do Integra Gestão. Posso te ajudar com dúvidas sobre o sistema ou executar ações rápidas.</p>
+                  <div className="bg-muted/30 border border-border/50 rounded-xl rounded-tl-sm px-4 py-3 max-w-[85%]">
+                    <p className="text-sm">Olá. Como posso auxiliar na sua gestão hoje?</p>
                   </div>
                 </div>
 
