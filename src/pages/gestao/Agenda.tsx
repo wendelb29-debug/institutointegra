@@ -357,9 +357,17 @@ const Agenda = () => {
                 {v.label}
               </button>
             ))}
+            
+            <Button variant="outline" size="sm" className="ml-auto gap-1.5" onClick={() => toast({ title: "Sincronização", description: "Integração com Google Calendar em breve." })}>
+              <Settings className="h-3.5 w-3.5" /> Sincronizar Google
+            </Button>
           </div>
 
-          {viewMode === 'month' && (
+          {loading ? (
+            <div className="grid grid-cols-7 gap-1">
+              {Array(35).fill(0).map((_, i) => <Skeleton key={i} className="min-h-[100px] bg-gold/5 rounded-lg" />)}
+            </div>
+          ) : viewMode === 'month' && (
             <div className="space-y-4">
               <MonthCalendar
                 currentMonth={currentMonth}
