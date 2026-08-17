@@ -82,27 +82,22 @@ serve(async (req) => {
       console.log('Z-API Response:', zapiData);
     }
 
-    // Email Notification logic
+    // Email Notification logic (Triggered for all INSERTs, ensuring collaborative visibility)
     if (type === 'INSERT') {
       try {
         console.log('Fetching all users for email notification from auth.users...');
-        const { data: users, error: usersError } = await supabase
-          .from('profiles')
-          .select('full_name, user_id')
-          .not('user_id', 'is', null);
-
-        if (usersError) throw usersError;
-
-        // Since email is not in profiles, we fetch from auth.users (via service role client)
+        
+        // Fetch all auth users via service role to get their emails
         const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
         if (authError) throw authError;
 
-        const recipientEmails = authUsers.users.map(u => u.email).filter(Boolean);
+        const recipientEmails = authUsers.users.map(u => u.email).filter(Boolean) as string[];
+        
+        if (recipientEmails.length === 0) {
+          console.log('No recipients found for reservation notification.');
+        } else {
+          console.log(`Sending notification to ${recipientEmails.length} users:`, recipientEmails);
 
-        if (usersError) throw usersError;
-
-        const recipientEmails = users.map(u => u.email).filter(Boolean);
-        console.log(`Sending notification to ${recipientEmails.length} users`);
 
         const emailHtml = await renderAsync(
           React.createElement(ReservationNotificationEmail, {
