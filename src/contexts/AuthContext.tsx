@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -19,70 +19,92 @@ export const useAuth = () => {
   return ctx;
 };
 
-const isMobileDevice = () =>
-  /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Auto-logout for desktop when "Lembrar-me" is off
+  const updateAuthState = useCallback((newSession: Session | null) => {
+    setSession(newSession);
+    setUser(newSession?.user ?? null);
+    setLoading(false);
+  }, []);
+
   useEffect(() => {
-    if (isMobileDevice()) return;
+    let mounted = true;
 
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const rememberMe = localStorage.getItem('rememberMe') === 'true';
-
-      // On page load: if no sessionStorage flag exists, the browser was fully closed
-      // (sessionStorage is cleared when all tabs close). Sign out if not remembering.
-      if (session && !rememberMe && !sessionStorage.getItem('integra_session_active')) {
-        await supabase.auth.signOut();
-        setUser(null);
-        setSession(null);
+    const initAuth = async () => {
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        if (mounted) {
+          updateAuthState(initialSession);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        if (mounted) setLoading(false);
       }
-      
-      // Mark that a tab is open in this browser session
-      sessionStorage.setItem('integra_session_active', 'true');
     };
 
-    checkSession();
-  }, []);
+    initAuth();
 
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      if (mounted) {
+        updateAuthState(newSession);
+      }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [updateAuthState]);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    setLoading(true);
+    try {
+      const normalizedEmail = email.trim().toLowerCase();
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email: normalizedEmail, 
+        password 
+      });
+      
+      if (error) throw error;
+      
+      // onAuthStateChange handles state update, but we ensure loading is off
+      if (data.session) {
+        updateAuthState(data.session);
+      }
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    }
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin },
-    });
-    if (error) throw error;
+    setLoading(true);
+    try {
+      const normalizedEmail = email.trim().toLowerCase();
+      const { error } = await supabase.auth.signUp({
+        email: normalizedEmail,
+        password,
+        options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin },
+      });
+      if (error) throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      updateAuthState(null);
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    }
   };
 
   return (

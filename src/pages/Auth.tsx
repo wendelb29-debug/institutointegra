@@ -42,19 +42,7 @@ const Auth = () => {
     setSubmitting(true);
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-          console.error("Login error:", error);
-          if (error.message.includes('Email not confirmed')) {
-            toast({ 
-              title: 'E-mail não confirmado', 
-              description: 'Por favor, verifique sua caixa de entrada e confirme seu e-mail para entrar.',
-              variant: 'destructive'
-            });
-            return;
-          }
-          throw error;
-        }
+        await signIn(email, password);
         toast({ title: 'Bem-vindo de volta!' });
       } else {
         await signUp(email, password, fullName);
@@ -65,8 +53,16 @@ const Auth = () => {
       }
     } catch (err: any) {
       let errorMessage = err.message;
-      if (err.message === 'Invalid login credentials') {
+      if (err.message === 'Invalid login credentials' || err.code === 'invalid_credentials') {
         errorMessage = 'E-mail ou senha incorretos.';
+      } else if (err.message.includes('Email not confirmed') || err.code === 'email_not_confirmed') {
+        errorMessage = 'Confirme seu e-mail antes de entrar. Verifique também o spam.';
+      } else if (err.message.includes('User already registered') || err.code === 'user_already_exists') {
+        errorMessage = 'Este e-mail já está cadastrado.';
+      } else if (err.code === 'user_banned') {
+        errorMessage = 'Seu acesso está bloqueado. Entre em contato com o administrador.';
+      } else if (err.message.includes('FetchError') || err.message.includes('Network Error')) {
+        errorMessage = 'Não foi possível conectar ao servidor. Verifique sua internet.';
       }
       toast({ title: 'Erro ao entrar', description: errorMessage, variant: 'destructive' });
     } finally {
