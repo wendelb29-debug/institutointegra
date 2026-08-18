@@ -111,6 +111,9 @@ const Auth = () => {
               <div className="space-y-2">
                 <Label htmlFor="resetEmail">E-mail</Label>
                 <Input id="resetEmail" type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="seu@email.com" />
+                <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
+                  Ao redefinir sua senha, você poderá cadastrar uma nova senha e manter todos os seus dados e histórico vinculados a este e-mail.
+                </p>
               </div>
               <Button type="submit" className="w-full" disabled={submitting}>
                 {submitting ? 'Enviando...' : 'Enviar link de redefinição'}
