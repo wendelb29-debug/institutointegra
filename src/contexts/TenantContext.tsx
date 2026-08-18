@@ -32,18 +32,22 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const fetchTenant = async () => {
       try {
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('tenant_id')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
+
+        if (profileError) throw profileError;
 
         if (profile?.tenant_id) {
-          const { data: tenantData } = await supabase
+          const { data: tenantData, error: tenantError } = await supabase
             .from('tenants' as any)
             .select('*')
             .eq('id', profile.tenant_id)
-            .single();
+            .maybeSingle();
+
+          if (tenantError) throw tenantError;
 
           if (tenantData) {
             setTenant(tenantData as unknown as Tenant);

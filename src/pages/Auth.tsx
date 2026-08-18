@@ -41,14 +41,32 @@ const Auth = () => {
     setSubmitting(true);
     try {
       if (isLogin) {
-        await signIn(email, password);
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          if (error.message.includes('Email not confirmed')) {
+            toast({ 
+              title: 'E-mail não confirmado', 
+              description: 'Por favor, verifique sua caixa de entrada e confirme seu e-mail para entrar.',
+              variant: 'destructive'
+            });
+            return;
+          }
+          throw error;
+        }
         toast({ title: 'Bem-vindo de volta!' });
       } else {
         await signUp(email, password, fullName);
-        toast({ title: 'Conta criada!', description: 'Verifique seu e-mail para confirmar.' });
+        toast({ 
+          title: 'Conta criada!', 
+          description: 'Enviamos um link de confirmação para seu e-mail. Por favor, verifique para ativar sua conta.' 
+        });
       }
     } catch (err: any) {
-      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+      let errorMessage = err.message;
+      if (err.message === 'Invalid login credentials') {
+        errorMessage = 'E-mail ou senha incorretos.';
+      }
+      toast({ title: 'Erro ao entrar', description: errorMessage, variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }

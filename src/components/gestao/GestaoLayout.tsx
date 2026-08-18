@@ -23,8 +23,12 @@ const GestaoLayout = () => {
       .from('profiles')
       .select('full_name')
       .eq('user_id', user.id)
-      .single()
-      .then(({ data }) => {
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("Erro ao carregar perfil:", error);
+          return;
+        }
         if (data?.full_name) setProfileName(data.full_name);
       });
   }, [user]);
