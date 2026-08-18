@@ -13,7 +13,6 @@ const GestaoLayout = () => {
   const { user, loading } = useAuth();
   const [profileName, setProfileName] = useState<string>('');
   const { theme, toggleTheme } = useTheme();
-  const isDarkMode = theme === 'dark';
 
   useEffect(() => {
     if (!user) return;
@@ -33,7 +32,7 @@ const GestaoLayout = () => {
       });
   }, [user]);
 
-  const toggleDarkMode = () => {
+  const handleToggleTheme = () => {
     toggleTheme();
   };
 
@@ -51,10 +50,10 @@ const GestaoLayout = () => {
 
   return (
     <SidebarProvider>
-      <div className="gestao-theme min-h-screen flex w-full bg-background text-foreground">
+      <div className="min-h-screen flex w-full bg-background text-foreground">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center justify-between border-b border-border/60 bg-card/40 backdrop-blur-md px-4 md:px-6 shrink-0 sticky top-0 z-10">
+          <header className="gestao-theme-header">
             <div className="flex items-center gap-3">
               <SidebarTrigger />
               <div className="hidden sm:flex items-center gap-2">
@@ -66,13 +65,16 @@ const GestaoLayout = () => {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                onClick={toggleDarkMode}
+                onClick={handleToggleTheme}
                 className="h-9 w-9 rounded-lg"
+                type="button"
+                aria-label={theme === 'dark' ? "Ativar tema claro" : "Ativar tema escuro"}
+                title={theme === 'dark' ? "Ativar tema claro" : "Ativar tema escuro"}
               >
-                {isDarkMode ? (
-                  <Moon className="h-4 w-4 text-muted-foreground" />
-                ) : (
+                {theme === 'dark' ? (
                   <Sun className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <Moon className="h-4 w-4 text-muted-foreground" />
                 )}
               </Button>
               <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg">

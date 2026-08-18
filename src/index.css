@@ -56,6 +56,16 @@
     --sidebar-border: 30 14% 90%;
     --sidebar-ring: 155 19% 30%;
   }
+
+  /* Shared Light Mode Enhancements */
+  .premium-card {
+    @apply bg-card text-card-foreground shadow-sm transition-all duration-300;
+  }
+  
+  .gestao-theme-header {
+    @apply h-14 flex items-center justify-between border-b border-border/60 bg-card/40 backdrop-blur-md px-4 md:px-6 shrink-0 sticky top-0 z-10;
+  }
+}
 }
 
 @layer base {
@@ -119,8 +129,7 @@
 /* ================================================================
    GESTÃO — Premium Dark Theme (scoped to .gestao-theme)
    ================================================================ */
-.dark,
-.gestao-theme {
+.dark {
   --background: 240 20% 5%;
   --foreground: 35 22% 93%;
   --card: 240 20% 10%;
@@ -165,60 +174,49 @@
   background-color: hsl(var(--background));
 }
 
-.dark,
-.gestao-theme {
+.dark {
   background-image:
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.015 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
 }
 
 .dark .font-jet,
-.dark [data-mono],
-.gestao-theme .font-jet,
-.gestao-theme [data-mono] {
+.dark [data-mono] {
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   font-feature-settings: "tnum" 1;
 }
 
-.dark ::-webkit-scrollbar,
-.gestao-theme ::-webkit-scrollbar { width: 6px; height: 6px; }
-.dark ::-webkit-scrollbar-track,
-.gestao-theme ::-webkit-scrollbar-track { background: transparent; }
-.dark ::-webkit-scrollbar-thumb,
-.gestao-theme ::-webkit-scrollbar-thumb {
+.dark ::-webkit-scrollbar { width: 6px; height: 6px; }
+.dark ::-webkit-scrollbar-track { background: transparent; }
+.dark ::-webkit-scrollbar-thumb {
   background: hsl(38 43% 61% / 0.5);
   border-radius: 999px;
 }
-.dark ::-webkit-scrollbar-thumb:hover,
-.gestao-theme ::-webkit-scrollbar-thumb:hover { background: hsl(38 43% 61% / 0.8); }
+.dark ::-webkit-scrollbar-thumb:hover { background: hsl(38 43% 61% / 0.8); }
 
 .gestao-divider {
   height: 1px;
   background: linear-gradient(to right, transparent, hsl(0 0% 100% / 0.08), transparent);
 }
 
-.dark .premium-card,
-.gestao-theme .premium-card {
+.dark .premium-card {
   background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card) / 0.9) 100%);
   border: 1px solid hsl(0 0% 100% / 0.05);
   box-shadow: 0 4px 12px hsl(0 0% 0% / 0.25);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(8px);
 }
-.dark .premium-card:hover,
-.gestao-theme .premium-card:hover {
+.dark .premium-card:hover {
   border-color: hsl(38 43% 61% / 0.3);
   box-shadow: 0 8px 32px hsl(38 43% 61% / 0.12);
   transform: translateY(-2px);
 }
 
-.dark .sidebar-active,
-.gestao-theme .sidebar-active {
+.dark .sidebar-active {
   background: hsl(38 43% 61% / 0.12) !important;
   color: hsl(38 43% 78%) !important;
   position: relative;
 }
-.dark .sidebar-active::before,
-.gestao-theme .sidebar-active::before {
+.dark .sidebar-active::before {
   content: '';
   position: absolute;
   left: 0; top: 4px; bottom: 4px;
@@ -244,8 +242,7 @@
   0% { background-position: -400px 0; }
   100% { background-position: 400px 0; }
 }
-.dark .shimmer,
-.gestao-theme .shimmer {
+.dark .shimmer {
   background: linear-gradient(90deg,
     hsl(var(--card)) 0%,
     hsl(38 43% 61% / 0.08) 50%,

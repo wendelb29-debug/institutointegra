@@ -24,7 +24,7 @@ const fmtCurrency = (v: number) =>
 const PremiumTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border border-primary/30 bg-[#1C1C2E] px-3 py-2 shadow-2xl backdrop-blur">
+    <div className="rounded-lg border border-primary/30 bg-card px-3 py-2 shadow-2xl backdrop-blur">
       {label && <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">{label}</p>}
       {payload.map((p: any, i: number) => (
         <div key={i} className="flex items-center gap-2 text-xs">
@@ -208,7 +208,7 @@ const Dashboard = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="hidden md:inline-flex items-center gap-2 text-xs font-medium text-foreground/80 hover:text-primary transition-colors px-3 py-2 rounded-lg border border-border/60 hover:border-primary/40">
+          <button className="hidden md:inline-flex items-center gap-2 text-xs font-medium text-foreground hover:text-primary transition-colors px-3 py-2 rounded-lg border border-border/60 hover:border-primary/40 bg-card">
             Este mês
             <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
           </button>
