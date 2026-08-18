@@ -15,7 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   Plus, ChevronLeft, ChevronRight, Clock, Filter, MessageCircle,
   CreditCard, User, CalendarDays, CheckCircle2, XCircle, Ban,
-  AlertTriangle, Eye
+  AlertTriangle, Eye, Pencil
 } from 'lucide-react';
 import {
   startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths,
@@ -62,6 +62,7 @@ const Reservas = () => {
   const [showNewReservation, setShowNewReservation] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [detailOpen, setDetailOpen] = useState<any>(null);
+  const [editingReservation, setEditingReservation] = useState<any>(null);
   const [form, setForm] = useState<any>({ status: 'pendente' });
   const [blockForm, setBlockForm] = useState<any>({ block_type: 'full_day', room_id: 'all', mode: 'single' });
   const [loading, setLoading] = useState(true);
@@ -202,6 +203,68 @@ const Reservas = () => {
       setShowNewReservation(false);
       setForm({ status: 'pendente' });
       fetchData();
+    }
+  };
+  
+  const handleUpdate = async () => {
+    if (!form.id || !form.room_id || !form.date || !form.start_time || !form.end_time) {
+      toast({ title: 'Erro', description: 'Preencha todos os campos obrigatórios.', variant: 'destructive' });
+      return;
+    }
+
+    const dateStr = form.date;
+    
+    // Conflict check (excluding current reservation)
+    const dateBlocks = roomBlocks.filter(b => b.block_date === dateStr && (!b.room_id || b.room_id === form.room_id));
+    const isBlocked = dateBlocks.some(b => {
+      if (b.block_type === 'full_day') return true;
+      if (!b.start_time || !b.end_time) return false;
+      return form.start_time < b.end_time && form.end_time > b.start_time;
+    });
+    
+    if (isBlocked) {
+      toast({ title: 'Horário bloqueado', description: 'Este horário já está reservado ou bloqueado para esta sala. Escolha outro horário.', variant: 'destructive' });
+      return;
+    }
+
+    const conflicting = reservations.filter(r =>
+      r.id !== form.id &&
+      r.date === dateStr && 
+      r.room_id === form.room_id && 
+      r.status !== 'cancelada' &&
+      form.start_time < r.end_time && 
+      form.end_time > r.start_time
+    );
+
+    if (conflicting.length > 0) {
+      toast({ title: 'Conflito', description: 'Este horário já está reservado ou bloqueado para esta sala. Escolha outro horário.', variant: 'destructive' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.from('reservations').update({
+        room_id: form.room_id,
+        date: form.date,
+        start_time: form.start_time,
+        end_time: form.end_time,
+        status: form.status,
+        total_value: form.total_value || 0,
+        notes: form.notes,
+        client_id: form.client_id || null,
+        updated_at: new Date().toISOString(),
+      } as any).eq('id', form.id);
+
+      if (error) {
+        toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      } else {
+        toast({ title: 'Reserva atualizada com sucesso.' });
+        setEditingReservation(null);
+        setForm({ status: 'pendente' });
+        fetchData();
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -551,6 +614,16 @@ const Reservas = () => {
                       <Button
                         size="sm" variant="outline"
                         className="h-7 text-xs gap-1"
+                        onClick={() => {
+                          setForm({ ...r });
+                          setEditingReservation(r);
+                        }}
+                      >
+                        <Pencil className="h-3 w-3" /> Editar
+                      </Button>
+                      <Button
+                        size="sm" variant="outline"
+                        className="h-7 text-xs gap-1"
                         onClick={() => setDetailOpen(r)}
                       >
                         <Eye className="h-3 w-3" /> Detalhes
@@ -604,6 +677,55 @@ const Reservas = () => {
                 <Textarea value={form.notes || ''} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Nome do cliente ou observações" />
               </div>
               <Button onClick={handleSave} className="w-full">Criar Reserva</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Reservation Dialog */}
+        <Dialog open={!!editingReservation} onOpenChange={(open) => !open && setEditingReservation(null)}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Editar Reserva</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Status da Reserva</Label>
+                <Select value={form.status || 'pendente'} onValueChange={v => setForm({ ...form, status: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pendente">Pendente</SelectItem>
+                    <SelectItem value="confirmada">Confirmada</SelectItem>
+                    <SelectItem value="cancelada">Cancelada</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Sala *</Label>
+                <Select value={form.room_id || ''} onValueChange={v => setForm({ ...form, room_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>{allRooms.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Data *</Label>
+                <Input type="date" value={form.date || ''} onChange={e => setForm({ ...form, date: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Início *</Label><Input type="time" value={form.start_time || ''} onChange={e => setForm({ ...form, start_time: e.target.value })} /></div>
+                <div><Label>Fim *</Label><Input type="time" value={form.end_time || ''} onChange={e => setForm({ ...form, end_time: e.target.value })} /></div>
+              </div>
+              <div>
+                <Label>Valor Total (R$)</Label>
+                <Input type="number" value={form.total_value || ''} onChange={e => setForm({ ...form, total_value: Number(e.target.value) })} />
+              </div>
+              <div>
+                <Label>Observações / Cliente</Label>
+                <Textarea value={form.notes || ''} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Nome do cliente ou observações" />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setEditingReservation(null)} className="flex-1">Cancelar</Button>
+                <Button onClick={handleUpdate} className="flex-1" disabled={loading}>
+                  {loading ? 'Salvando...' : 'Salvar alterações'}
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
