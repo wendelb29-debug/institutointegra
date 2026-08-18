@@ -14,33 +14,33 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const [theme, setThemeState] = useState<Theme>('light');
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('integra-theme') as Theme;
+      if (saved) return saved;
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+    }
+    return 'light';
+  });
 
   useEffect(() => {
-    // Initial load from localStorage (for fast feedback)
-    const localTheme = localStorage.getItem('theme-preference') as Theme;
-    if (localTheme) {
-      setThemeState(localTheme);
-      applyTheme(localTheme);
-    } else {
-      // Default to light for non-logged users
-      setThemeState('light');
-      applyTheme('light');
-    }
-
-    // Load from DB if user is logged in
+    applyTheme(theme);
+    
+    // Sync with DB if user logs in
     if (user) {
       supabase
         .from('profiles')
         .select('theme_preference')
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle()
         .then(({ data }) => {
           if (data?.theme_preference) {
             const dbTheme = data.theme_preference as Theme;
-            setThemeState(dbTheme);
-            applyTheme(dbTheme);
-            localStorage.setItem('theme-preference', dbTheme);
+            if (dbTheme !== theme) {
+              setThemeState(dbTheme);
+              applyTheme(dbTheme);
+              localStorage.setItem('integra-theme', dbTheme);
+            }
           }
         });
     }
@@ -57,7 +57,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const setTheme = async (newTheme: Theme) => {
     setThemeState(newTheme);
     applyTheme(newTheme);
-    localStorage.setItem('theme-preference', newTheme);
+    localStorage.setItem('integra-theme', newTheme);
 
     if (user) {
       await supabase
