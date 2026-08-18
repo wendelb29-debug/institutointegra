@@ -27,7 +27,6 @@ serve(async (req) => {
     const payload = await req.json();
     const { record, old_record, type, manual_recipient } = payload;
     
-    // Type can be INSERT, UPDATE or MANUAL_RESEND
     const eventType = manual_recipient ? 'MANUAL_RESEND' : type;
     console.log(`Processing ${eventType} for reservation ${record.id}`);
 
@@ -53,11 +52,10 @@ serve(async (req) => {
       shouldSend = true;
       subject = `Nova reserva realizada - ${dateStr} às ${reservation.start_time.slice(0, 5)}`;
     } else if (eventType === 'UPDATE') {
-      // Check for significant changes
-      const statusChanged = record.status !== old_record.status;
-      const dateChanged = record.date !== old_record.date;
-      const timeChanged = record.start_time !== old_record.start_time || record.end_time !== old_record.end_time;
-      const roomChanged = record.room_id !== old_record.room_id;
+      const statusChanged = record.status !== old_record?.status;
+      const dateChanged = record.date !== old_record?.date;
+      const timeChanged = record.start_time !== old_record?.start_time || record.end_time !== old_record?.end_time;
+      const roomChanged = record.room_id !== old_record?.room_id;
 
       if (statusChanged || dateChanged || timeChanged || roomChanged) {
         shouldSend = true;
@@ -78,23 +76,45 @@ serve(async (req) => {
       return new Response(JSON.stringify({ message: 'No notification needed' }), { headers: corsHeaders });
     }
 
-    // Determine recipients
+    // Recipient Discovery
     let recipients: string[] = [];
     if (manual_recipient) {
-      recipients = [manual_recipient];
+      recipients = [manual_recipient.trim().toLowerCase()];
     } else {
-      // Admin list from auth.users (simplification for this multi-tenant structure)
-      const { data: authUsers } = await supabase.auth.admin.listUsers();
-      recipients = (authUsers?.users || []).map(u => u.email).filter(Boolean) as string[];
+      // 1. Get ALL active profiles in the same tenant
+      const { data: profiles, error: pError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('tenant_id', reservation.tenant_id)
+        .eq('status', 'ativo');
+
+      if (pError) throw pError;
+
+      const userIds = profiles.map(p => p.user_id);
       
-      // Also include the user who made the reservation if not in list
-      if (reservation.profiles?.email && !recipients.includes(reservation.profiles.email)) {
-        recipients.push(reservation.profiles.email);
-      }
-      
-      // And the client if they have an email
-      if (reservation.clients?.email && !recipients.includes(reservation.clients.email)) {
-        recipients.push(reservation.clients.email);
+      // 2. Get real emails from auth.users via Admin API (limited batching if necessary, but here we list)
+      const { data: authUsers, error: aError } = await supabase.auth.admin.listUsers();
+      if (aError) throw aError;
+
+      const emailMap = new Map();
+      authUsers.users.forEach(u => {
+        if (u.email) emailMap.set(u.id, u.email.trim().toLowerCase());
+      });
+
+      // Filter and collect emails
+      userIds.forEach(uid => {
+        const email = emailMap.get(uid);
+        if (email && !recipients.includes(email)) {
+          recipients.push(email);
+        }
+      });
+
+      // 3. Ensure client is included if email exists
+      if (reservation.clients?.email) {
+        const cEmail = reservation.clients.email.trim().toLowerCase();
+        if (!recipients.includes(cEmail)) {
+          recipients.push(cEmail);
+        }
       }
     }
 
@@ -112,11 +132,15 @@ serve(async (req) => {
         date: dateStr,
         time: timeStr,
         status: reservation.status,
+        eventType: eventType as any,
+        userName: reservation.profiles?.full_name || 'Sistema',
       })
     );
 
-    // Send via Lovable Transactional Email
+    // Batch Sending with Idempotency and Individual Logging
     const results = await Promise.all(recipients.map(async (email) => {
+      const idempotencyKey = `${reservation.id}-${eventType}-${email}-${reservation.updated_at || reservation.created_at}`;
+      
       try {
         const sendRes = await fetch(Deno.env.get('LOVABLE_SEND_URL')!, {
           method: 'POST',
@@ -133,14 +157,13 @@ serve(async (req) => {
               'X-Priority': '1 (Highest)',
               'X-MSMail-Priority': 'High',
               'Importance': 'High',
-              'X-Idempotency-Key': `${reservation.id}-${eventType}-${reservation.updated_at || reservation.created_at}`
+              'X-Idempotency-Key': idempotencyKey
             }
           })
         });
 
         const data = await sendRes.json();
         
-        // Log to email_logs
         await supabase.from('email_logs').insert({
           reservation_id: reservation.id,
           tenant_id: reservation.tenant_id,
@@ -161,7 +184,21 @@ serve(async (req) => {
       }
     }));
 
-    return new Response(JSON.stringify({ success: true, results }), {
+    const allSuccess = results.every(r => r.success);
+    const someSuccess = results.some(r => r.success);
+
+    let feedbackMessage = "Reserva salva e todos os usuários foram notificados por e-mail.";
+    if (!allSuccess && someSuccess) {
+      feedbackMessage = "Reserva salva. Algumas notificações não puderam ser enviadas.";
+    } else if (!someSuccess) {
+      feedbackMessage = "Reserva salva, mas as notificações por e-mail não foram enviadas.";
+    }
+
+    return new Response(JSON.stringify({ 
+      success: true, 
+      results, 
+      feedback: feedbackMessage 
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

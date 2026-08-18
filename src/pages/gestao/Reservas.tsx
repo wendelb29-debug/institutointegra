@@ -201,7 +201,26 @@ const Reservas = () => {
     if (error) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Reserva criada!' });
+      // Trigger webhook manually or wait for trigger? 
+      // The instructions say "After saving: feedback...". 
+      // Triggers don't return JSON to frontend easily. 
+      // We should invoke it manually if we want immediate feedback.
+      try {
+        const { data: newRes } = await supabase.from('reservations').select('*').eq('user_id', user?.id).order('created_at', { ascending: false }).limit(1).single();
+        if (newRes) {
+          const { data: webhookRes } = await supabase.functions.invoke('reservations-webhook', {
+            body: { record: newRes, type: 'INSERT' }
+          });
+          if (webhookRes?.feedback) {
+            toast({ title: 'Sucesso', description: webhookRes.feedback });
+          } else {
+            toast({ title: 'Reserva criada!' });
+          }
+        }
+      } catch (e) {
+        toast({ title: 'Reserva criada!', description: 'Não foi possível disparar notificações.' });
+      }
+      
       setShowNewReservation(false);
       setForm({ status: 'pendente' });
       fetchData();
@@ -260,7 +279,20 @@ const Reservas = () => {
       if (error) {
         toast({ title: 'Erro', description: error.message, variant: 'destructive' });
       } else {
-        toast({ title: 'Reserva atualizada com sucesso.' });
+        try {
+          const { data: updatedRes } = await supabase.from('reservations').select('*').eq('id', form.id).single();
+          const { data: webhookRes } = await supabase.functions.invoke('reservations-webhook', {
+            body: { record: updatedRes, type: 'UPDATE', old_record: reservations.find(r => r.id === form.id) }
+          });
+          if (webhookRes?.feedback) {
+            toast({ title: 'Sucesso', description: webhookRes.feedback });
+          } else {
+            toast({ title: 'Reserva atualizada com sucesso.' });
+          }
+        } catch (e) {
+          toast({ title: 'Reserva atualizada!', description: 'Não foi possível disparar notificações.' });
+        }
+        
         setEditingReservation(null);
         setForm({ status: 'pendente' });
         fetchData();
@@ -312,8 +344,26 @@ const Reservas = () => {
   };
 
   const updateStatus = async (id: string, status: string) => {
-    await supabase.from('reservations').update({ status } as any).eq('id', id);
-    toast({ title: `Reserva ${status}!` });
+    const oldRecord = reservations.find(r => r.id === id);
+    const { error } = await supabase.from('reservations').update({ status } as any).eq('id', id);
+    
+    if (!error) {
+      try {
+        const { data: updatedRes } = await supabase.from('reservations').select('*').eq('id', id).single();
+        const { data: webhookRes } = await supabase.functions.invoke('reservations-webhook', {
+          body: { record: updatedRes, type: 'UPDATE', old_record: oldRecord }
+        });
+        if (webhookRes?.feedback) {
+          toast({ title: 'Sucesso', description: webhookRes.feedback });
+        } else {
+          toast({ title: `Reserva ${status}!` });
+        }
+      } catch (e) {
+        toast({ title: `Reserva ${status}!`, description: 'Não foi possível disparar notificações.' });
+      }
+    } else {
+      toast({ title: 'Erro ao atualizar status', variant: 'destructive' });
+    }
     fetchData();
   };
 
@@ -335,10 +385,10 @@ const Reservas = () => {
         body: { record: res, type: 'UPDATE', manual_recipient: res.clients?.email || user?.email }
       });
       if (error) throw error;
-      toast({ title: 'Reserva realizada e confirmação enviada por e-mail.' });
+      toast({ title: 'Notificação reenviada', description: data?.feedback || 'E-mail enviado com sucesso.' });
       fetchEmailLogs(res.id);
     } catch (err: any) {
-      toast({ title: 'Reserva salva, mas não foi possível enviar o e-mail de confirmação.', variant: 'destructive' });
+      toast({ title: 'Erro ao reenviar', description: 'Não foi possível enviar o e-mail de confirmação.', variant: 'destructive' });
     } finally {
       setSendingEmail(false);
     }
