@@ -30,6 +30,9 @@ export const RecoveryEmail = ({
     <Head />
     <Preview>Recupere sua senha para {siteName}</Preview>
     <Body style={main}>
+      <Section style={priorityHeader}>
+        <Text style={priorityText}>IMPORTANTE: AÇÃO REQUERIDA</Text>
+      </Section>
       <Container style={container}>
         <Section style={logoContainer}>
           <Img src={LOGO_URL} width="150" height="auto" alt={siteName} style={logo} />
@@ -83,3 +86,5 @@ const button = {
   textDecoration: 'none',
 }
 const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0', textAlign: 'center' as const }
+const priorityHeader = { backgroundColor: '#C9A96E', padding: '10px', textAlign: 'center' as const }
+const priorityText = { color: '#0A0A0F', fontSize: '12px', fontWeight: 'bold', margin: 0, textTransform: 'uppercase' as const }

@@ -162,6 +162,11 @@ const handler = createAuthEmailHandler({
           siteName: SITE_NAME,
           confirmationUrl: data.url,
         }),
+      headers: {
+        'X-Priority': '1 (Highest)',
+        'X-MSMail-Priority': 'High',
+        'Importance': 'High',
+      },
     },
     email_change: {
       subject: 'Confirme a alteração de seu e-mail',
