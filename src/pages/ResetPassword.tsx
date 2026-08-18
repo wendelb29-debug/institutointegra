@@ -20,15 +20,20 @@ const ResetPassword = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const handleRecovery = (event: any) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsRecovery(true);
+      }
+    };
+
     const hash = window.location.hash;
-    if (hash && hash.includes('type=recovery')) {
+    // Verifica hash ou fragmento de URL que indica recuperação
+    if (hash && (hash.includes('type=recovery') || hash.includes('access_token='))) {
       setIsRecovery(true);
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setIsRecovery(true);
-      }
+      handleRecovery(event);
     });
 
     return () => subscription.unsubscribe();
