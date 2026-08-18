@@ -56,7 +56,9 @@
     --sidebar-border: 30 14% 90%;
     --sidebar-ring: 155 19% 30%;
   }
+}
 
+@layer components {
   /* Shared Light Mode Enhancements */
   .premium-card {
     @apply bg-card text-card-foreground shadow-sm transition-all duration-300;
@@ -65,7 +67,6 @@
   .gestao-theme-header {
     @apply h-14 flex items-center justify-between border-b border-border/60 bg-card/40 backdrop-blur-md px-4 md:px-6 shrink-0 sticky top-0 z-10;
   }
-}
 }
 
 @layer base {
