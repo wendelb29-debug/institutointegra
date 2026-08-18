@@ -31,16 +31,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (isMobileDevice()) return;
 
-    const rememberMe = localStorage.getItem('rememberMe') === 'true';
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const rememberMe = localStorage.getItem('rememberMe') === 'true';
 
-    // On page load: if no sessionStorage flag exists, the browser was fully closed
-    // (sessionStorage is cleared when all tabs close). Sign out if not remembering.
-    if (!rememberMe && !sessionStorage.getItem('integra_session_active')) {
-      supabase.auth.signOut();
-    }
+      // On page load: if no sessionStorage flag exists, the browser was fully closed
+      // (sessionStorage is cleared when all tabs close). Sign out if not remembering.
+      if (session && !rememberMe && !sessionStorage.getItem('integra_session_active')) {
+        await supabase.auth.signOut();
+        setUser(null);
+        setSession(null);
+      }
+      
+      // Mark that a tab is open in this browser session
+      sessionStorage.setItem('integra_session_active', 'true');
+    };
 
-    // Mark that a tab is open in this browser session
-    sessionStorage.setItem('integra_session_active', 'true');
+    checkSession();
   }, []);
 
   useEffect(() => {
