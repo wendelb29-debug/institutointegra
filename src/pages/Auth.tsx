@@ -44,6 +44,7 @@ const Auth = () => {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
+          console.error("Login error:", error);
           if (error.message.includes('Email not confirmed')) {
             toast({ 
               title: 'E-mail não confirmado', 
@@ -113,6 +114,9 @@ const Auth = () => {
                 <Input id="resetEmail" type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="seu@email.com" />
                 <p className="text-[10px] text-muted-foreground mt-1 leading-tight">
                   Ao redefinir sua senha, você poderá cadastrar uma nova senha e manter todos os seus dados e histórico vinculados a este e-mail.
+                </p>
+                <p className="text-[10px] font-bold text-amber-500 mt-2">
+                  Nota: Se você não recebeu o e-mail em 5 minutos, verifique sua pasta de SPAM.
                 </p>
               </div>
               <Button type="submit" className="w-full" disabled={submitting}>
