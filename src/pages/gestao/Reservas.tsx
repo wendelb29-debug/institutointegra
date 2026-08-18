@@ -15,7 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   Plus, ChevronLeft, ChevronRight, Clock, Filter, MessageCircle,
   CreditCard, User, CalendarDays, CheckCircle2, XCircle, Ban,
-  AlertTriangle, Eye
+  AlertTriangle, Eye, Pencil
 } from 'lucide-react';
 import {
   startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths,
