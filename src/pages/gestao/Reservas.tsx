@@ -63,6 +63,8 @@ const Reservas = () => {
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [detailOpen, setDetailOpen] = useState<any>(null);
   const [editingReservation, setEditingReservation] = useState<any>(null);
+  const [emailLogs, setEmailLogs] = useState<any[]>([]);
+  const [sendingEmail, setSendingEmail] = useState(false);
   const [form, setForm] = useState<any>({ status: 'pendente' });
   const [blockForm, setBlockForm] = useState<any>({ block_type: 'full_day', room_id: 'all', mode: 'single' });
   const [loading, setLoading] = useState(true);
@@ -319,6 +321,27 @@ const Reservas = () => {
     await supabase.from('room_blocks').delete().eq('id', id);
     toast({ title: 'Bloqueio removido!' });
     fetchData();
+  };
+
+  const fetchEmailLogs = async (resId: string) => {
+    const { data } = await supabase.from('email_logs').select('*').eq('reservation_id', resId).order('sent_at', { ascending: false });
+    setEmailLogs(data || []);
+  };
+
+  const handleResendEmail = async (res: any) => {
+    setSendingEmail(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('reservations-webhook', {
+        body: { record: res, type: 'UPDATE', manual_recipient: res.clients?.email || user?.email }
+      });
+      if (error) throw error;
+      toast({ title: 'Reserva realizada e confirmação enviada por e-mail.' });
+      fetchEmailLogs(res.id);
+    } catch (err: any) {
+      toast({ title: 'Reserva salva, mas não foi possível enviar o e-mail de confirmação.', variant: 'destructive' });
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   // Selected day data
@@ -811,8 +834,11 @@ const Reservas = () => {
         </Dialog>
 
         {/* Reservation Detail Dialog */}
-        <Dialog open={!!detailOpen} onOpenChange={() => setDetailOpen(null)}>
-          <DialogContent>
+        <Dialog open={!!detailOpen} onOpenChange={(open) => {
+          if (!open) setDetailOpen(null);
+          else if (detailOpen?.id) fetchEmailLogs(detailOpen.id);
+        }}>
+          <DialogContent className="max-w-md">
             <DialogHeader><DialogTitle>Detalhes da Reserva</DialogTitle></DialogHeader>
             {detailOpen && (
               <div className="space-y-4">
@@ -833,17 +859,48 @@ const Reservas = () => {
                   </div>
                 </div>
                 {detailOpen.notes && <div><span className="text-sm text-muted-foreground">Observações:</span><p className="text-sm mt-1">{detailOpen.notes}</p></div>}
-                <div className="flex flex-col gap-2 pt-2">
-                  {detailOpen.status === 'pendente' && (
-                    <Button size="sm" onClick={() => { updateStatus(detailOpen.id, 'confirmada'); setDetailOpen(null); }} className="gap-1">
-                      <CheckCircle2 className="h-3.5 w-3.5" /> Confirmar Reserva
+                
+                <div className="pt-2 space-y-3">
+                  <div className="rounded-lg border border-border p-3 bg-muted/30">
+                    <h4 className="text-xs font-semibold mb-2 flex items-center gap-1.5 uppercase tracking-wider text-muted-foreground">
+                      Comunicações
+                    </h4>
+                    {emailLogs.length > 0 ? (
+                      <div className="space-y-2 mb-3">
+                        <div className="flex justify-between items-start text-[11px]">
+                          <div>
+                            <p className="text-muted-foreground">Último e-mail: <span className="text-foreground">{emailLogs[0].status === 'sent' ? 'Enviado' : 'Falhou'}</span></p>
+                            <p className="text-muted-foreground">Destinatário: <span className="text-foreground">{emailLogs[0].recipient}</span></p>
+                            <p className="text-muted-foreground">Data: <span className="text-foreground">{format(new Date(emailLogs[0].sent_at), "dd/MM/yyyy HH:mm")}</span></p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground mb-3">Nenhum e-mail enviado recentemente.</p>
+                    )}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full text-xs h-8 gap-1.5"
+                      onClick={() => handleResendEmail(detailOpen)}
+                      disabled={sendingEmail}
+                    >
+                      {sendingEmail ? 'Enviando...' : 'Reenviar e-mail'}
                     </Button>
-                  )}
-                  {detailOpen.status !== 'cancelada' && (
-                    <Button size="sm" variant="destructive" onClick={() => { updateStatus(detailOpen.id, 'cancelada'); setDetailOpen(null); }}>
-                      Cancelar Reserva
-                    </Button>
-                  )}
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    {detailOpen.status === 'pendente' && (
+                      <Button size="sm" onClick={() => { updateStatus(detailOpen.id, 'confirmada'); setDetailOpen(null); }} className="gap-1">
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Confirmar Reserva
+                      </Button>
+                    )}
+                    {detailOpen.status !== 'cancelada' && (
+                      <Button size="sm" variant="destructive" onClick={() => { updateStatus(detailOpen.id, 'cancelada'); setDetailOpen(null); }}>
+                        Cancelar Reserva
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

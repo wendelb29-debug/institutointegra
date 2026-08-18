@@ -9,13 +9,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Z-API Global Fallback (from project config)
-const GLOBAL_INSTANCE_ID = '3F0A839B3D4A131C158AA248D27FDCD6';
-const GLOBAL_TOKEN = 'A714392518FBCFACC066D258';
-const GLOBAL_CLIENT_TOKEN = 'F2bd5df5779e047e489ca72f794289888S';
-
 const SITE_NAME = "Instituto Integra"
 const FROM_DOMAIN = "institutointegra.site"
+const FROM_EMAIL = `Instituto Integra <noreply@${FROM_DOMAIN}>`
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -28,18 +24,17 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const { record, old_record, type } = await req.json();
-    console.log(`Processing ${type} for reservation ${record.id}`);
+    const payload = await req.json();
+    const { record, old_record, type, manual_recipient } = payload;
+    
+    // Type can be INSERT, UPDATE or MANUAL_RESEND
+    const eventType = manual_recipient ? 'MANUAL_RESEND' : type;
+    console.log(`Processing ${eventType} for reservation ${record.id}`);
 
-    // Only notify on status change or specific events
-    if (type === 'UPDATE' && record.status === old_record.status) {
-      return new Response(JSON.stringify({ message: 'No status change' }), { headers: corsHeaders });
-    }
-
-    // Get client and room details
+    // Fetch full reservation data with relations
     const { data: reservation, error: resError } = await supabase
       .from('reservations')
-      .select('*, rooms(name), clients(name, phone, email)')
+      .select('*, rooms(name, type), clients(name, phone, email), profiles:user_id(full_name, email)')
       .eq('id', record.id)
       .single();
 
@@ -47,100 +42,129 @@ serve(async (req) => {
       throw new Error('Reservation not found');
     }
 
-    const clientPhone = reservation.clients?.phone?.replace(/\D/g, '');
+    // Determine if email should be sent
+    let shouldSend = false;
+    let subject = '';
     
-    let message = '';
     const dateStr = new Date(reservation.date + 'T12:00:00').toLocaleDateString('pt-BR');
     const timeStr = `${reservation.start_time.slice(0, 5)} às ${reservation.end_time.slice(0, 5)}`;
+    
+    if (eventType === 'INSERT') {
+      shouldSend = true;
+      subject = `Nova reserva realizada - ${dateStr} às ${reservation.start_time.slice(0, 5)}`;
+    } else if (eventType === 'UPDATE') {
+      // Check for significant changes
+      const statusChanged = record.status !== old_record.status;
+      const dateChanged = record.date !== old_record.date;
+      const timeChanged = record.start_time !== old_record.start_time || record.end_time !== old_record.end_time;
+      const roomChanged = record.room_id !== old_record.room_id;
 
-    if (reservation.status === 'confirmada') {
-      message = `✅ *Reserva Confirmada!*\n\nOlá ${reservation.clients.name}, sua reserva para a sala *${reservation.rooms.name}* foi confirmada.\n\n📅 Data: ${dateStr}\n🕐 Horário: ${timeStr}\n\nEsperamos por você!`;
-    } else if (reservation.status === 'cancelada') {
-      message = `❌ *Reserva Cancelada*\n\nOlá ${reservation.clients.name}, sua reserva para a sala *${reservation.rooms.name}* no dia ${dateStr} foi cancelada.\n\nCaso tenha dúvidas, entre em contato conosco.`;
-    } else if (type === 'INSERT' && reservation.status === 'pendente') {
-      message = `⏳ *Reserva Recebida*\n\nOlá ${reservation.clients.name}, recebemos sua solicitação de reserva para a sala *${reservation.rooms.name}*.\n\n📅 Data: ${dateStr}\n🕐 Horário: ${timeStr}\n\nAguarde a confirmação em breve!`;
+      if (statusChanged || dateChanged || timeChanged || roomChanged) {
+        shouldSend = true;
+        if (statusChanged && record.status === 'confirmada') {
+          subject = `Reserva confirmada — ${dateStr} às ${reservation.start_time.slice(0, 5)}`;
+        } else if (statusChanged && record.status === 'cancelada') {
+          subject = `Reserva cancelada — ${dateStr} às ${reservation.start_time.slice(0, 5)}`;
+        } else {
+          subject = `Reserva atualizada — ${dateStr} às ${reservation.start_time.slice(0, 5)}`;
+        }
+      }
+    } else if (eventType === 'MANUAL_RESEND') {
+      shouldSend = true;
+      subject = `Reenvio: Reserva ${reservation.status} - ${dateStr}`;
     }
 
-    if (message && clientPhone) {
-      console.log(`Sending WhatsApp to ${clientPhone}`);
+    if (!shouldSend) {
+      return new Response(JSON.stringify({ message: 'No notification needed' }), { headers: corsHeaders });
+    }
+
+    // Determine recipients
+    let recipients: string[] = [];
+    if (manual_recipient) {
+      recipients = [manual_recipient];
+    } else {
+      // Admin list from auth.users (simplification for this multi-tenant structure)
+      const { data: authUsers } = await supabase.auth.admin.listUsers();
+      recipients = (authUsers?.users || []).map(u => u.email).filter(Boolean) as string[];
+      
+      // Also include the user who made the reservation if not in list
+      if (reservation.profiles?.email && !recipients.includes(reservation.profiles.email)) {
+        recipients.push(reservation.profiles.email);
+      }
+      
+      // And the client if they have an email
+      if (reservation.clients?.email && !recipients.includes(reservation.clients.email)) {
+        recipients.push(reservation.clients.email);
+      }
+    }
+
+    if (recipients.length === 0) {
+      console.log('No recipients found');
+      return new Response(JSON.stringify({ message: 'No recipients' }), { headers: corsHeaders });
+    }
+
+    // Render Template
+    const emailHtml = await renderAsync(
+      React.createElement(ReservationNotificationEmail, {
+        siteName: SITE_NAME,
+        clientName: reservation.clients?.name || reservation.notes || 'N/A',
+        roomName: reservation.rooms?.name || 'Sala',
+        date: dateStr,
+        time: timeStr,
+        status: reservation.status,
+      })
+    );
+
+    // Send via Lovable Transactional Email
+    const results = await Promise.all(recipients.map(async (email) => {
       try {
-        const zapiRes = await fetch(`https://api.z-api.io/instances/${GLOBAL_INSTANCE_ID}/token/${GLOBAL_TOKEN}/send-text`, {
+        const sendRes = await fetch(Deno.env.get('LOVABLE_SEND_URL')!, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Client-Token': GLOBAL_CLIENT_TOKEN
+            'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`
           },
           body: JSON.stringify({
-            phone: clientPhone,
-            message: message
-          }),
-        });
-        
-        const zapiData = await zapiRes.json();
-        console.log('Z-API Response:', zapiData);
-      } catch (zapiErr) {
-        console.error('WhatsApp failed:', zapiErr);
-      }
-    }
-
-    // Email Notification logic (Triggered for all INSERTs, ensuring collaborative visibility)
-    if (type === 'INSERT') {
-      try {
-        console.log('Fetching all users for email notification from auth.users...');
-        
-        // Fetch all auth users via service role to get their emails
-        const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-        if (authError) throw authError;
-
-        const recipientEmails = authUsers.users.map(u => u.email).filter(Boolean) as string[];
-        
-        if (recipientEmails.length === 0) {
-          console.log('No recipients found for reservation notification.');
-        } else {
-          console.log(`Sending notification to ${recipientEmails.length} users`);
-
-          const emailHtml = await renderAsync(
-            React.createElement(ReservationNotificationEmail, {
-              siteName: SITE_NAME,
-              clientName: reservation.clients.name,
-              roomName: reservation.rooms.name,
-              date: dateStr,
-              time: timeStr,
-              status: reservation.status
-            })
-          );
-
-          // Call the transactional email sender via Lovable API
-          const sendRes = await fetch(Deno.env.get('LOVABLE_SEND_URL')!, {
-            method: 'POST',
+            from: FROM_EMAIL,
+            to: [email],
+            subject: subject,
+            html: emailHtml,
             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`
-            },
-            body: JSON.stringify({
-              from: `${SITE_NAME} <notifications@${FROM_DOMAIN}>`,
-              to: recipientEmails,
-              subject: `⚠️ IMPORTANTE: Nova Reserva - ${reservation.rooms.name}`,
-              html: emailHtml,
-              headers: {
-                'X-Priority': '1 (Highest)',
-                'X-MSMail-Priority': 'High',
-                'Importance': 'High'
-              }
-            })
-          });
+              'X-Priority': '1 (Highest)',
+              'X-MSMail-Priority': 'High',
+              'Importance': 'High',
+              'X-Idempotency-Key': `${reservation.id}-${eventType}-${reservation.updated_at || reservation.created_at}`
+            }
+          })
+        });
 
-          const sendData = await sendRes.json();
-          console.log('Email Send Response:', sendData);
-        }
-      } catch (emailErr) {
-        console.error('Failed to send emails:', emailErr);
+        const data = await sendRes.json();
+        
+        // Log to email_logs
+        await supabase.from('email_logs').insert({
+          reservation_id: reservation.id,
+          tenant_id: reservation.tenant_id,
+          template_name: 'reservation-notification',
+          recipient: email,
+          subject: subject,
+          event_type: eventType,
+          status: sendRes.ok ? 'sent' : 'failed',
+          provider_message_id: data.id || null,
+          error_message: sendRes.ok ? null : JSON.stringify(data),
+          sent_by: reservation.user_id,
+        });
+
+        return { email, success: sendRes.ok };
+      } catch (err) {
+        console.error(`Failed to send to ${email}:`, err);
+        return { email, success: false, error: err.message };
       }
-    }
+    }));
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ success: true, results }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+
   } catch (error) {
     console.error('Webhook error:', error.message);
     return new Response(JSON.stringify({ error: error.message }), {
