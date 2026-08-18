@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface UserForm {
@@ -26,6 +26,7 @@ export default function UsersTab() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
   const [form, setForm] = useState<UserForm>(emptyForm);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { data: usersData, isLoading } = useQuery({
     queryKey: ['admin-users'],
@@ -106,8 +107,8 @@ export default function UsersTab() {
         status: form.status,
       });
     } else {
-      if (!form.password || form.password.length < 6) {
-        toast.error('Senha é obrigatória (mín. 6 caracteres)');
+      if (!form.password || form.password.length < 8) {
+        toast.error('Senha é obrigatória (mín. 8 caracteres)');
         return;
       }
       manageMutation.mutate({ action: 'create', ...form });
@@ -220,12 +221,22 @@ export default function UsersTab() {
             </div>
             <div>
               <Label>{editingUser ? 'Nova Senha (deixe vazio para manter)' : 'Senha'}</Label>
-              <Input
-                type="password"
-                value={form.password}
-                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                placeholder={editingUser ? '••••••' : 'Mínimo 6 caracteres'}
-              />
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={form.password}
+                  onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                  placeholder={editingUser ? '••••••••' : 'Mínimo 8 caracteres'}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <div>
               <Label>Perfil de Acesso</Label>

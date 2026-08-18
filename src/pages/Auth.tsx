@@ -74,11 +74,15 @@ const Auth = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const normalizedEmail = email.trim().toLowerCase();
+      const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) throw error;
-      toast({ title: 'E-mail enviado!', description: 'Verifique sua caixa de entrada para redefinir sua senha.' });
+      toast({ 
+        title: 'Solicitação enviada', 
+        description: 'Se este e-mail estiver cadastrado, enviaremos um link para você criar uma nova senha. Verifique também a caixa de spam.' 
+      });
       setIsForgotPassword(false);
     } catch (err: any) {
       toast({ title: 'Erro', description: err.message, variant: 'destructive' });
@@ -101,7 +105,9 @@ const Auth = () => {
               <img src={logoIntegra} alt="Integra" className="h-16 w-auto mx-auto" />
             </div>
             <CardTitle className="text-xl font-display text-charcoal">Esqueceu a senha?</CardTitle>
-            <CardDescription>Insira seu e-mail e enviaremos um link para redefinir sua senha.</CardDescription>
+            <CardDescription>
+              Se este e-mail estiver cadastrado, enviaremos um link para você criar uma nova senha. Verifique também a caixa de spam.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleForgotPassword} className="space-y-4">
@@ -169,7 +175,7 @@ const Auth = () => {
                   value={password} 
                   onChange={e => setPassword(e.target.value)} 
                   required 
-                  minLength={6}
+                  minLength={8}
                   className="pr-10"
                 />
                 <button
