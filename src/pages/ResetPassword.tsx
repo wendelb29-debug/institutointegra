@@ -40,16 +40,23 @@ const ResetPassword = () => {
       toast({ title: 'Erro', description: 'As senhas não coincidem.', variant: 'destructive' });
       return;
     }
-    if (password.length < 6) {
-      toast({ title: 'Erro', description: 'A senha deve ter pelo menos 6 caracteres.', variant: 'destructive' });
+    if (password.length < 8) {
+      toast({ title: 'Erro', description: 'A senha deve ter pelo menos 8 caracteres.', variant: 'destructive' });
       return;
     }
     setSubmitting(true);
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-      toast({ title: 'Senha atualizada!', description: 'Você será redirecionado.' });
-      setTimeout(() => navigate('/gestao'), 1500);
+      
+      toast({ 
+        title: 'Senha cadastrada com sucesso.', 
+        description: 'Você já pode entrar com a nova senha.' 
+      });
+      
+      // Encerra sessão temporária se necessário e redireciona
+      await supabase.auth.signOut();
+      setTimeout(() => navigate('/auth'), 2000);
     } catch (err: any) {
       toast({ title: 'Erro', description: err.message, variant: 'destructive' });
     } finally {
@@ -63,11 +70,14 @@ const ResetPassword = () => {
         <Card className="w-full max-w-md shadow-lg border-border/50 text-center">
           <CardHeader>
             <img src={logoIntegra} alt="Integra" className="h-16 w-auto mx-auto mb-4" />
-            <CardTitle className="text-xl">Link inválido</CardTitle>
-            <CardDescription>Este link de redefinição é inválido ou expirou.</CardDescription>
+            <CardTitle className="text-xl">Link inválido ou expirado</CardTitle>
+            <CardDescription>Este link expirou ou é inválido. Solicite uma nova redefinição de senha.</CardDescription>
           </CardHeader>
-          <CardContent>
-            <Link to="/auth">
+          <CardContent className="space-y-4">
+            <Link to="/auth" className="block">
+              <Button className="w-full" variant="outline">Solicitar novo link</Button>
+            </Link>
+            <Link to="/auth" className="block">
               <Button className="w-full">Voltar ao login</Button>
             </Link>
           </CardContent>
@@ -99,7 +109,7 @@ const ResetPassword = () => {
                   value={password} 
                   onChange={e => setPassword(e.target.value)} 
                   required 
-                  minLength={6}
+                  minLength={8}
                   className="pr-10"
                 />
                 <button
@@ -120,7 +130,7 @@ const ResetPassword = () => {
                   value={confirmPassword} 
                   onChange={e => setConfirmPassword(e.target.value)} 
                   required 
-                  minLength={6}
+                  minLength={8}
                   className="pr-10"
                 />
                 <button
@@ -133,7 +143,7 @@ const ResetPassword = () => {
               </div>
             </div>
             <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? 'Aguarde...' : 'Redefinir senha'}
+              {submitting ? 'Cadastrando...' : 'Cadastrar nova senha'}
             </Button>
           </form>
         </CardContent>
